@@ -1,0 +1,151 @@
+**MERAKI ****v1.0**
+
+Documento de Requisitos de Software (DRS) 
+
+Plataforma de contratação baseada em projetos
+
+Data: 09/03/2026
+
+# 1. Visão Geral do Sistema
+
+Nome: Meraki
+
+Tipo: Plataforma de contratação especializada baseada em projetos.
+
+Descrição:
+
+A Meraki conecta empresas com projetos técnicos específicos a especialistas altamente qualificados.
+
+A contratação ocorre por licitação técnica e execução baseada em milestones.
+
+Diferenciais:
+
+• Profissionais disputam projetos com propostas técnicas e financeiras
+
+• Progresso acompanhado por gestão visual (Kanban)
+
+• Pagamentos liberados conforme entregas validadas
+
+• Perfis profissionais com histórico de projetos
+
+# 2. Domínio do Problema (DDD)
+
+Core Domain: Gestão de projetos técnicos com contratação baseada em entregas verificáveis.
+
+Capacidades principais do sistema:
+
+• Criar projetos
+
+• Abrir licitação técnica
+
+• Receber propostas
+
+• Acompanhar entregas
+
+• Validar milestones
+
+• Liberar pagamentos
+
+• Registrar histórico profissional
+
+# 3. Bounded Contexts
+
+Identity & Access Context – cadastro, autenticação e autorização.
+
+Project Management Context – criação e gestão de projetos.
+
+Bidding Context – envio e avaliação de propostas.
+
+Delivery Tracking Context – acompanhamento de progresso e Kanban.
+
+Payment Context – pagamentos por milestone.
+
+Portfolio Context – histórico profissional e portfólio.
+
+# 4. Entidades
+
+User, Company, Specialist, Project, Milestone, Bid, Payment, ProjectHistory.
+
+# 5. Requisitos Funcionais
+
+| ID | Descrição |
+| --- | --- |
+| RF01 | Cadastro de empresas |
+| RF02 | Cadastro de especialistas |
+| RF03 | Criação de projetos |
+| RF04 | Definição de milestones |
+| RF05 | Envio de propostas |
+| RF06 | Avaliação de propostas |
+| RF07 | Seleção do especialista vencedor |
+| RF08 | Acompanhamento via Kanban |
+| RF09 | Validação de milestones |
+| RF10 | Liberação de pagamento após validação |
+| RF11 | Acesso a de histórico de entregas |
+| RF12 | Perfil público de especialistas |
+| RF13 | Perfil público de empresas |
+| RF14 | Acesso a histórico profissional dos freelancers |
+
+# 6. Requisitos Não Funcionais
+
+| ID | Descrição |
+| --- | --- |
+| RNF01 | Autenticação segura via JWT |
+| RNF02 | Suporte a múltiplos usuários simultâneos |
+| RNF03 | Arquitetura baseada em DDD e Microserviços |
+| RNF04 | Consistência transacional financeira |
+| RNF05 | Alta disponibilidade |
+| RNF06 | Logs de auditoria |
+| RNF07 | API REST documentada |
+| RNF08 | Proteção contra SQL Injection, XSS e CSRF |
+| RNF09 | Banco de dados independente por microserviço |
+| RNF10 | Comunicação entre serviços baseada em eventos |
+
+# 7. Regras de Negócio
+
+RN01 – Projetos recebem propostas apenas quando o sistema validar a qualidade do escopo do projeto.
+
+RN02 – Cada especialista pode ter ativa apenas uma proposta por projeto.
+
+RN03 – A empresa deve selecionar apenas um especialista vencedor por projeto.
+
+RN04 – Milestones devem ser concluídas sequencialmente
+
+RN05 – Pagamento liberado somente após validação
+
+RN06 – Plataforma retém taxa percentual
+
+RN07-Sistema automaticamente registra o histórico de entregas
+
+# 8. Arquitetura de Microservices
+
+api-gateway
+
+user-service
+
+project-service
+
+bidding-service
+
+delivery-service
+
+payment-service
+
+portfolio-service
+
+Cada serviço possui domínio próprio, banco de dados independente e API REST.
+
+# 9. Tecnologias Sugeridas
+
+Backend: Deus nos ajude teremos q usar typescript, cadê meu spring
+
+Banco: PostgreSQL se Deus quiser, se tiver q tocar oracle vai ser triste
+
+Mensageria: RabbitMQ ou Kafka 
+
+Infraestrutura: Docker
+
+Frontend: React / [Next.js](http://next.js)
+
+Definições no documento:
+
+## Milestones - Prazos limite de funcionalidades do projeto.
