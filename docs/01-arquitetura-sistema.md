@@ -108,14 +108,14 @@
 
 ### 2.1 Fluxo de Criação de Projeto
 ```
-Empresa (Web) → API Gateway → Project Service → RabbitMQ (project.created)
+Empresa (Flutter App) → API Gateway → Project Service → RabbitMQ (project.created)
                                                       ↓
                                                Todos os serviços interessados
 ```
 
 ### 2.2 Fluxo de Proposta
 ```
-Especialista (Web) → API Gateway → Bidding Service → RabbitMQ (bid.submitted)
+Especialista (Flutter App) → API Gateway → Bidding Service → RabbitMQ (bid.submitted)
                                                            ↓
                                                  Project Service (atualiza status)
 ```
@@ -237,26 +237,28 @@ Glossário de termos ubíquos usados consistentemente em todos os contextos:
 meraki/
 ├── backend/
 │   ├── api-gateway/
-│   ├── user-service/
+│   ├── identity-service/
 │   ├── project-service/
 │   ├── bidding-service/
 │   ├── delivery-service/
 │   ├── payment-service/
 │   └── portfolio-service/
 │
-├── frontend/
-│   └── meraki-web/
-│       ├── app/
-│       │   ├── (auth)/
-│       │   ├── (projects)/
-│       │   ├── (bidding)/
-│       │   ├── (delivery)/
-│       │   ├── (payments)/
-│       │   └── (portfolio)/
-│       ├── components/
+├── mobile/
+│   └── meraki-app/
 │       ├── lib/
-│       ├── hooks/
-│       └── services/
+│       │   ├── features/
+│       │   │   ├── auth/
+│       │   │   ├── projects/
+│       │   │   ├── bidding/
+│       │   │   ├── delivery/
+│       │   │   ├── payments/
+│       │   │   └── portfolio/
+│       │   └── core/
+│       │       ├── api/
+│       │       ├── storage/
+│       │       └── auth/
+│       └── pubspec.yaml
 │
 └── docs/
     ├── 01-arquitetura-sistema.md

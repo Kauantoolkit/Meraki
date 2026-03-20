@@ -47,7 +47,7 @@ A arquitetura é organizada em seis bounded contexts, cada um correspondendo a u
 | **Banco de Dados** | PostgreSQL (por serviço) | ACID, relacional, confiável. Banco independente por microserviço (RNF09) |
 | **Mensageria** | RabbitMQ ou Kafka | Comunicação assíncrona entre serviços (RNF10). Kafka preferível para alta throughput |
 | **Containerização** | Docker + Docker Compose | Isolamento de serviços, ambiente reproduzível, orquestração local |
-| **Frontend** | React + Next.js | SSR, performance, ecosystem robusto para SPAs complexas |
+| **Frontend** | Flutter | 
 | **API Gateway** | api-gateway (custom) | Roteamento centralizado, autenticação de entrada, rate limiting |
 | **Autenticação** | JWT (JSON Web Tokens) | Stateless, escalável, seguro conforme RNF01 |
 | **Documentação API** | OpenAPI / Swagger | API REST documentada conforme RNF07 |

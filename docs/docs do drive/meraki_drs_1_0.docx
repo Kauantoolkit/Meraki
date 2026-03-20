@@ -144,7 +144,7 @@ Mensageria: RabbitMQ ou Kafka
 
 Infraestrutura: Docker
 
-Frontend: React / [Next.js](http://next.js)
+Frontend: Flutter
 
 Definições no documento:
 

@@ -1,0 +1,137 @@
+version: '3.8'
+
+services:
+  # ─── IDENTITY SERVICE DB ───────────────────────────────────────────────────
+  identity-db:
+    image: postgres:15-alpine
+    container_name: meraki-identity-db
+    environment:
+      POSTGRES_DB: identity_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - identity-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── PROJECT SERVICE DB ────────────────────────────────────────────────────
+  project-db:
+    image: postgres:15-alpine
+    container_name: meraki-project-db
+    environment:
+      POSTGRES_DB: project_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5433:5432'
+    volumes:
+      - project-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── BIDDING SERVICE DB ────────────────────────────────────────────────────
+  bidding-db:
+    image: postgres:15-alpine
+    container_name: meraki-bidding-db
+    environment:
+      POSTGRES_DB: bidding_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5434:5432'
+    volumes:
+      - bidding-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── DELIVERY SERVICE DB ───────────────────────────────────────────────────
+  delivery-db:
+    image: postgres:15-alpine
+    container_name: meraki-delivery-db
+    environment:
+      POSTGRES_DB: delivery_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5435:5432'
+    volumes:
+      - delivery-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── PAYMENT SERVICE DB ────────────────────────────────────────────────────
+  payment-db:
+    image: postgres:15-alpine
+    container_name: meraki-payment-db
+    environment:
+      POSTGRES_DB: payment_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5436:5432'
+    volumes:
+      - payment-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── PORTFOLIO SERVICE DB ──────────────────────────────────────────────────
+  portfolio-db:
+    image: postgres:15-alpine
+    container_name: meraki-portfolio-db
+    environment:
+      POSTGRES_DB: portfolio_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5437:5432'
+    volumes:
+      - portfolio-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── RABBITMQ ──────────────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: meraki-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: meraki
+      RABBITMQ_DEFAULT_PASS: meraki
+    ports:
+      - '5672:5672'    # AMQP
+      - '15672:15672'  # Management UI
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  identity-db:
+  project-db:
+  bidding-db:
+  delivery-db:
+  payment-db:
+  portfolio-db:
+  rabbitmq:
