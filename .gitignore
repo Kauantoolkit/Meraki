@@ -1,2 +1,44 @@
-backend/identity-service/.env
-backend/identity-service/node_modules
+# ─── Variáveis de ambiente ────────────────────────────────────────────────────
+# Ignora qualquer .env real em qualquer nível; .env.example é permitido
+**/.env
+!**/.env.example
+
+# ─── Node.js ──────────────────────────────────────────────────────────────────
+**/node_modules/
+**/dist/
+**/build/
+**/*.js.map
+**/coverage/
+**/.nyc_output/
+**/pids/
+**/*.pid
+**/*.seed
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# ─── Flutter / Dart ───────────────────────────────────────────────────────────
+# Diretórios gerados pelo `flutter create` (plataformas nativas)
+mobile/android/
+mobile/ios/
+mobile/linux/
+mobile/macos/
+mobile/windows/
+mobile/web/
+
+# ─── IDEs ─────────────────────────────────────────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/settings.json
+.vscode/launch.json
+
+# ─── Sistemas operacionais ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# ─── Claude Code ──────────────────────────────────────────────────────────────
+.claude/settings.local.json

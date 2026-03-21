@@ -42,17 +42,17 @@ Usar `identity-service` — alinha semanticamente com o Bounded Context "Identit
 ## Decisão 3 — Ordem de Implementação (Incremental)
 
 **Data:** 2026-03-19
-**Status:** Em andamento
+**Status:** Concluído
 
 ### Sequência definida
 1. ✅ `docker-compose.yml` — infraestrutura (PostgreSQL + RabbitMQ)
-2. 🔄 `identity-service` — autenticação e gerenciamento de usuários (porta 3001)
-3. ⏳ `api-gateway` — proxy + JWT guard (porta 3000)
-4. ⏳ `project-service` — projetos e milestones (porta 3002)
-5. ⏳ `bidding-service` — propostas (porta 3003)
-6. ⏳ `delivery-service` — entregas + Kanban (porta 3004)
-7. ⏳ `payment-service` — pagamentos + escrow (porta 3005)
-8. ⏳ `portfolio-service` — portfólio + avaliações (porta 3006)
+2. ✅ `identity-service` — autenticação e gerenciamento de usuários (porta 3001)
+3. ✅ `api-gateway` — proxy + JWT guard (porta 3000)
+4. ✅ `project-service` — projetos e milestones (porta 3002)
+5. ✅ `bidding-service` — propostas (porta 3003)
+6. ✅ `delivery-service` — entregas + Kanban (porta 3004)
+7. ✅ `payment-service` — pagamentos + escrow (porta 3005)
+8. ✅ `portfolio-service` — portfólio + avaliações (porta 3006)
 
 ### Critério de conclusão por serviço
 Cada serviço é considerado **pronto para a próxima fase** quando:

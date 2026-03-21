@@ -1,0 +1,73 @@
+import {
+  Entity, PrimaryGeneratedColumn, Column,
+  CreateDateColumn, UpdateDateColumn,
+} from 'typeorm';
+import { DomainException } from '../exceptions/domain.exception';
+
+export enum PaymentStatus {
+  ESCROW_HELD = 'ESCROW_HELD',
+  RELEASED = 'RELEASED',
+  REFUNDED = 'REFUNDED',
+}
+
+/** RN06: Plataforma retém 10% sobre cada pagamento liberado */
+const PLATFORM_FEE_RATE = parseFloat(process.env.PLATFORM_FEE_RATE || '0.10');
+
+@Entity('payments')
+export class Payment {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
+  @Column()
+  projectId: string;
+
+  @Column()
+  milestoneId: string;
+
+  @Column()
+  specialistId: string;
+
+  @Column('decimal', { precision: 10, scale: 2 })
+  amount: number;
+
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  specialistAmount: number;
+
+  @Column('decimal', { precision: 10, scale: 2, nullable: true })
+  platformFee: number;
+
+  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.ESCROW_HELD })
+  status: PaymentStatus;
+
+  @Column({ nullable: true })
+  escrowTransactionId: string;
+
+  @Column({ nullable: true })
+  releaseTransactionId: string;
+
+  @Column({ nullable: true })
+  releasedAt: Date;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+
+  // ─── Domain behavior — RN06 ───────────────────────────────────────────────
+
+  release(): { specialistAmount: number; platformFee: number } {
+    if (this.status !== PaymentStatus.ESCROW_HELD) {
+      throw new DomainException('Só é possível liberar pagamentos em ESCROW_HELD (RN06)');
+    }
+    const fee = Number((this.amount * PLATFORM_FEE_RATE).toFixed(2));
+    const specialist = Number((this.amount - fee).toFixed(2));
+
+    this.platformFee = fee;
+    this.specialistAmount = specialist;
+    this.status = PaymentStatus.RELEASED;
+    this.releasedAt = new Date();
+
+    return { specialistAmount: specialist, platformFee: fee };
+  }
+}

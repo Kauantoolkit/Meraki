@@ -127,6 +127,147 @@ services:
       timeout: 5s
       retries: 5
 
+  # ─── SERVIÇOS ──────────────────────────────────────────────────────────────
+
+  identity-service:
+    build: ./identity-service
+    container_name: meraki-identity-service
+    ports:
+      - '3001:3001'
+    environment:
+      PORT: 3001
+      DB_HOST: identity-db
+      DB_PORT: 5432
+      DB_NAME: identity_db
+      DB_USER: postgres
+      DB_PASS: postgres
+      JWT_SECRET: meraki-jwt-secret
+      JWT_EXPIRES_IN: 7d
+      RABBITMQ_URL: amqp://meraki:meraki@rabbitmq:5672
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: meraki-api-gateway
+    ports:
+      - '3000:3000'
+    environment:
+      PORT: 3000
+      JWT_SECRET: meraki-jwt-secret
+      IDENTITY_SERVICE_URL: http://identity-service:3001
+      PROJECT_SERVICE_URL: http://project-service:3002
+      BIDDING_SERVICE_URL: http://bidding-service:3003
+      DELIVERY_SERVICE_URL: http://delivery-service:3004
+      PAYMENT_SERVICE_URL: http://payment-service:3005
+      PORTFOLIO_SERVICE_URL: http://portfolio-service:3006
+    depends_on:
+      - identity-service
+
+  project-service:
+    build: ./project-service
+    container_name: meraki-project-service
+    ports:
+      - '3002:3002'
+    environment:
+      PORT: 3002
+      DB_HOST: project-db
+      DB_PORT: 5432
+      DB_NAME: project_db
+      DB_USER: postgres
+      DB_PASS: postgres
+      JWT_SECRET: meraki-jwt-secret
+      RABBITMQ_URL: amqp://meraki:meraki@rabbitmq:5672
+    depends_on:
+      project-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  bidding-service:
+    build: ./bidding-service
+    container_name: meraki-bidding-service
+    ports:
+      - '3003:3003'
+    environment:
+      PORT: 3003
+      DB_HOST: bidding-db
+      DB_PORT: 5432
+      DB_NAME: bidding_db
+      DB_USER: postgres
+      DB_PASS: postgres
+      JWT_SECRET: meraki-jwt-secret
+      RABBITMQ_URL: amqp://meraki:meraki@rabbitmq:5672
+    depends_on:
+      bidding-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  delivery-service:
+    build: ./delivery-service
+    container_name: meraki-delivery-service
+    ports:
+      - '3004:3004'
+    environment:
+      PORT: 3004
+      DB_HOST: delivery-db
+      DB_PORT: 5432
+      DB_NAME: delivery_db
+      DB_USER: postgres
+      DB_PASS: postgres
+      JWT_SECRET: meraki-jwt-secret
+      RABBITMQ_URL: amqp://meraki:meraki@rabbitmq:5672
+    depends_on:
+      delivery-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  payment-service:
+    build: ./payment-service
+    container_name: meraki-payment-service
+    ports:
+      - '3005:3005'
+    environment:
+      PORT: 3005
+      DB_HOST: payment-db
+      DB_PORT: 5432
+      DB_NAME: payment_db
+      DB_USER: postgres
+      DB_PASS: postgres
+      JWT_SECRET: meraki-jwt-secret
+      RABBITMQ_URL: amqp://meraki:meraki@rabbitmq:5672
+      PLATFORM_FEE_RATE: '0.10'
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  portfolio-service:
+    build: ./portfolio-service
+    container_name: meraki-portfolio-service
+    ports:
+      - '3006:3006'
+    environment:
+      PORT: 3006
+      DB_HOST: portfolio-db
+      DB_PORT: 5432
+      DB_NAME: portfolio_db
+      DB_USER: postgres
+      DB_PASS: postgres
+      JWT_SECRET: meraki-jwt-secret
+      RABBITMQ_URL: amqp://meraki:meraki@rabbitmq:5672
+    depends_on:
+      portfolio-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 volumes:
   identity-db:
   project-db:
