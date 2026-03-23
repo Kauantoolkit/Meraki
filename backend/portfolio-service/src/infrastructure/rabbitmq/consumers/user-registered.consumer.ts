@@ -19,9 +19,9 @@ export class UserRegisteredConsumer implements OnModuleInit {
       'portfolio.events.user-registered',
       'user.registered',
       async (message) => {
-        const { userId, userType, companyName } = message.payload || message;
+        const { userId, userType, name, companyName } = message.payload || message;
         if (userType === 'SPECIALIST') {
-          await this.createSpecialistProfile.execute(userId);
+          await this.createSpecialistProfile.execute(userId, name);
         } else if (userType === 'COMPANY') {
           await this.createCompanyProfile.execute(userId, companyName);
         }

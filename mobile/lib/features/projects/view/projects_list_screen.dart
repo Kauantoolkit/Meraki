@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../features/auth/viewmodel/auth_viewmodel.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_view.dart';
@@ -11,13 +12,26 @@ class ProjectsListScreen extends ConsumerStatefulWidget {
   const ProjectsListScreen({super.key});
 
   @override
-  ConsumerState<ProjectsListScreen> createState() => _ProjectsListScreenState();
+  ConsumerState<ProjectsListScreen> createState() =>
+      _ProjectsListScreenState();
 }
 
 class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   String? _statusFilter;
+  final _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _initialized = false;
 
-  static const _filterOptions = [
+  // Para empresa: começa sem filtro (ver todos os projetos delas)
+  // Para especialista: começa em OPEN (descobrir oportunidades)
+  static const _specialistFilters = [
+    (value: 'OPEN', label: 'Abertos'),
+    (value: null, label: 'Todos'),
+    (value: 'IN_PROGRESS', label: 'Em andamento'),
+    (value: 'COMPLETED', label: 'Concluídos'),
+  ];
+
+  static const _companyFilters = [
     (value: null, label: 'Todos'),
     (value: 'OPEN', label: 'Abertos'),
     (value: 'IN_PROGRESS', label: 'Em andamento'),
@@ -25,72 +39,226 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(
+      () => setState(() => _searchQuery = _searchController.text),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      _initialized = true;
+      final user = ref.read(authViewModelProvider).user;
+      if (user?.isSpecialist == true) {
+        _statusFilter = 'OPEN';
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref
+              .read(projectsViewModelProvider.notifier)
+              .filterByStatus('OPEN');
+        });
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final projectsAsync = ref.watch(projectsViewModelProvider);
     final user = ref.watch(authViewModelProvider).user;
     final isCompany = user?.isCompany ?? false;
-
-    final filterLabel = _filterOptions
-        .firstWhere((o) => o.value == _statusFilter,
-            orElse: () => _filterOptions.first)
-        .label;
+    final isSpecialist = user?.isSpecialist ?? false;
+    final filters = isSpecialist ? _specialistFilters : _companyFilters;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isCompany ? 'Meus Projetos' : 'Projetos disponíveis'),
-        actions: [
-          PopupMenuButton<String?>(
-            icon: Badge(
-              isLabelVisible: _statusFilter != null,
-              child: const Icon(Icons.filter_list),
-            ),
-            tooltip: 'Filtrar por status ($filterLabel)',
-            onSelected: (v) {
-              setState(() => _statusFilter = v);
-              ref.read(projectsViewModelProvider.notifier).filterByStatus(v);
-            },
-            itemBuilder: (_) => _filterOptions
-                .map((o) => PopupMenuItem(
-                      value: o.value,
-                      child: Row(
-                        children: [
-                          if (_statusFilter == o.value)
-                            const Icon(Icons.check, size: 18)
-                          else
-                            const SizedBox(width: 18),
-                          const SizedBox(width: 8),
-                          Text(o.label),
-                        ],
-                      ),
-                    ))
-                .toList(),
-          ),
-        ],
-      ),
       body: projectsAsync.when(
         loading: () => const LoadingIndicator(),
         error: (e, _) => ErrorView(
           message: e.toString(),
-          onRetry: () => ref.read(projectsViewModelProvider.notifier).refresh(),
+          onRetry: () =>
+              ref.read(projectsViewModelProvider.notifier).refresh(),
         ),
-        data: (projects) => projects.isEmpty
-            ? _EmptyState(isCompany: isCompany)
-            : RefreshIndicator(
-                onRefresh: () =>
-                    ref.read(projectsViewModelProvider.notifier).refresh(),
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: projects.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (_, i) =>
-                      _ProjectCard(project: projects[i], user: user),
+        data: (projects) {
+          // Filtro de busca client-side por título e descrição
+          final filtered = _searchQuery.isEmpty
+              ? projects
+              : projects
+                  .where((p) =>
+                      p.title
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()) ||
+                      p.description
+                          .toLowerCase()
+                          .contains(_searchQuery.toLowerCase()))
+                  .toList();
+
+          return RefreshIndicator(
+            onRefresh: () =>
+                ref.read(projectsViewModelProvider.notifier).refresh(),
+            child: CustomScrollView(
+              slivers: [
+                // ─── App bar ──────────────────────────────────────────────
+                SliverAppBar.large(
+                  title: Text(isCompany ? 'Meus Projetos' : 'Explorar'),
+                  backgroundColor: AppTheme.slate100,
+                  surfaceTintColor: Colors.transparent,
+                  scrolledUnderElevation: 0,
                 ),
-              ),
+
+                // ─── Search bar (especialista) ────────────────────────────
+                if (isSpecialist)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                      child: Container(
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: AppTheme.slate200),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'Buscar por título ou descrição...',
+                            hintStyle: TextStyle(
+                              color: AppTheme.slate400,
+                              fontSize: 14,
+                            ),
+                            prefixIcon: const Icon(
+                              Icons.search_rounded,
+                              size: 20,
+                              color: AppTheme.slate400,
+                            ),
+                            suffixIcon: _searchQuery.isNotEmpty
+                                ? IconButton(
+                                    icon: const Icon(
+                                        Icons.close_rounded,
+                                        size: 18),
+                                    onPressed: _searchController.clear,
+                                  )
+                                : null,
+                            border: InputBorder.none,
+                            contentPadding:
+                                const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                // ─── Filter chips ─────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 46,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+                      itemCount: filters.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(width: 8),
+                      itemBuilder: (_, i) {
+                        final f = filters[i];
+                        final isSelected = _statusFilter == f.value;
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() => _statusFilter = f.value);
+                            ref
+                                .read(projectsViewModelProvider.notifier)
+                                .filterByStatus(f.value);
+                          },
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? AppTheme.brand
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppTheme.brand
+                                    : AppTheme.slate200,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: AppTheme.brand
+                                            .withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Text(
+                              f.label,
+                              style: TextStyle(
+                                color: isSelected
+                                    ? Colors.white
+                                    : AppTheme.slate700,
+                                fontSize: 13,
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                // ─── Lista de projetos ────────────────────────────────────
+                if (filtered.isEmpty)
+                  SliverFillRemaining(
+                    child: _EmptyState(
+                      isCompany: isCompany,
+                      hasSearch: _searchQuery.isNotEmpty,
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding:
+                        const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    sliver: SliverList.separated(
+                      itemCount: filtered.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: 10),
+                      itemBuilder: (_, i) => _ProjectCard(
+                        project: filtered[i],
+                        user: user,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
       ),
       floatingActionButton: isCompany
           ? FloatingActionButton.extended(
               onPressed: () => context.go('/projects/create'),
-              icon: const Icon(Icons.add),
+              icon: const Icon(Icons.add_rounded),
               label: const Text('Novo projeto'),
             )
           : null,
@@ -98,44 +266,62 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   }
 }
 
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
 class _EmptyState extends StatelessWidget {
   final bool isCompany;
-  const _EmptyState({required this.isCompany});
+  final bool hasSearch;
+  const _EmptyState({required this.isCompany, required this.hasSearch});
 
   @override
   Widget build(BuildContext context) {
+    final icon = hasSearch
+        ? Icons.search_off_rounded
+        : (isCompany ? Icons.folder_open_rounded : Icons.explore_off_rounded);
+    final title = hasSearch
+        ? 'Nenhum resultado encontrado'
+        : (isCompany ? 'Nenhum projeto ainda' : 'Nenhuma oportunidade aberta');
+    final subtitle = hasSearch
+        ? 'Tente outras palavras-chave'
+        : (isCompany
+            ? 'Crie seu primeiro projeto e receba propostas de especialistas'
+            : 'Novas oportunidades aparecerão aqui quando empresas publicarem projetos');
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: const EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              isCompany ? Icons.folder_open : Icons.search_off,
-              size: 72,
-              color: Theme.of(context).colorScheme.outline,
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppTheme.brandLight,
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: Icon(icon, size: 40, color: AppTheme.brand),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
             Text(
-              isCompany
-                  ? 'Você ainda não criou nenhum projeto'
-                  : 'Nenhum projeto encontrado',
+              title,
               style: Theme.of(context).textTheme.titleMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              isCompany
-                  ? 'Crie seu primeiro projeto e receba propostas de especialistas'
-                  : 'Tente outro filtro ou volte mais tarde',
-              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+              subtitle,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: AppTheme.slate400),
               textAlign: TextAlign.center,
             ),
-            if (isCompany) ...[
-              const SizedBox(height: 24),
+            if (isCompany && !hasSearch) ...[
+              const SizedBox(height: 28),
               FilledButton.icon(
-                onPressed: () => context.go('/projects/create'),
-                icon: const Icon(Icons.add),
+                onPressed: () => GoRouter.of(context).go('/projects/create'),
+                icon: const Icon(Icons.add_rounded),
                 label: const Text('Criar projeto'),
               ),
             ],
@@ -146,25 +332,12 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
+// ─── Project card ─────────────────────────────────────────────────────────────
+
 class _ProjectCard extends StatelessWidget {
   final ProjectModel project;
   final dynamic user;
   const _ProjectCard({required this.project, required this.user});
-
-  Color _statusColor() => switch (project.status) {
-        'OPEN' => Colors.green,
-        'IN_PROGRESS' => Colors.blue,
-        'COMPLETED' => Colors.grey,
-        _ => Colors.orange,
-      };
-
-  String _statusLabel() => switch (project.status) {
-        'OPEN' => 'Aberto',
-        'IN_PROGRESS' => 'Em andamento',
-        'COMPLETED' => 'Concluído',
-        'CANCELLED' => 'Cancelado',
-        _ => project.status,
-      };
 
   @override
   Widget build(BuildContext context) {
@@ -173,123 +346,161 @@ class _ProjectCard extends StatelessWidget {
     final isAssigned = project.specialistId == user?.id;
     final isOpen = project.status == 'OPEN';
     final isInProgress = project.status == 'IN_PROGRESS';
-    final color = _statusColor();
 
-    return Card(
-      child: InkWell(
-        onTap: () => context.go('/projects/${project.id}'),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ─── Título + status ──────────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Text(
-                      project.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
+    final statusColor = AppTheme.statusColor(project.status);
+    final statusBg = AppTheme.statusBg(project.status);
+    final statusLabel = AppTheme.statusLabel(project.status);
+
+    final hasActions = (isSpecialist && isOpen) ||
+        (isSpecialist && isAssigned && isInProgress) ||
+        (isCompany && (isOpen || isInProgress));
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 28,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: () => context.go('/projects/${project.id}'),
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // ─── Accent strip ────────────────────────────────────
+                Container(width: 4, color: statusColor),
+                // ─── Content ─────────────────────────────────────────
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Título + badge de status
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                project.title,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleSmall
+                                    ?.copyWith(
+                                      color: AppTheme.slate900,
+                                      height: 1.3,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: statusBg,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                statusLabel,
+                                style: TextStyle(
+                                  color: statusColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          project.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: AppTheme.slate500),
+                        ),
+                        const SizedBox(height: 12),
+                        // Meta info
+                        Wrap(
+                          spacing: 14,
+                          runSpacing: 4,
+                          children: [
+                            _MetaChip(
+                              icon: Icons.attach_money_rounded,
+                              label:
+                                  'R\$ ${project.budget.toStringAsFixed(0)}',
+                            ),
+                            _MetaChip(
+                              icon: Icons.calendar_today_rounded,
+                              label: project.deadline.substring(0, 10),
+                            ),
+                            if (project.milestones.isNotEmpty)
+                              _MetaChip(
+                                icon: Icons.flag_rounded,
+                                label:
+                                    '${project.milestones.length} milestones',
+                              ),
+                          ],
+                        ),
+                        // Ações contextuais
+                        if (hasActions) ...[
+                          const SizedBox(height: 12),
+                          Container(height: 1, color: AppTheme.slate100),
+                          const SizedBox(height: 10),
+                          Row(
+                            children: [
+                              if (isSpecialist && isOpen)
+                                _ActionButton(
+                                  icon: Icons.send_rounded,
+                                  label: 'Enviar proposta',
+                                  onTap: () => context
+                                      .go('/projects/${project.id}/bid'),
+                                ),
+                              if (isSpecialist && isAssigned && isInProgress)
+                                _ActionButton(
+                                  icon: Icons.view_kanban_rounded,
+                                  label: 'Ver Kanban',
+                                  onTap: () => context.go(
+                                      '/projects/${project.id}/kanban'),
+                                ),
+                              if (isCompany && isOpen)
+                                _ActionButton(
+                                  icon: Icons.group_rounded,
+                                  label: 'Ver propostas',
+                                  onTap: () => context.go(
+                                      '/projects/${project.id}/bids'),
+                                ),
+                              if (isCompany && isInProgress)
+                                _ActionButton(
+                                  icon: Icons.view_kanban_rounded,
+                                  label: 'Kanban',
+                                  onTap: () => context.go(
+                                      '/projects/${project.id}/kanban'),
+                                ),
+                            ],
                           ),
+                        ],
+                      ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: color.withOpacity(0.4)),
-                    ),
-                    child: Text(
-                      _statusLabel(),
-                      style: TextStyle(
-                          color: color,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                project.description,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant),
-              ),
-              const SizedBox(height: 12),
-
-              // ─── Métricas ─────────────────────────────────────────
-              Wrap(
-                spacing: 12,
-                runSpacing: 4,
-                children: [
-                  _MetaChip(
-                    icon: Icons.attach_money,
-                    label: 'R\$ ${project.budget.toStringAsFixed(0)}',
-                  ),
-                  _MetaChip(
-                    icon: Icons.calendar_today,
-                    label: project.deadline.substring(0, 10),
-                  ),
-                  if (project.milestones.isNotEmpty)
-                    _MetaChip(
-                      icon: Icons.flag_outlined,
-                      label: '${project.milestones.length} milestones',
-                    ),
-                ],
-              ),
-
-              // ─── Ações rápidas ────────────────────────────────────
-              if ((isSpecialist && isOpen) ||
-                  (isSpecialist && isAssigned && isInProgress) ||
-                  (isCompany && (isOpen || isInProgress))) ...[
-                const SizedBox(height: 12),
-                const Divider(height: 1),
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    if (isSpecialist && isOpen)
-                      _QuickAction(
-                        icon: Icons.send_outlined,
-                        label: 'Propor',
-                        onTap: () =>
-                            context.go('/projects/${project.id}/bid'),
-                      ),
-                    if (isSpecialist && isAssigned && isInProgress)
-                      _QuickAction(
-                        icon: Icons.view_kanban_outlined,
-                        label: 'Kanban',
-                        onTap: () =>
-                            context.go('/projects/${project.id}/kanban'),
-                      ),
-                    if (isCompany && isOpen)
-                      _QuickAction(
-                        icon: Icons.group_outlined,
-                        label: 'Ver propostas',
-                        onTap: () =>
-                            context.go('/projects/${project.id}/bids'),
-                      ),
-                    if (isCompany && isInProgress)
-                      _QuickAction(
-                        icon: Icons.view_kanban_outlined,
-                        label: 'Kanban',
-                        onTap: () =>
-                            context.go('/projects/${project.id}/kanban'),
-                      ),
-                  ],
                 ),
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -307,26 +518,29 @@ class _MetaChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon,
-            size: 14, color: Theme.of(context).colorScheme.outline),
+        Icon(icon, size: 13, color: AppTheme.slate400),
         const SizedBox(width: 4),
-        Text(label,
-            style: Theme.of(context)
-                .textTheme
-                .bodySmall
-                ?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: Theme.of(context)
+              .textTheme
+              .bodySmall
+              ?.copyWith(color: AppTheme.slate500),
+        ),
       ],
     );
   }
 }
 
-class _QuickAction extends StatelessWidget {
+class _ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  const _QuickAction(
-      {required this.icon, required this.label, required this.onTap});
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -335,20 +549,24 @@ class _QuickAction extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: AppTheme.brandLight,
+            borderRadius: BorderRadius.circular(8),
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon,
-                  size: 16, color: Theme.of(context).colorScheme.primary),
-              const SizedBox(width: 4),
+              Icon(icon, size: 14, color: AppTheme.brand),
+              const SizedBox(width: 5),
               Text(
                 label,
-                style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  color: AppTheme.brand,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),

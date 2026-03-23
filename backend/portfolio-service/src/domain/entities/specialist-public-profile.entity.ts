@@ -9,6 +9,9 @@ export class SpecialistPublicProfile {
   @Column({ unique: true })
   userId: string;
 
+  @Column({ nullable: true })
+  name: string;
+
   @Column('text', { nullable: true })
   bio: string;
 

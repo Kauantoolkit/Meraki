@@ -1,3 +1,35 @@
+// ─── Project history (RF11) ──────────────────────────────────────────────────
+
+class ProjectHistoryModel {
+  final String id;
+  final String projectId;
+  final String? specialistId;
+  final String action;
+  final String? description;
+  final String createdAt;
+
+  const ProjectHistoryModel({
+    required this.id,
+    required this.projectId,
+    this.specialistId,
+    required this.action,
+    this.description,
+    required this.createdAt,
+  });
+
+  factory ProjectHistoryModel.fromJson(Map<String, dynamic> json) =>
+      ProjectHistoryModel(
+        id: json['id'] as String,
+        projectId: json['projectId'] as String,
+        specialistId: json['specialistId'] as String?,
+        action: json['action'] as String? ?? '',
+        description: json['description'] as String?,
+        createdAt: json['createdAt'] as String? ?? '',
+      );
+}
+
+// ─── Kanban ───────────────────────────────────────────────────────────────────
+
 class KanbanCardModel {
   final String id;
   final String title;

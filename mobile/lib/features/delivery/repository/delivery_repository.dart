@@ -28,12 +28,13 @@ class DeliveryRepository {
     return DeliveryModel.fromJson(response.data!);
   }
 
-  Future<List<DeliveryModel>> getProjectHistory(String projectId) async {
+  Future<List<ProjectHistoryModel>> getProjectHistory(String projectId) async {
     final response = await _apiClient.get<List<dynamic>>(
       '/projects/$projectId/history',
     );
     return (response.data ?? [])
-        .map((e) => DeliveryModel.fromJson(e as Map<String, dynamic>))
+        .map((e) =>
+            ProjectHistoryModel.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 }

@@ -113,6 +113,12 @@ export class PublicProfileController {
     private readonly getCompanyProfileUseCase: GetCompanyProfileUseCase,
   ) {}
 
+  @Get('specialists')
+  @ApiOperation({ summary: 'Listar todos os especialistas (RF12)' })
+  listSpecialists() {
+    return this.getPublicProfileUseCase.getAllSpecialists();
+  }
+
   @Get('specialist/:specialistId')
   @ApiOperation({ summary: 'Perfil público do especialista (RF12)' })
   getSpecialist(@Param('specialistId') specialistId: string) {

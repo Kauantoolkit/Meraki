@@ -15,6 +15,10 @@ export class SpecialistProfileRepository implements ISpecialistProfileRepository
     return this.repo.findOne({ where: { userId } });
   }
 
+  findAll(): Promise<SpecialistPublicProfile[]> {
+    return this.repo.find({ order: { rating: 'DESC', completedProjects: 'DESC' } });
+  }
+
   save(profile: SpecialistPublicProfile): Promise<SpecialistPublicProfile> {
     return this.repo.save(profile);
   }

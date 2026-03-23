@@ -61,3 +61,38 @@ final portfolioViewModelProvider =
     AsyncNotifierProvider<PortfolioViewModel, PortfolioModel>(
   PortfolioViewModel.new,
 );
+
+// ─── Specialists list ─────────────────────────────────────────────────────────
+
+class SpecialistsListViewModel
+    extends AsyncNotifier<List<SpecialistSummaryModel>> {
+  @override
+  Future<List<SpecialistSummaryModel>> build() =>
+      ref.read(portfolioRepositoryProvider).listSpecialists();
+
+  Future<void> refresh() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(portfolioRepositoryProvider).listSpecialists(),
+    );
+  }
+}
+
+final specialistsListViewModelProvider = AsyncNotifierProvider<
+    SpecialistsListViewModel, List<SpecialistSummaryModel>>(
+  SpecialistsListViewModel.new,
+);
+
+// ─── Company public profile (RF13) ───────────────────────────────────────────
+
+class CompanyProfileViewModel
+    extends FamilyAsyncNotifier<CompanyProfileModel, String> {
+  @override
+  Future<CompanyProfileModel> build(String companyId) =>
+      ref.read(portfolioRepositoryProvider).getCompanyProfile(companyId);
+}
+
+final companyProfileViewModelProvider = AsyncNotifierProviderFamily<
+    CompanyProfileViewModel, CompanyProfileModel, String>(
+  CompanyProfileViewModel.new,
+);

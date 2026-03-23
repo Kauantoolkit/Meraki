@@ -36,4 +36,20 @@ class PortfolioRepository {
       data: dto,
     );
   }
+
+  Future<List<SpecialistSummaryModel>> listSpecialists() async {
+    final response =
+        await _apiClient.get<List<dynamic>>('/portfolio/specialists');
+    final list = response.data ?? [];
+    return list
+        .map((e) =>
+            SpecialistSummaryModel.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<CompanyProfileModel> getCompanyProfile(String companyId) async {
+    final response = await _apiClient
+        .get<Map<String, dynamic>>('/portfolio/company/$companyId');
+    return CompanyProfileModel.fromJson(response.data!);
+  }
 }

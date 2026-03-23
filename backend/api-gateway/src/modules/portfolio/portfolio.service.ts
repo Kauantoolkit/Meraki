@@ -23,6 +23,10 @@ export class PortfolioService {
     return this.proxy.post(`${PORTFOLIO_URL}/api/portfolio/me/certifications`, dto, this.proxy.authHeaders(token));
   }
 
+  listSpecialists(token: string) {
+    return this.proxy.get(`${PORTFOLIO_URL}/api/profiles/specialists`, this.proxy.authHeaders(token));
+  }
+
   getSpecialistProfile(specialistId: string, token: string) {
     return this.proxy.get(`${PORTFOLIO_URL}/api/profiles/specialist/${specialistId}`, this.proxy.authHeaders(token));
   }

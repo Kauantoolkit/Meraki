@@ -45,6 +45,12 @@ export class PortfolioController {
     return this.portfolioService.addCertification(body, this.token(req));
   }
 
+  @Get('specialists')
+  @ApiOperation({ summary: 'Listar todos os especialistas' })
+  listSpecialists(@Req() req: Request) {
+    return this.portfolioService.listSpecialists(this.token(req));
+  }
+
   @Get('specialist/:specialistId')
   @ApiOperation({ summary: 'Perfil público do especialista (RF12)' })
   getSpecialistProfile(@Param('specialistId') specialistId: string, @Req() req: Request) {

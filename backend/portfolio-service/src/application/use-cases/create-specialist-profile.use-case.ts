@@ -11,11 +11,11 @@ export class CreateSpecialistProfileUseCase {
     private readonly profileFactory: SpecialistProfileFactory,
   ) {}
 
-  async execute(userId: string): Promise<void> {
+  async execute(userId: string, name?: string): Promise<void> {
     const existing = await this.profileRepo.findByUserId(userId);
     if (existing) return;
 
-    const profile = this.profileFactory.createInitial(userId);
+    const profile = this.profileFactory.createInitial(userId, name);
     await this.profileRepo.save(profile);
     this.logger.log(`Perfil público criado para especialista ${userId}`);
   }

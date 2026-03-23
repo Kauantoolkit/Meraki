@@ -80,3 +80,23 @@ final deliverMilestoneViewModelProvider =
     NotifierProvider<DeliverMilestoneViewModel, DeliverMilestoneState>(
   DeliverMilestoneViewModel.new,
 );
+
+// ─── Project History (RF11) ──────────────────────────────────────────────────
+
+class ProjectHistoryViewModel
+    extends AsyncNotifier<List<ProjectHistoryModel>> {
+  @override
+  Future<List<ProjectHistoryModel>> build() async => [];
+
+  Future<void> load(String projectId) async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(
+      () => ref.read(deliveryRepositoryProvider).getProjectHistory(projectId),
+    );
+  }
+}
+
+final projectHistoryViewModelProvider =
+    AsyncNotifierProvider<ProjectHistoryViewModel, List<ProjectHistoryModel>>(
+  ProjectHistoryViewModel.new,
+);

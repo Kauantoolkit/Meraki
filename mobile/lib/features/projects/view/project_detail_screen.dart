@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../features/auth/viewmodel/auth_viewmodel.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_view.dart';
@@ -12,7 +13,8 @@ class ProjectDetailScreen extends ConsumerStatefulWidget {
   const ProjectDetailScreen({super.key, required this.projectId});
 
   @override
-  ConsumerState<ProjectDetailScreen> createState() => _ProjectDetailScreenState();
+  ConsumerState<ProjectDetailScreen> createState() =>
+      _ProjectDetailScreenState();
 }
 
 class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
@@ -33,6 +35,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
     final isSpecialist = user?.isSpecialist == true;
     final isCompany = user?.isCompany == true;
     final isOpen = project?.status == 'OPEN';
+    final isInProgress = project?.status == 'IN_PROGRESS';
     final isAssigned = project != null && project.specialistId == user?.id;
 
     return Scaffold(
@@ -40,25 +43,33 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
         title: const Text('Projeto'),
         actions: [
           if (projectAsync.hasValue) ...[
+            // ─── Histórico (RF11) ────────────────────────────────────
+            if (isInProgress || project?.status == 'COMPLETED')
+              IconButton(
+                icon: const Icon(Icons.history_rounded),
+                tooltip: 'Histórico de entregas',
+                onPressed: () =>
+                    context.go('/projects/${widget.projectId}/history'),
+              ),
             if (isSpecialist && isOpen)
               TextButton.icon(
                 onPressed: () =>
                     context.go('/projects/${widget.projectId}/bid'),
-                icon: const Icon(Icons.send_outlined),
+                icon: const Icon(Icons.send_rounded, size: 16),
                 label: const Text('Propor'),
               ),
             if (isSpecialist && isAssigned)
               TextButton.icon(
                 onPressed: () =>
                     context.go('/projects/${widget.projectId}/kanban'),
-                icon: const Icon(Icons.view_kanban_outlined),
+                icon: const Icon(Icons.view_kanban_rounded, size: 16),
                 label: const Text('Kanban'),
               ),
-            if (isCompany && (isOpen || project?.status == 'IN_PROGRESS'))
+            if (isCompany && (isOpen || isInProgress))
               TextButton.icon(
                 onPressed: () =>
                     context.go('/projects/${widget.projectId}/bids'),
-                icon: const Icon(Icons.group_outlined),
+                icon: const Icon(Icons.group_rounded, size: 16),
                 label: const Text('Propostas'),
               ),
           ],
@@ -78,6 +89,8 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
   }
 }
 
+// ─── Content ──────────────────────────────────────────────────────────────────
+
 class _ProjectContent extends ConsumerWidget {
   final ProjectModel project;
   final dynamic user;
@@ -85,25 +98,16 @@ class _ProjectContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statusColor = switch (project.status) {
-      'OPEN' => Colors.green,
-      'IN_PROGRESS' => Colors.blue,
-      'COMPLETED' => Colors.grey,
-      _ => Colors.orange,
-    };
-    final statusLabel = switch (project.status) {
-      'OPEN' => 'Aberto',
-      'IN_PROGRESS' => 'Em andamento',
-      'COMPLETED' => 'Concluído',
-      _ => project.status,
-    };
+    final statusColor = AppTheme.statusColor(project.status);
+    final statusBg = AppTheme.statusBg(project.status);
+    final statusLabel = AppTheme.statusLabel(project.status);
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 40),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ─── Header ───────────────────────────────────────────────────
+          // ─── Header ──────────────────────────────────────────────────
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -113,74 +117,143 @@ class _ProjectContent extends ConsumerWidget {
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
               ),
-              const SizedBox(width: 8),
-              Chip(
-                label: Text(statusLabel),
-                labelStyle: TextStyle(color: statusColor, fontSize: 12),
-                side: BorderSide(color: statusColor),
-                backgroundColor: Colors.transparent,
+              const SizedBox(width: 10),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: statusBg,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  statusLabel,
+                  style: TextStyle(
+                    color: statusColor,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          _InfoRow(
-            Icons.attach_money,
-            'R\$ ${project.budget.toStringAsFixed(2)}',
-            label: 'Orçamento',
-          ),
-          _InfoRow(
-            Icons.calendar_today,
-            project.deadline.substring(0, 10),
-            label: 'Prazo',
-          ),
-          if (project.specialistId != null)
-            _InfoRow(
-              Icons.person_outline,
-              'Especialista contratado',
-              label: 'Status',
+          const SizedBox(height: 14),
+
+          // ─── Meta info ───────────────────────────────────────────────
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
+            child: Column(
+              children: [
+                _InfoRow(
+                  Icons.attach_money_rounded,
+                  'R\$ ${project.budget.toStringAsFixed(2)}',
+                  label: 'Orçamento',
+                ),
+                const Divider(height: 12),
+                _InfoRow(
+                  Icons.calendar_today_rounded,
+                  project.deadline.substring(0, 10),
+                  label: 'Prazo',
+                ),
+                if (project.specialistId != null) ...[
+                  const Divider(height: 12),
+                  _InfoRow(
+                    Icons.person_rounded,
+                    'Especialista contratado',
+                    label: 'Status',
+                    valueColor: AppTheme.success,
+                  ),
+                ],
+              ],
+            ),
+          ),
 
-          // ─── Descrição ────────────────────────────────────────────────
-          const SizedBox(height: 20),
-          Text('Descrição', style: Theme.of(context).textTheme.titleMedium),
-          const Divider(height: 12),
-          Text(project.description,
-              style: Theme.of(context).textTheme.bodyMedium),
+          // ─── Descrição ───────────────────────────────────────────────
+          const SizedBox(height: 24),
+          _SectionTitle('Descrição'),
+          const SizedBox(height: 8),
+          Text(
+            project.description,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: AppTheme.slate700, height: 1.6),
+          ),
 
-          // ─── Requisitos ───────────────────────────────────────────────
+          // ─── Requisitos ──────────────────────────────────────────────
           if (project.requirements.isNotEmpty) ...[
-            const SizedBox(height: 20),
-            Text('Requisitos', style: Theme.of(context).textTheme.titleMedium),
-            const Divider(height: 12),
+            const SizedBox(height: 24),
+            _SectionTitle('Requisitos'),
+            const SizedBox(height: 8),
             ...project.requirements.map(
               (r) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(Icons.check_circle_outline,
-                        size: 16,
-                        color: Theme.of(context).colorScheme.primary),
+                    const Icon(Icons.check_circle_rounded,
+                        size: 16, color: AppTheme.success),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(r)),
+                    Expanded(
+                      child: Text(r,
+                          style:
+                              Theme.of(context).textTheme.bodyMedium),
+                    ),
                   ],
                 ),
               ),
             ),
           ],
 
-          // ─── Milestones ───────────────────────────────────────────────
+          // ─── Milestones ──────────────────────────────────────────────
           if (project.milestones.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Text('Milestones', style: Theme.of(context).textTheme.titleMedium),
-            const Divider(height: 12),
-            ...project.milestones.map(
-              (m) => _MilestoneTile(milestone: m, project: project, user: user),
-            ),
+            _SectionTitle('Milestones'),
+            const SizedBox(height: 8),
+            // Determina o índice da milestone desbloqueada (RN04)
+            ...List.generate(project.milestones.length, (i) {
+              final m = project.milestones[i];
+              // Uma milestone está bloqueada se a anterior não foi aprovada
+              final previousApproved = i == 0 ||
+                  project.milestones[i - 1].status == 'APPROVED';
+              return _MilestoneTile(
+                milestone: m,
+                project: project,
+                user: user,
+                isBlocked: !previousApproved,
+              );
+            }),
           ],
-          const SizedBox(height: 24),
         ],
       ),
+    );
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+class _SectionTitle extends StatelessWidget {
+  final String text;
+  const _SectionTitle(this.text);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context)
+          .textTheme
+          .titleMedium
+          ?.copyWith(color: AppTheme.slate900),
     );
   }
 }
@@ -189,113 +262,179 @@ class _InfoRow extends StatelessWidget {
   final IconData icon;
   final String value;
   final String label;
-  const _InfoRow(this.icon, this.value, {required this.label});
+  final Color? valueColor;
+  const _InfoRow(this.icon, this.value,
+      {required this.label, this.valueColor});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: Theme.of(context).colorScheme.outline),
-          const SizedBox(width: 6),
-          Text(label,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: Theme.of(context).colorScheme.outline)),
-          const SizedBox(width: 6),
-          Text(value,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w500)),
-        ],
-      ),
+    return Row(
+      children: [
+        Icon(icon, size: 15, color: AppTheme.slate400),
+        const SizedBox(width: 6),
+        Text(label,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: AppTheme.slate400)),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: valueColor,
+                ),
+            textAlign: TextAlign.end,
+          ),
+        ),
+      ],
     );
   }
 }
+
+// ─── Milestone tile ───────────────────────────────────────────────────────────
 
 class _MilestoneTile extends ConsumerWidget {
   final MilestoneModel milestone;
   final ProjectModel project;
   final dynamic user;
-  const _MilestoneTile(
-      {required this.milestone, required this.project, required this.user});
+  final bool isBlocked; // RN04: milestone não sequencial
+  const _MilestoneTile({
+    required this.milestone,
+    required this.project,
+    required this.user,
+    required this.isBlocked,
+  });
 
-  Color _statusColor() => switch (milestone.status) {
-        'APPROVED' => Colors.green,
-        'IN_PROGRESS' => Colors.blue,
-        'SUBMITTED' => Colors.orange,
-        'REJECTED' => Colors.red,
-        _ => Colors.grey,
-      };
-
-  String _statusLabel() => switch (milestone.status) {
-        'APPROVED' => 'Aprovado',
-        'IN_PROGRESS' => 'Em andamento',
-        'SUBMITTED' => 'Enviado',
-        'REJECTED' => 'Rejeitado',
-        'PENDING' => 'Pendente',
-        _ => milestone.status,
-      };
+  Color _statusColor() => AppTheme.statusColor(milestone.status);
+  Color _statusBg() => AppTheme.statusBg(milestone.status);
+  String _statusLabel() => AppTheme.statusLabel(milestone.status);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final action = _buildAction(context, ref);
-    return Card(
-      margin: const EdgeInsets.only(bottom: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            CircleAvatar(
-              radius: 18,
-              backgroundColor: _statusColor(),
-              child: Text(
-                '${milestone.order}',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 13),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(milestone.title,
-                      style:
-                          const TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 2),
-                  Row(
+    final color = _statusColor();
+    final bg = _statusBg();
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Status accent strip
+              Container(width: 4, color: color),
+              // Content
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Row(
                     children: [
-                      Text(
-                        'R\$ ${milestone.value.toStringAsFixed(2)}',
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                      const SizedBox(width: 8),
+                      // Order circle
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
-                          color: _statusColor().withOpacity(0.15),
-                          borderRadius: BorderRadius.circular(4),
+                          color: bg,
+                          shape: BoxShape.circle,
                         ),
-                        child: Text(
-                          _statusLabel(),
-                          style: TextStyle(
-                              color: _statusColor(), fontSize: 11),
+                        child: Center(
+                          child: Text(
+                            '${milestone.order}',
+                            style: TextStyle(
+                              color: color,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 13,
+                            ),
+                          ),
                         ),
                       ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              milestone.title,
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14),
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Text(
+                                  'R\$ ${milestone.value.toStringAsFixed(2)}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                          color: AppTheme.slate500),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 7, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: bg,
+                                    borderRadius:
+                                        BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    _statusLabel(),
+                                    style: TextStyle(
+                                        color: color, fontSize: 11,
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            // RN04: aviso de bloqueio sequencial
+                            if (isBlocked) ...[
+                              const SizedBox(height: 6),
+                              Row(
+                                children: [
+                                  Icon(Icons.lock_rounded,
+                                      size: 12,
+                                      color: AppTheme.slate400),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Aguardando aprovação da anterior',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: AppTheme.slate400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (action != null) ...[
+                        const SizedBox(width: 8),
+                        action,
+                      ],
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-            if (action != null) action,
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -306,35 +445,79 @@ class _MilestoneTile extends ConsumerWidget {
     final isCompany = user?.isCompany == true;
     final isAssigned = project.specialistId == user?.id;
 
+    // Especialista: só pode entregar se não estiver bloqueada (RN04)
     if (isSpecialist && isAssigned && milestone.status == 'IN_PROGRESS') {
-      return FilledButton.tonal(
-        onPressed: () => context.go(
-          '/projects/${project.id}/milestones/${milestone.id}/deliver',
+      return Tooltip(
+        message: isBlocked ? 'Conclua a milestone anterior primeiro' : '',
+        child: FilledButton.tonal(
+          onPressed: isBlocked
+              ? null
+              : () => context.go(
+                    '/projects/${project.id}/milestones/${milestone.id}/deliver',
+                  ),
+          style: FilledButton.styleFrom(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          ),
+          child: const Text('Entregar', style: TextStyle(fontSize: 13)),
         ),
-        child: const Text('Entregar'),
       );
     }
+
+    // Empresa: aprovar/rejeitar milestone submetida
     if (isCompany && milestone.status == 'SUBMITTED') {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            icon: const Icon(Icons.check_circle, color: Colors.green),
+          _ActionIcon(
+            icon: Icons.check_circle_rounded,
+            color: AppTheme.success,
             tooltip: 'Aprovar',
-            onPressed: () => ref
+            onTap: () => ref
                 .read(projectDetailViewModelProvider.notifier)
                 .updateMilestone(milestone.id, 'approve'),
           ),
-          IconButton(
-            icon: const Icon(Icons.cancel, color: Colors.red),
+          const SizedBox(width: 4),
+          _ActionIcon(
+            icon: Icons.cancel_rounded,
+            color: AppTheme.danger,
             tooltip: 'Rejeitar',
-            onPressed: () => ref
+            onTap: () => ref
                 .read(projectDetailViewModelProvider.notifier)
                 .updateMilestone(milestone.id, 'reject'),
           ),
         ],
       );
     }
+
     return null;
+  }
+}
+
+class _ActionIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String tooltip;
+  final VoidCallback onTap;
+  const _ActionIcon({
+    required this.icon,
+    required this.color,
+    required this.tooltip,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(icon, color: color, size: 24),
+        ),
+      ),
+    );
   }
 }

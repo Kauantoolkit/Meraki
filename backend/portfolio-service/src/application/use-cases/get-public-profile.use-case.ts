@@ -15,6 +15,10 @@ export class GetPublicProfileUseCase {
     return profile;
   }
 
+  getAllSpecialists() {
+    return this.profileRepo.findAll();
+  }
+
   getWorkHistory(specialistId: string) {
     return this.historyRepo.findBySpecialist(specialistId);
   }

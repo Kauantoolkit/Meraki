@@ -2,6 +2,7 @@ class WorkHistoryModel {
   final String id;
   final String projectId;
   final String projectTitle;
+  final String? companyId;
   final String companyName;
   final double earnedAmount;
   final String completedAt;
@@ -10,6 +11,7 @@ class WorkHistoryModel {
     required this.id,
     required this.projectId,
     required this.projectTitle,
+    this.companyId,
     required this.companyName,
     required this.earnedAmount,
     required this.completedAt,
@@ -20,9 +22,46 @@ class WorkHistoryModel {
         id: json['id'] as String,
         projectId: json['projectId'] as String,
         projectTitle: json['projectTitle'] as String? ?? '',
+        companyId: json['companyId'] as String?,
         companyName: json['companyName'] as String? ?? '',
-        earnedAmount: double.parse((json['earnedAmount'] ?? 0).toString()),
+        earnedAmount: double.parse((json['earnedAmount'] ?? json['amountEarned'] ?? 0).toString()),
         completedAt: json['completedAt'] as String? ?? '',
+      );
+}
+
+// ─── Company public profile (RF13) ───────────────────────────────────────────
+
+class CompanyProfileModel {
+  final String id;
+  final String userId;
+  final String companyName;
+  final String? description;
+  final String? website;
+  final String? sector;
+  final int totalProjectsCreated;
+  final double rating;
+
+  const CompanyProfileModel({
+    required this.id,
+    required this.userId,
+    required this.companyName,
+    this.description,
+    this.website,
+    this.sector,
+    required this.totalProjectsCreated,
+    required this.rating,
+  });
+
+  factory CompanyProfileModel.fromJson(Map<String, dynamic> json) =>
+      CompanyProfileModel(
+        id: json['id'] as String,
+        userId: json['userId'] as String,
+        companyName: json['companyName'] as String? ?? '',
+        description: json['description'] as String?,
+        website: json['website'] as String?,
+        sector: json['sector'] as String?,
+        totalProjectsCreated: json['totalProjectsCreated'] as int? ?? 0,
+        rating: double.parse((json['rating'] ?? 0).toString()),
       );
 }
 
@@ -122,5 +161,41 @@ class PortfolioModel {
                 ?.map((e) => ReviewModel.fromJson(e as Map<String, dynamic>))
                 .toList() ??
             [],
+      );
+}
+
+// ─── Resumo do especialista para listagem ─────────────────────────────────────
+
+class SpecialistSummaryModel {
+  final String id;
+  final String userId;
+  final String name;
+  final String bio;
+  final List<String> skills;
+  final double rating;
+  final int completedProjects;
+
+  const SpecialistSummaryModel({
+    required this.id,
+    required this.userId,
+    required this.name,
+    required this.bio,
+    required this.skills,
+    required this.rating,
+    required this.completedProjects,
+  });
+
+  factory SpecialistSummaryModel.fromJson(Map<String, dynamic> json) =>
+      SpecialistSummaryModel(
+        id: json['id'] as String,
+        userId: json['userId'] as String,
+        name: json['name'] as String? ?? 'Especialista',
+        bio: json['bio'] as String? ?? '',
+        skills: (json['skills'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            [],
+        rating: double.parse((json['rating'] ?? 0).toString()),
+        completedProjects: json['completedProjects'] as int? ?? 0,
       );
 }
