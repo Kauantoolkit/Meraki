@@ -22,7 +22,7 @@ export class DeliveryController {
 
   @Post()
   @ApiOperation({ summary: 'Submeter entrega de milestone (especialista)' })
-  submit(@Body() body: SubmitDeliveryDto, @CurrentUser('id') specialistId: string) {
+  submit(@Body() body: SubmitDeliveryDto, @CurrentUser('specialistId') specialistId: string) {
     return this.submitDelivery.execute(body, specialistId);
   }
 

@@ -27,7 +27,7 @@ export class BidController {
 
   @Post()
   @ApiOperation({ summary: 'Submeter proposta — valida RN02 (1 proposta ativa/projeto)' })
-  submit(@Body() dto: SubmitBidDto, @CurrentUser('id') specialistId: string) {
+  submit(@Body() dto: SubmitBidDto, @CurrentUser('specialistId') specialistId: string) {
     return this.submitBid.execute(dto, specialistId);
   }
 
@@ -35,16 +35,15 @@ export class BidController {
   @ApiOperation({ summary: 'Listar propostas (por projectId ou por especialista autenticado)' })
   findAll(
     @Query('projectId') projectId?: string,
-    @CurrentUser('id') userId?: string,
-    @CurrentUser('userType') userType?: string,
+    @CurrentUser('specialistId') specialistId?: string,
   ) {
     if (projectId) return this.getBids.findByProject(projectId);
-    return this.getBids.findBySpecialist(userId);
+    return this.getBids.findBySpecialist(specialistId);
   }
 
   @Get('my-bids')
   @ApiOperation({ summary: 'Minhas propostas (especialista autenticado)' })
-  myBids(@CurrentUser('id') specialistId: string) {
+  myBids(@CurrentUser('specialistId') specialistId: string) {
     return this.getBids.findBySpecialist(specialistId);
   }
 
@@ -71,7 +70,7 @@ export class BidController {
   @Put(':id/withdraw')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Retirar proposta (especialista dono)' })
-  withdraw(@Param('id') id: string, @CurrentUser('id') specialistId: string) {
+  withdraw(@Param('id') id: string, @CurrentUser('specialistId') specialistId: string) {
     return this.withdrawBid.execute(id, specialistId);
   }
 }

@@ -1,0 +1,23 @@
+http:
+  middlewares:
+    # Adiciona headers de segurança em todas as respostas
+    secure-headers:
+      headers:
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        stsPreload: true
+        forceSTSHeader: true
+        contentTypeNosniff: true
+        browserXssFilter: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        customResponseHeaders:
+          X-Frame-Options: "DENY"
+          X-Content-Type-Options: "nosniff"
+          Permissions-Policy: "camera=(), microphone=(), geolocation=()"
+
+    # Rate limiting: 100 req/s em média, burst de 200
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: "1s"

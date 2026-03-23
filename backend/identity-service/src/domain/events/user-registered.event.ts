@@ -7,6 +7,7 @@ export interface UserRegisteredPayload {
   userType: 'COMPANY' | 'SPECIALIST';
   companyId?: string;
   specialistId?: string;
+  companyName?: string;
 }
 
 export class UserRegisteredEvent extends BaseEvent {

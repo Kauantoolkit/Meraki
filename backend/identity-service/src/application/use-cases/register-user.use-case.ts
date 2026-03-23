@@ -75,6 +75,7 @@ export class RegisterUserUseCase {
       userType: user.userType as 'COMPANY' | 'SPECIALIST',
       companyId,
       specialistId,
+      companyName: dto.companyName,
     });
     await this.eventPublisher.publishUserRegistered(event.payload);
 

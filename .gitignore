@@ -1,7 +1,9 @@
 # ─── Variáveis de ambiente ────────────────────────────────────────────────────
-# Ignora qualquer .env real em qualquer nível; .env.example é permitido
+# Ignora todos os arquivos .env e variantes; .env.example é explicitamente permitido
 **/.env
+**/.env.*
 !**/.env.example
+!**/.env.*.example
 
 # ─── Node.js ──────────────────────────────────────────────────────────────────
 **/node_modules/
@@ -39,6 +41,13 @@ mobile/web/
 Thumbs.db
 desktop.ini
 *.log
+
+# ─── Produção ─────────────────────────────────────────────────────────────────
+# Certificados SSL gerados pelo Traefik/Let's Encrypt
+backend/traefik/letsencrypt/
+
+# Backups dos bancos (ficam no volume Docker, não no repo)
+backend/backups/
 
 # ─── Claude Code ──────────────────────────────────────────────────────────────
 .claude/settings.local.json

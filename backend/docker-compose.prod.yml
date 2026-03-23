@@ -1,0 +1,459 @@
+services:
+  # ─── REVERSE PROXY + SSL ───────────────────────────────────────────────────
+  traefik:
+    image: traefik:v3.0
+    container_name: meraki-traefik
+    restart: unless-stopped
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.network=meraki-net"
+      - "--providers.file.filename=/etc/traefik/dynamic.yml"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.http.redirections.entrypoint.permanent=true"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.letsencrypt.acme.tlschallenge=true"
+      - "--log.level=INFO"
+      - "--accesslog=true"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/dynamic.yml:/etc/traefik/dynamic.yml:ro
+      - traefik-certs:/letsencrypt
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ─── DATABASES (sem portas expostas em produção) ───────────────────────────
+  identity-db:
+    image: postgres:15-alpine
+    container_name: meraki-identity-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${IDENTITY_DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - identity-db:/var/lib/postgresql/data
+    networks:
+      - meraki-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  project-db:
+    image: postgres:15-alpine
+    container_name: meraki-project-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PROJECT_DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - project-db:/var/lib/postgresql/data
+    networks:
+      - meraki-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  bidding-db:
+    image: postgres:15-alpine
+    container_name: meraki-bidding-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${BIDDING_DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - bidding-db:/var/lib/postgresql/data
+    networks:
+      - meraki-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  delivery-db:
+    image: postgres:15-alpine
+    container_name: meraki-delivery-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DELIVERY_DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - delivery-db:/var/lib/postgresql/data
+    networks:
+      - meraki-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  payment-db:
+    image: postgres:15-alpine
+    container_name: meraki-payment-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PAYMENT_DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - payment-db:/var/lib/postgresql/data
+    networks:
+      - meraki-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  portfolio-db:
+    image: postgres:15-alpine
+    container_name: meraki-portfolio-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${PORTFOLIO_DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - portfolio-db:/var/lib/postgresql/data
+    networks:
+      - meraki-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ─── RABBITMQ (management UI apenas internamente) ──────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: meraki-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    networks:
+      - meraki-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ─── MICROSERVIÇOS ─────────────────────────────────────────────────────────
+  identity-service:
+    build: ./identity-service
+    container_name: meraki-identity-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: identity-db
+      DB_PORT: 5432
+      DB_NAME: ${IDENTITY_DB_NAME}
+      DB_USERNAME: ${DB_USER}
+      DB_PASSWORD: ${DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: meraki-api-gateway
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET}
+      IDENTITY_SERVICE_URL: http://identity-service:3001
+      PROJECT_SERVICE_URL: http://project-service:3002
+      BIDDING_SERVICE_URL: http://bidding-service:3003
+      DELIVERY_SERVICE_URL: http://delivery-service:3004
+      PAYMENT_SERVICE_URL: http://payment-service:3005
+      PORTFOLIO_SERVICE_URL: http://portfolio-service:3006
+    depends_on:
+      - identity-service
+      - project-service
+      - bidding-service
+      - delivery-service
+      - payment-service
+      - portfolio-service
+    networks:
+      - meraki-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.api.middlewares=secure-headers@file,rate-limit@file"
+      - "traefik.http.services.api.loadbalancer.server.port=3000"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  project-service:
+    build: ./project-service
+    container_name: meraki-project-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3002
+      DB_HOST: project-db
+      DB_PORT: 5432
+      DB_NAME: ${PROJECT_DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      project-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  bidding-service:
+    build: ./bidding-service
+    container_name: meraki-bidding-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3003
+      DB_HOST: bidding-db
+      DB_PORT: 5432
+      DB_NAME: ${BIDDING_DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      bidding-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  delivery-service:
+    build: ./delivery-service
+    container_name: meraki-delivery-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      DB_HOST: delivery-db
+      DB_PORT: 5432
+      DB_NAME: ${DELIVERY_DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      delivery-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  payment-service:
+    build: ./payment-service
+    container_name: meraki-payment-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3005
+      DB_HOST: payment-db
+      DB_PORT: 5432
+      DB_NAME: ${PAYMENT_DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+      PLATFORM_FEE_RATE: ${PLATFORM_FEE_RATE}
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  portfolio-service:
+    build: ./portfolio-service
+    container_name: meraki-portfolio-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3006
+      DB_HOST: portfolio-db
+      DB_PORT: 5432
+      DB_NAME: ${PORTFOLIO_DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      portfolio-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  # ─── BACKUP AUTOMÁTICO DOS BANCOS ──────────────────────────────────────────
+  # Roda pg_dump de todos os 6 bancos todo dia às 02:00
+  # Mantém os últimos BACKUP_RETENTION_DAYS dias (padrão: 7)
+  db-backup:
+    image: postgres:15-alpine
+    container_name: meraki-db-backup
+    restart: unless-stopped
+    entrypoint: >
+      sh -c "
+        echo '0 2 * * * /scripts/backup.sh >> /var/log/backup.log 2>&1' > /etc/crontabs/root &&
+        crond -f -l 6
+      "
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      IDENTITY_DB_NAME: ${IDENTITY_DB_NAME}
+      PROJECT_DB_NAME: ${PROJECT_DB_NAME}
+      BIDDING_DB_NAME: ${BIDDING_DB_NAME}
+      DELIVERY_DB_NAME: ${DELIVERY_DB_NAME}
+      PAYMENT_DB_NAME: ${PAYMENT_DB_NAME}
+      PORTFOLIO_DB_NAME: ${PORTFOLIO_DB_NAME}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
+    volumes:
+      - ./scripts/backup.sh:/scripts/backup.sh:ro
+      - db-backups:/backups
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      project-db:
+        condition: service_healthy
+      bidding-db:
+        condition: service_healthy
+      delivery-db:
+        condition: service_healthy
+      payment-db:
+        condition: service_healthy
+      portfolio-db:
+        condition: service_healthy
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  meraki-net:
+    driver: bridge
+
+volumes:
+  identity-db:
+  project-db:
+  bidding-db:
+  delivery-db:
+  payment-db:
+  portfolio-db:
+  rabbitmq:
+  traefik-certs:
+  db-backups:

@@ -29,7 +29,7 @@ export class ProjectController {
 
   @Post()
   @ApiOperation({ summary: 'Criar projeto (empresa)' })
-  create(@Body() dto: CreateProjectDto, @CurrentUser('id') companyId: string) {
+  create(@Body() dto: CreateProjectDto, @CurrentUser('companyId') companyId: string) {
     return this.createProject.execute(dto, companyId);
   }
 
@@ -42,12 +42,13 @@ export class ProjectController {
     @Query('status') status?: ProjectStatus,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
-    @CurrentUser('id') userId?: string,
     @CurrentUser('userType') userType?: string,
+    @CurrentUser('companyId') companyId?: string,
+    @CurrentUser('specialistId') specialistId?: string,
   ) {
     const filter: any = { status, page, limit };
-    if (userType === 'COMPANY') filter.companyId = userId;
-    if (userType === 'SPECIALIST') filter.specialistId = userId;
+    if (userType === 'COMPANY') filter.companyId = companyId;
+    if (userType === 'SPECIALIST') filter.specialistId = specialistId;
     return this.getProjects.execute(filter);
   }
 
@@ -62,7 +63,7 @@ export class ProjectController {
   update(
     @Param('id') id: string,
     @Body() dto: UpdateProjectDto,
-    @CurrentUser('id') companyId: string,
+    @CurrentUser('companyId') companyId: string,
   ) {
     return this.updateProject.execute(id, dto, companyId);
   }
@@ -70,7 +71,7 @@ export class ProjectController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Cancelar projeto (empresa dona)' })
-  cancel(@Param('id') id: string, @CurrentUser('id') companyId: string) {
+  cancel(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
     return this.cancelProject.execute(id, companyId);
   }
 }

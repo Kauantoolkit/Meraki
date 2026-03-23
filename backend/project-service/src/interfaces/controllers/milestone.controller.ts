@@ -23,7 +23,7 @@ export class MilestoneController {
   create(
     @Param('id') projectId: string,
     @Body() dto: CreateMilestoneDto,
-    @CurrentUser('id') companyId: string,
+    @CurrentUser('companyId') companyId: string,
   ) {
     return this.createMilestone.execute(projectId, dto, companyId);
   }

@@ -1,13 +1,20 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { CompanyProfileRepository } from '../../infrastructure/repositories/company-profile.repository';
+import { CreateCompanyProfileUseCase } from './create-company-profile.use-case';
 
 @Injectable()
 export class GetCompanyProfileUseCase {
-  constructor(private readonly companyProfileRepo: CompanyProfileRepository) {}
+  constructor(
+    private readonly companyProfileRepo: CompanyProfileRepository,
+    private readonly createCompanyProfile: CreateCompanyProfileUseCase,
+  ) {}
 
   async execute(companyId: string) {
-    const profile = await this.companyProfileRepo.findByUserId(companyId);
-    if (!profile) throw new NotFoundException('Perfil de empresa não encontrado');
+    let profile = await this.companyProfileRepo.findByUserId(companyId);
+    if (!profile) {
+      await this.createCompanyProfile.execute(companyId);
+      profile = await this.companyProfileRepo.findByUserId(companyId);
+    }
     return profile;
   }
 }
