@@ -5,6 +5,8 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
+import { CreateEscrowDto } from './dto/create-escrow.dto';
+import { ReleasePaymentDto } from './dto/release-payment.dto';
 
 @ApiTags('Payments')
 @Controller('payments')
@@ -20,14 +22,14 @@ export class PaymentsController {
   @Post('escrow')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Criar escrow para milestone (empresa)' })
-  createEscrow(@Body() body: any, @Req() req: Request) {
+  createEscrow(@Body() body: CreateEscrowDto, @Req() req: Request) {
     return this.paymentsService.createEscrow(body, this.token(req));
   }
 
   @Post('release')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Liberar pagamento de milestone (empresa) — retém 10% (RN06)' })
-  releasePayment(@Body() body: { milestoneId: string }, @Req() req: Request) {
+  releasePayment(@Body() body: ReleasePaymentDto, @Req() req: Request) {
     return this.paymentsService.releasePayment(body.milestoneId, this.token(req));
   }
 

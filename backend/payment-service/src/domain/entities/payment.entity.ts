@@ -10,9 +10,6 @@ export enum PaymentStatus {
   REFUNDED = 'REFUNDED',
 }
 
-/** RN06: Plataforma retém 10% sobre cada pagamento liberado */
-const PLATFORM_FEE_RATE = parseFloat(process.env.PLATFORM_FEE_RATE || '0.10');
-
 @Entity('payments')
 export class Payment {
   @PrimaryGeneratedColumn('uuid')
@@ -56,11 +53,11 @@ export class Payment {
 
   // ─── Domain behavior — RN06 ───────────────────────────────────────────────
 
-  release(): { specialistAmount: number; platformFee: number } {
+  release(feeRate: number): { specialistAmount: number; platformFee: number } {
     if (this.status !== PaymentStatus.ESCROW_HELD) {
       throw new DomainException('Só é possível liberar pagamentos em ESCROW_HELD (RN06)');
     }
-    const fee = Number((this.amount * PLATFORM_FEE_RATE).toFixed(2));
+    const fee = Number((this.amount * feeRate).toFixed(2));
     const specialist = Number((this.amount - fee).toFixed(2));
 
     this.platformFee = fee;

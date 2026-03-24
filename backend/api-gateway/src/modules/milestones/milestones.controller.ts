@@ -5,6 +5,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
+import { SubmitDeliveryDto } from './dto/submit-delivery.dto';
+import { ApproveDeliveryDto } from './dto/approve-delivery.dto';
+import { RejectDeliveryDto } from './dto/reject-delivery.dto';
+import { AddCommentDto } from './dto/add-comment.dto';
 
 @ApiTags('Milestones / Deliveries')
 @Controller('milestones')
@@ -20,27 +24,27 @@ export class MilestonesController {
   @Post(':id/submit')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Submeter entrega de milestone (especialista)' })
-  submitDelivery(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+  submitDelivery(@Param('id') id: string, @Body() body: SubmitDeliveryDto, @Req() req: Request) {
     return this.milestonesService.submitDelivery(id, body, this.token(req));
   }
 
   @Put(':id/approve')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Aprovar entrega do milestone (empresa)' })
-  approveDelivery(@Param('id') id: string, @Body() body: { amount?: number }, @Req() req: Request) {
-    return this.milestonesService.approveDelivery(id, body?.amount, this.token(req));
+  approveDelivery(@Param('id') id: string, @Body() body: ApproveDeliveryDto, @Req() req: Request) {
+    return this.milestonesService.approveDelivery(id, body.amount, this.token(req));
   }
 
   @Put(':id/reject')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Rejeitar entrega do milestone (empresa)' })
-  rejectDelivery(@Param('id') id: string, @Body() body: { reason: string }, @Req() req: Request) {
+  rejectDelivery(@Param('id') id: string, @Body() body: RejectDeliveryDto, @Req() req: Request) {
     return this.milestonesService.rejectDelivery(id, body.reason, this.token(req));
   }
 
   @Post(':id/comments')
   @ApiOperation({ summary: 'Adicionar comentário ao milestone' })
-  addComment(@Param('id') id: string, @Body() body: { comment: string }, @Req() req: Request) {
+  addComment(@Param('id') id: string, @Body() body: AddCommentDto, @Req() req: Request) {
     return this.milestonesService.addComment(id, body.comment, this.token(req));
   }
 }

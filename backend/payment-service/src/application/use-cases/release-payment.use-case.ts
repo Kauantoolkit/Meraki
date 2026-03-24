@@ -31,7 +31,7 @@ export class ReleasePaymentUseCase {
     const payment = this.paymentFactory.create(dto);
 
     // 2. Aplica RN06 via Domain Service — calcula taxa e libera
-    const { specialistAmount, platformFee } = payment.release();
+    const { specialistAmount, platformFee } = payment.release(this.feeService.rate);
     payment.releaseTransactionId = `release-${Date.now()}`;
     await this.paymentRepo.save(payment);
 

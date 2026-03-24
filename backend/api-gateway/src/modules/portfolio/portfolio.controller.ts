@@ -5,6 +5,9 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
+import { UpdatePortfolioProfileDto } from './dto/update-profile.dto';
+import { AddSkillDto } from './dto/add-skill.dto';
+import { AddCertificationDto } from './dto/add-certification.dto';
 
 @ApiTags('Portfolio')
 @Controller('portfolio')
@@ -27,21 +30,21 @@ export class PortfolioController {
   @Patch('me')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Atualizar bio e/ou skills' })
-  updateProfile(@Body() body: any, @Req() req: Request) {
+  updateProfile(@Body() body: UpdatePortfolioProfileDto, @Req() req: Request) {
     return this.portfolioService.updateProfile(body, this.token(req));
   }
 
   @Post('me/skills')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Adicionar habilidade' })
-  addSkill(@Body() body: any, @Req() req: Request) {
+  addSkill(@Body() body: AddSkillDto, @Req() req: Request) {
     return this.portfolioService.addSkill(body, this.token(req));
   }
 
   @Post('me/certifications')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Adicionar certificação' })
-  addCertification(@Body() body: any, @Req() req: Request) {
+  addCertification(@Body() body: AddCertificationDto, @Req() req: Request) {
     return this.portfolioService.addCertification(body, this.token(req));
   }
 

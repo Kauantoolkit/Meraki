@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
+import { SubmitBidDto } from './dto/submit-bid.dto';
 
 const BIDDING_URL = process.env.BIDDING_SERVICE_URL || 'http://localhost:3003';
 
@@ -7,7 +8,7 @@ const BIDDING_URL = process.env.BIDDING_SERVICE_URL || 'http://localhost:3003';
 export class BidsService {
   constructor(private readonly proxy: HttpProxyService) {}
 
-  submit(projectId: string, dto: any, token: string) {
+  submit(projectId: string, dto: SubmitBidDto, token: string) {
     return this.proxy.post(`${BIDDING_URL}/api/bids`, { ...dto, projectId }, this.proxy.authHeaders(token));
   }
 

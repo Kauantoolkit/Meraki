@@ -8,6 +8,10 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
+import { CreateProjectDto } from './dto/create-project.dto';
+import { UpdateProjectDto } from './dto/update-project.dto';
+import { CreateMilestoneDto } from './dto/create-milestone.dto';
+import { ListProjectsQueryDto } from './dto/list-projects-query.dto';
 
 @ApiTags('Projects')
 @Controller('projects')
@@ -23,13 +27,13 @@ export class ProjectsController {
   @Post()
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Criar projeto (empresa)' })
-  create(@Body() body: any, @Req() req: Request) {
+  create(@Body() body: CreateProjectDto, @Req() req: Request) {
     return this.projectsService.create(body, this.token(req));
   }
 
   @Get()
   @ApiOperation({ summary: 'Listar projetos' })
-  findAll(@Query() query: any, @Req() req: Request) {
+  findAll(@Query() query: ListProjectsQueryDto, @Req() req: Request) {
     return this.projectsService.findAll(query, this.token(req));
   }
 
@@ -42,7 +46,7 @@ export class ProjectsController {
   @Put(':id')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Atualizar projeto' })
-  update(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+  update(@Param('id') id: string, @Body() body: UpdateProjectDto, @Req() req: Request) {
     return this.projectsService.update(id, body, this.token(req));
   }
 
@@ -56,7 +60,7 @@ export class ProjectsController {
   @Post(':id/milestones')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Criar milestone do projeto' })
-  createMilestone(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+  createMilestone(@Param('id') id: string, @Body() body: CreateMilestoneDto, @Req() req: Request) {
     return this.projectsService.createMilestone(id, body, this.token(req));
   }
 

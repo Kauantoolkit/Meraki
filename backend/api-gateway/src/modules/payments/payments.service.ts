@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
+import { CreateEscrowDto } from './dto/create-escrow.dto';
 
 const PAYMENT_URL = process.env.PAYMENT_SERVICE_URL || 'http://localhost:3005';
 
@@ -7,7 +8,7 @@ const PAYMENT_URL = process.env.PAYMENT_SERVICE_URL || 'http://localhost:3005';
 export class PaymentsService {
   constructor(private readonly proxy: HttpProxyService) {}
 
-  createEscrow(dto: any, token: string) {
+  createEscrow(dto: CreateEscrowDto, token: string) {
     return this.proxy.post(`${PAYMENT_URL}/api/payments/escrow`, dto, this.proxy.authHeaders(token));
   }
 

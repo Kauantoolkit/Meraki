@@ -14,6 +14,10 @@ export class FeeCalculationDomainService {
     this.feeRate = parseFloat(process.env.PLATFORM_FEE_RATE || '0.10');
   }
 
+  get rate(): number {
+    return this.feeRate;
+  }
+
   calculate(amount: number): { specialistAmount: number; platformFee: number } {
     if (amount <= 0) {
       throw new DomainException('Valor do pagamento deve ser maior que zero (RN06)');

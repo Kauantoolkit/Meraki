@@ -5,6 +5,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
+import { SubmitBidDto } from './dto/submit-bid.dto';
 
 @ApiTags('Bids')
 @Controller('bids')
@@ -20,7 +21,7 @@ export class BidsController {
   @Post('project/:projectId')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Submeter proposta (especialista)' })
-  submit(@Param('projectId') projectId: string, @Body() body: any, @Req() req: Request) {
+  submit(@Param('projectId') projectId: string, @Body() body: SubmitBidDto, @Req() req: Request) {
     return this.bidsService.submit(projectId, body, this.token(req));
   }
 

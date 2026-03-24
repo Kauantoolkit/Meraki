@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
+import { SubmitDeliveryDto } from './dto/submit-delivery.dto';
 
 const DELIVERY_URL = process.env.DELIVERY_SERVICE_URL || 'http://localhost:3004';
 
@@ -7,7 +8,7 @@ const DELIVERY_URL = process.env.DELIVERY_SERVICE_URL || 'http://localhost:3004'
 export class MilestonesService {
   constructor(private readonly proxy: HttpProxyService) {}
 
-  submitDelivery(milestoneId: string, dto: any, token: string) {
+  submitDelivery(milestoneId: string, dto: SubmitDeliveryDto, token: string) {
     return this.proxy.post(`${DELIVERY_URL}/api/deliveries`, { ...dto, milestoneId }, this.proxy.authHeaders(token));
   }
 
