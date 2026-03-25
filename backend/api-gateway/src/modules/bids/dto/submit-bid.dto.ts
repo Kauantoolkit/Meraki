@@ -1,23 +1,22 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsString, Min, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class SubmitBidDto {
-  @ApiProperty({ example: 4500.00 })
-  @IsNumber()
-  @IsPositive()
-  proposedValue: number;
-
-  @ApiProperty({ example: '2026-07-15' })
-  @IsDateString()
-  estimatedDeadline: string;
-
-  @ApiProperty({ example: 'Utilizarei NestJS e PostgreSQL para construir a solução.' })
+  @ApiProperty({ example: 'Tenho 5 anos de experiência com Flutter e NestJS. Entregarei no prazo.' })
   @IsString()
   @MinLength(20)
-  technicalProposal: string;
+  proposal: string;
 
-  @ApiPropertyOptional({ example: 'Tenho 5 anos de experiência com projetos similares.' })
-  @IsOptional()
-  @IsString()
-  coverLetter?: string;
+  @ApiProperty({ example: 4500.00 })
+  @IsNumber()
+  @Min(0.01)
+  @Type(() => Number)
+  proposedBudget: number;
+
+  @ApiProperty({ example: 60, description: 'Prazo estimado em dias' })
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  estimatedDuration: number;
 }

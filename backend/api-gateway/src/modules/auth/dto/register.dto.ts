@@ -22,7 +22,7 @@ export class RegisterDto {
 
   @ApiProperty({ enum: UserRole })
   @IsEnum(UserRole)
-  role: UserRole;
+  userType: UserRole;
 
   @ApiPropertyOptional({ example: 'Acme Corp' })
   @IsOptional()

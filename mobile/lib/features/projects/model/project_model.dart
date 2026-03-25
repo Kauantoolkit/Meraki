@@ -19,8 +19,8 @@ class MilestoneModel {
         id: json['id'] as String,
         title: json['title'] as String,
         description: json['description'] as String,
-        value: (json['value'] as num).toDouble(),
-        order: json['order'] as int,
+        value: double.parse((json['amount'] ?? 0).toString()),
+        order: json['order'] as int? ?? 0,
         status: json['status'] as String? ?? 'PENDING',
       );
 

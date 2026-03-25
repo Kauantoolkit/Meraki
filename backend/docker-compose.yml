@@ -7,8 +7,6 @@ services:
       POSTGRES_DB: ${IDENTITY_DB_NAME:-identity_db}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASS:-postgres}
-    ports:
-      - '5432:5432'
     volumes:
       - identity-db:/var/lib/postgresql/data
     healthcheck:
@@ -25,8 +23,6 @@ services:
       POSTGRES_DB: ${PROJECT_DB_NAME:-project_db}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASS:-postgres}
-    ports:
-      - '5433:5432'
     volumes:
       - project-db:/var/lib/postgresql/data
     healthcheck:
@@ -43,8 +39,6 @@ services:
       POSTGRES_DB: ${BIDDING_DB_NAME:-bidding_db}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASS:-postgres}
-    ports:
-      - '5434:5432'
     volumes:
       - bidding-db:/var/lib/postgresql/data
     healthcheck:
@@ -61,8 +55,6 @@ services:
       POSTGRES_DB: ${DELIVERY_DB_NAME:-delivery_db}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASS:-postgres}
-    ports:
-      - '5435:5432'
     volumes:
       - delivery-db:/var/lib/postgresql/data
     healthcheck:
@@ -79,8 +71,6 @@ services:
       POSTGRES_DB: ${PAYMENT_DB_NAME:-payment_db}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASS:-postgres}
-    ports:
-      - '5436:5432'
     volumes:
       - payment-db:/var/lib/postgresql/data
     healthcheck:
@@ -97,8 +87,6 @@ services:
       POSTGRES_DB: ${PORTFOLIO_DB_NAME:-portfolio_db}
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASS:-postgres}
-    ports:
-      - '5437:5432'
     volumes:
       - portfolio-db:/var/lib/postgresql/data
     healthcheck:
@@ -114,8 +102,8 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-meraki}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-meraki}
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-meraki-erlang-cookie}
     ports:
-      - '5672:5672'
       - '15672:15672'
     volumes:
       - rabbitmq:/var/lib/rabbitmq

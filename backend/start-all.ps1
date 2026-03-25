@@ -74,24 +74,14 @@ Write-Host "  Build concluido." -ForegroundColor Green
 Write-Host ""
 Write-Host "[3/3] Subindo todos os containers..." -ForegroundColor Cyan
 
-$requiredPorts = @(5432, 5433, 5434, 5435, 5436, 5437, 5672, 15672, 3000, 3001, 3002, 3003, 3004, 3005, 3006)
+$requiredPorts = @(15672, 3000, 3001, 3002, 3003, 3004, 3005, 3006)
 foreach ($port in $requiredPorts) {
     $listening = netstat -ano | Select-String ":$port " | Where-Object { $_ -match 'LISTENING' }
     if ($listening) { Free-Port -Port $port }
 }
 
-$staleContainers = @(
-    "meraki-rabbitmq", "meraki-postgres",
-    "meraki-identity-db", "meraki-project-db", "meraki-bidding-db",
-    "meraki-delivery-db", "meraki-payment-db", "meraki-portfolio-db"
-)
-foreach ($name in $staleContainers) {
-    $exists = & docker ps -a --filter "name=^${name}$" --format "{{.Names}}" 2>$null
-    if ($exists -eq $name) {
-        Write-Host "  Removendo container avulso: $name"
-        & docker rm -f $name | Out-Null
-    }
-}
+Write-Host "  Derrubando stack existente..." -ForegroundColor DarkGray
+docker compose down --remove-orphans 2>$null | Out-Null
 
 docker compose up -d
 if ($LASTEXITCODE -ne 0) {

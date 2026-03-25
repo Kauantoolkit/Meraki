@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDateString, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import { IsArray, IsDateString, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
 
 export class CreateProjectDto {
   @ApiProperty({ example: 'Sistema de Agendamento' })
@@ -9,8 +9,12 @@ export class CreateProjectDto {
 
   @ApiProperty({ example: 'Desenvolver um sistema de agendamento para clínica.' })
   @IsString()
-  @MinLength(10)
   description: string;
+
+  @ApiProperty({ example: ['Flutter', 'NestJS', 'PostgreSQL'] })
+  @IsArray()
+  @IsString({ each: true })
+  requirements: string[];
 
   @ApiProperty({ example: 5000.00 })
   @IsNumber()
@@ -20,9 +24,4 @@ export class CreateProjectDto {
   @ApiProperty({ example: '2026-06-30' })
   @IsDateString()
   deadline: string;
-
-  @ApiPropertyOptional({ example: 'Backend Development' })
-  @IsOptional()
-  @IsString()
-  category?: string;
 }

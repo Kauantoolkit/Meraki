@@ -534,7 +534,8 @@ function getSteps() {
       headers: () => ({'Content-Type':'application/json','Authorization':`Bearer ${ctx.tokenSpecialist}`}),
       body: () => ({
         proposal:'Tenho 5 anos de experiência com Flutter e NestJS. Entregarei no prazo com qualidade.',
-        proposedBudget:9000, estimatedDuration:90,
+        proposedBudget:9000,
+        estimatedDuration:90,
       }),
       extract(r) { ctx.bidId = r.id; },
     },
@@ -571,7 +572,7 @@ function getSteps() {
       sub:'Empresa aprova milestone → dispara milestone.validated → payment-service libera pagamento (RN06)',
       url: () => `${getBase()}/api/milestones/${ctx.milestoneId}/approve`,
       headers: () => ({'Content-Type':'application/json','Authorization':`Bearer ${ctx.tokenEmpresa}`}),
-      body: () => ({ amount: ctx.milestoneAmount }),
+      body: () => ({}),
       extract() {},
     },
     {

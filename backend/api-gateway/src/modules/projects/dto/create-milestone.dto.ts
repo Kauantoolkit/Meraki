@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import { IsDateString, IsNumber, IsOptional, IsPositive, IsString, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateMilestoneDto {
   @ApiProperty({ example: 'Entrega do módulo de autenticação' })
@@ -9,22 +10,16 @@ export class CreateMilestoneDto {
 
   @ApiProperty({ example: 'Implementar login, registro e recuperação de senha.' })
   @IsString()
-  @MinLength(10)
   description: string;
 
-  @ApiProperty({ example: 1 })
-  @IsInt()
-  @IsPositive()
-  order: number;
-
-  @ApiPropertyOptional({ example: ['Documentação', 'Código-fonte', 'Testes'] })
-  @IsOptional()
-  @IsString({ each: true })
-  deliverables?: string[];
-
-  @ApiPropertyOptional({ example: 40 })
-  @IsOptional()
+  @ApiProperty({ example: 1500.00 })
   @IsNumber()
   @IsPositive()
-  expectedHours?: number;
+  @Type(() => Number)
+  amount: number;
+
+  @ApiPropertyOptional({ example: '2026-06-30' })
+  @IsOptional()
+  @IsDateString()
+  dueDate?: string;
 }

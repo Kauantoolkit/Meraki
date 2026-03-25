@@ -51,7 +51,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             Expanded(
               child: SafeArea(
                 bottom: false,
-                child: Padding(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.fromLTRB(32, 40, 32, 24),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
