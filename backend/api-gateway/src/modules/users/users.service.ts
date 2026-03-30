@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
-const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
+const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL as string;
 
 @Injectable()
 export class UsersService {

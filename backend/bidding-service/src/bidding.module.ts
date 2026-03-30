@@ -9,6 +9,7 @@ import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 
 // Repositories (infrastructure — adapters)
 import { BidRepository } from './infrastructure/repositories/bid.repository';
+import { BidMessageRepository } from './infrastructure/repositories/bid-message.repository';
 
 // Factories (domain)
 import { BidFactory } from './domain/factories/bid.factory';
@@ -22,6 +23,8 @@ import { AcceptBidUseCase } from './application/use-cases/accept-bid.use-case';
 import { RejectBidUseCase } from './application/use-cases/reject-bid.use-case';
 import { WithdrawBidUseCase } from './application/use-cases/withdraw-bid.use-case';
 import { GetBidsUseCase } from './application/use-cases/get-bids.use-case';
+import { SendBidMessageUseCase } from './application/use-cases/send-bid-message.use-case';
+import { GetBidMessagesUseCase } from './application/use-cases/get-bid-messages.use-case';
 
 // Controllers (interfaces)
 import { BidController } from './interfaces/controllers/bid.controller';
@@ -30,13 +33,14 @@ import { BidController } from './interfaces/controllers/bid.controller';
   imports: [
     TypeOrmModule.forFeature([Bid, BidMessage]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({ secret: process.env.JWT_SECRET || 'meraki-jwt-secret' }),
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
   ],
   controllers: [BidController],
   providers: [
     JwtStrategy,
     // Repositories
     BidRepository,
+    BidMessageRepository,
     // Factories
     BidFactory,
     // Domain Services
@@ -47,6 +51,8 @@ import { BidController } from './interfaces/controllers/bid.controller';
     RejectBidUseCase,
     WithdrawBidUseCase,
     GetBidsUseCase,
+    SendBidMessageUseCase,
+    GetBidMessagesUseCase,
   ],
 })
 export class BiddingModule {}

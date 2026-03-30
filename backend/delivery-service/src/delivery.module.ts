@@ -15,6 +15,7 @@ import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 import { DeliveryRepository } from './infrastructure/repositories/delivery.repository';
 import { KanbanRepository } from './infrastructure/repositories/kanban.repository';
 import { HistoryRepository } from './infrastructure/repositories/history.repository';
+import { CommentRepository } from './infrastructure/repositories/comment.repository';
 
 // Factories (domain)
 import { DeliveryFactory } from './domain/factories/delivery.factory';
@@ -28,27 +29,30 @@ import { SubmitDeliveryUseCase } from './application/use-cases/submit-delivery.u
 import { ReviewDeliveryUseCase } from './application/use-cases/review-delivery.use-case';
 import { GetKanbanBoardUseCase } from './application/use-cases/get-kanban-board.use-case';
 import { GetProjectHistoryUseCase } from './application/use-cases/get-project-history.use-case';
+import { AddMilestoneCommentUseCase } from './application/use-cases/add-milestone-comment.use-case';
+import { GetMilestoneCommentsUseCase } from './application/use-cases/get-milestone-comments.use-case';
 
 // Consumers (infrastructure)
 import { BidAcceptedConsumer } from './infrastructure/rabbitmq/consumers/bid-accepted.consumer';
 import { MilestoneCreatedConsumer } from './infrastructure/rabbitmq/consumers/milestone-created.consumer';
 
 // Controllers (interfaces)
-import { DeliveryController, KanbanController, HistoryController } from './interfaces/controllers/delivery.controller';
+import { DeliveryController, KanbanController, HistoryController, CommentController } from './interfaces/controllers/delivery.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Delivery, KanbanColumn, KanbanCard, ProjectHistory, MilestoneComment]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({ secret: process.env.JWT_SECRET || 'meraki-jwt-secret' }),
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
   ],
-  controllers: [DeliveryController, KanbanController, HistoryController],
+  controllers: [DeliveryController, KanbanController, HistoryController, CommentController],
   providers: [
     JwtStrategy,
     // Repositories
     DeliveryRepository,
     KanbanRepository,
     HistoryRepository,
+    CommentRepository,
     // Factories
     DeliveryFactory,
     KanbanColumnFactory,
@@ -59,6 +63,8 @@ import { DeliveryController, KanbanController, HistoryController } from './inter
     ReviewDeliveryUseCase,
     GetKanbanBoardUseCase,
     GetProjectHistoryUseCase,
+    AddMilestoneCommentUseCase,
+    GetMilestoneCommentsUseCase,
     // Consumers
     BidAcceptedConsumer,
     MilestoneCreatedConsumer,

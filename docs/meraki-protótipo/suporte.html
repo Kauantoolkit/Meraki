@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Suporte Técnico</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', 
+                        },
+                        dark: {
+                            bg: '#09090b',    
+                            card: '#18181b',  
+                            border: '#27272a',
+                            input: '#121214', 
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .bg-grid { background-size: 32px 32px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px); }
+        .btn-sharp:active { transform: translate(2px, 2px); box-shadow: none !important; }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <div id="navbar-container"></div>
+
+    <main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        <section class="md:col-span-2">
+            <h1 class="text-2xl font-bold text-white tracking-tight uppercase mb-6">Base de Conhecimento</h1>
+
+            <!-- Accordions -->
+            <div class="space-y-4" id="faq-list">
+                
+                <div class="bg-dark-card border border-dark-border p-5">
+                    <h3 class="text-sm font-bold text-white mb-2">Como é libertado o pagamento do Escrow?</h3>
+                    <p class="text-xs text-zinc-500 leading-relaxed">Quando for submetido um Milestone (Entrega), a empresa aprova e os fundos correspondentes para esse Milestone são libertados de imediato para a Wallet do especialista via nossa API de pagamentos integrada com RabbitMQ.</p>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border p-5">
+                    <h3 class="text-sm font-bold text-white mb-2">Taxas cobradas pela plataforma</h3>
+                    <p class="text-xs text-zinc-500 leading-relaxed">O Meraki cobra uma comissão fixa de operação técnica (10% sobre o valor gerado aos dev) e para empresa existe zero comissão extra base. As transações seguras são asseguradas criptograficamente.</p>
+                </div>
+
+                <div class="bg-dark-card border border-dark-border p-5">
+                    <h3 class="text-sm font-bold text-white mb-2">E se houver litígio ou disputa técnica?</h3>
+                    <p class="text-xs text-zinc-500 leading-relaxed">Pode solicitar uma auditoria do código por um Tech Lead neutral nomeado pela casa, enviando o caso diretamente para o nosso Helpdesk usando o botão ao lado.</p>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Ticket Area -->
+        <aside>
+            <div class="bg-[#000] border border-dark-border p-6 shadow-xl sticky top-24">
+                <i data-lucide="terminal-square" class="w-8 h-8 text-brand-500 mb-4"></i>
+                <h2 class="font-bold text-white uppercase text-sm tracking-widest mb-2">Abrir Ticket T1</h2>
+                <p class="text-[10px] font-mono text-zinc-500 mb-6">Não encontrou resposta? Contacte a equipa Core para debugging ao seu caso diretamente.</p>
+                
+                <form onsubmit="event.preventDefault(); alert('Ticket simulado.'); this.reset();">
+                    <input type="text" placeholder="Assunto do erro/disputa" required class="w-full bg-dark-input border border-dark-border p-3 text-xs font-mono text-white mb-3 focus:outline-none focus:border-brand-500 transition-colors">
+                    <textarea placeholder="Descrição do Evento (Logs de erro, details, etc)..." required class="w-full h-32 bg-dark-input border border-dark-border p-3 text-xs font-mono text-white mb-3 focus:outline-none focus:border-brand-500 transition-colors resize-none"></textarea>
+                    <button type="submit" class="w-full btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs py-3 border border-brand-500 hover:bg-brand-400">
+                        ROTEAR_TICKET()
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+        function goBack() {
+            const user = window.mockAPI.getCurrentUser();
+            window.location.href = (user && user.type === 'company') ? 'dashboard-empresa.html' : 'dashboard-especialista.html';
+        }
+    </script>
+</body>
+</html>

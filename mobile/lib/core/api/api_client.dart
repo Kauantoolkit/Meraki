@@ -6,8 +6,10 @@ import 'interceptors/auth_interceptor.dart';
 class ApiClient {
   late final Dio _dio;
 
-  // Em produção substituir pelo IP do servidor
-  static const String baseUrl = 'http://localhost:3000/api';
+  static const String baseUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'http://localhost:3000/api',
+  );
 
   ApiClient(StorageService storage) {
     _dio = Dio(

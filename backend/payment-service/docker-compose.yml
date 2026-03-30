@@ -1,0 +1,49 @@
+# ─── payment-service — deploy independente ─────────────────────────────────
+# Sobe o serviço + seu PostgreSQL próprio.
+# RabbitMQ é externo: configure RABBITMQ_URL no .env apontando para o servidor
+# de infra (ver backend/docker-compose.infra.yml).
+#
+# Uso:
+#   cp .env.example .env   # preencha os valores
+#   docker compose up -d
+
+services:
+  payment-service:
+    build: .
+    container_name: meraki-payment-service
+    ports:
+      - '${PORT:-3005}:${PORT:-3005}'
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3005}
+      DB_HOST: payment-db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-payment_db}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      JWT_SECRET: ${JWT_SECRET}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      PLATFORM_FEE_RATE: ${PLATFORM_FEE_RATE:-0.10}
+    depends_on:
+      payment-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  payment-db:
+    image: postgres:15-alpine
+    container_name: meraki-payment-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-payment_db}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  db-data:

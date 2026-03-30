@@ -64,4 +64,16 @@ export class BidsController {
   withdraw(@Param('id') id: string, @Req() req: Request) {
     return this.bidsService.withdraw(id, this.token(req));
   }
+
+  @Post(':id/messages')
+  @ApiOperation({ summary: 'Enviar mensagem de negociação na proposta' })
+  sendMessage(@Param('id') id: string, @Body() body: { message: string }, @Req() req: Request) {
+    return this.bidsService.sendMessage(id, body.message, this.token(req));
+  }
+
+  @Get(':id/messages')
+  @ApiOperation({ summary: 'Listar mensagens de negociação da proposta' })
+  getMessages(@Param('id') id: string, @Req() req: Request) {
+    return this.bidsService.getMessages(id, this.token(req));
+  }
 }

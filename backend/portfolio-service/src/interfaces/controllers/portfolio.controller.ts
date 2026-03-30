@@ -10,11 +10,22 @@ import { AddCertificationUseCase } from '../../application/use-cases/add-certifi
 import { AddReviewUseCase } from '../../application/use-cases/add-review.use-case';
 import { GetPublicProfileUseCase } from '../../application/use-cases/get-public-profile.use-case';
 import { GetCompanyProfileUseCase } from '../../application/use-cases/get-company-profile.use-case';
+import { GetMyPortfolioUseCase } from '../../application/use-cases/get-my-portfolio.use-case';
 import { SpecialistProfileRepository } from '../../infrastructure/repositories/specialist-profile.repository';
-import { CertificationRepository } from '../../infrastructure/repositories/certification.repository';
-import { ReviewRepository } from '../../infrastructure/repositories/review.repository';
-import { WorkHistoryRepository } from '../../infrastructure/repositories/work-history.repository';
-import { SpecialistPublicProfile } from '../../domain/entities/specialist-public-profile.entity';
+import {
+  CreatePortfolioItemDto,
+  UpdatePortfolioItemDto,
+  AddCertificationDto,
+  CreateReviewDto,
+  UpdateMyProfileDto,
+  AddSkillDto,
+  AddMyCertificationDto,
+} from '../dtos/portfolio.dto';
+
+interface AuthUser {
+  sub: string;
+  specialistId?: string;
+}
 
 // ─── Portfolio ──────────────────────────────────────────────────────────────
 
@@ -33,13 +44,17 @@ export class PortfolioController {
 
   @Post()
   @ApiOperation({ summary: 'Criar item de portfólio (especialista)' })
-  create(@Body() body: any) {
-    return this.getPortfolioUseCase.create(body);
+  create(@Body() body: CreatePortfolioItemDto) {
+    return this.getPortfolioUseCase.create({
+      ...body,
+      startDate: body.startDate ? new Date(body.startDate) : undefined,
+      endDate: body.endDate ? new Date(body.endDate) : undefined,
+    });
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Atualizar item de portfólio' })
-  update(@Param('id') id: string, @Body() body: any) {
+  update(@Param('id') id: string, @Body() body: UpdatePortfolioItemDto) {
     return this.getPortfolioUseCase.update(id, body);
   }
 
@@ -68,8 +83,12 @@ export class CertificationController {
 
   @Post()
   @ApiOperation({ summary: 'Adicionar certificação' })
-  create(@Body() body: any) {
-    return this.addCertificationUseCase.execute(body);
+  create(@Body() body: AddCertificationDto) {
+    return this.addCertificationUseCase.execute({
+      ...body,
+      issueDate: body.issueDate ? new Date(body.issueDate) : undefined,
+      expiryDate: body.expiryDate ? new Date(body.expiryDate) : undefined,
+    });
   }
 
   @Delete(':id')
@@ -96,7 +115,7 @@ export class ReviewController {
 
   @Post()
   @ApiOperation({ summary: 'Submeter avaliação (empresa)' })
-  create(@Body() body: any) {
+  create(@Body() body: CreateReviewDto) {
     return this.addReviewUseCase.execute(body);
   }
 }
@@ -146,70 +165,24 @@ export class PublicProfileController {
 @UseGuards(AuthGuard('jwt'))
 export class MyPortfolioController {
   constructor(
+    private readonly getMyPortfolioUseCase: GetMyPortfolioUseCase,
     private readonly profileRepo: SpecialistProfileRepository,
-    private readonly certRepo: CertificationRepository,
-    private readonly reviewRepo: ReviewRepository,
-    private readonly historyRepo: WorkHistoryRepository,
+    private readonly addCertificationUseCase: AddCertificationUseCase,
   ) {}
 
   private specialistId(req: Request): string {
-    return (req.user as any).specialistId;
+    return (req.user as AuthUser).specialistId ?? (req.user as AuthUser).sub;
   }
 
   @Get()
   @ApiOperation({ summary: 'Meu portfólio completo (especialista)' })
-  async getMyPortfolio(@Req() req: Request) {
-    const specialistId = this.specialistId(req);
-    let profile = await this.profileRepo.findByUserId(specialistId);
-    if (!profile) {
-      // Auto-create a blank profile on first access
-      const blank = new SpecialistPublicProfile();
-      blank.userId = specialistId;
-      profile = await this.profileRepo.save(blank);
-    }
-    const [certifications, reviews, history] = await Promise.all([
-      this.certRepo.findBySpecialist(specialistId),
-      this.reviewRepo.findBySpecialist(specialistId),
-      this.historyRepo.findBySpecialist(specialistId),
-    ]);
-    return {
-      id: profile.id,
-      specialistId: profile.userId,
-      bio: profile.bio ?? '',
-      skills: profile.skills ?? [],
-      rating: Number(profile.rating ?? 0),
-      completedProjects: profile.completedProjects ?? 0,
-      certifications: certifications.map((c) => ({
-        id: c.id,
-        title: c.name,
-        institution: c.issuer,
-        issuedAt: c.issueDate ? c.issueDate.toISOString() : new Date().toISOString(),
-        credentialUrl: c.credentialUrl ?? null,
-      })),
-      reviews: reviews.map((r) => ({
-        id: r.id,
-        reviewerName: 'Anônimo',
-        rating: r.rating,
-        comment: r.comment ?? '',
-        createdAt: r.createdAt,
-      })),
-      workHistory: history.map((h) => ({
-        id: h.id,
-        projectId: h.projectId,
-        projectTitle: h.projectTitle ?? '',
-        companyName: h.companyId ?? '',
-        earnedAmount: Number(h.amountEarned ?? 0),
-        completedAt: h.completedAt ? h.completedAt.toISOString() : '',
-      })),
-    };
+  getMyPortfolio(@Req() req: Request) {
+    return this.getMyPortfolioUseCase.execute(this.specialistId(req));
   }
 
   @Patch()
   @ApiOperation({ summary: 'Atualizar bio e/ou skills' })
-  async updateProfile(
-    @Req() req: Request,
-    @Body() body: { bio?: string; skills?: string[] },
-  ) {
+  async updateProfile(@Req() req: Request, @Body() body: UpdateMyProfileDto) {
     const specialistId = this.specialistId(req);
     const profile = await this.profileRepo.findByUserId(specialistId);
     if (!profile) throw new NotFoundException('Perfil não encontrado');
@@ -220,7 +193,7 @@ export class MyPortfolioController {
 
   @Post('skills')
   @ApiOperation({ summary: 'Adicionar habilidade' })
-  async addSkill(@Req() req: Request, @Body() body: { skill: string }) {
+  async addSkill(@Req() req: Request, @Body() body: AddSkillDto) {
     const specialistId = this.specialistId(req);
     const profile = await this.profileRepo.findByUserId(specialistId);
     if (!profile) throw new NotFoundException('Perfil não encontrado');
@@ -229,14 +202,14 @@ export class MyPortfolioController {
   }
 
   @Post('certifications')
-  @ApiOperation({ summary: 'Adicionar certificação' })
-  addCertification(@Req() req: Request, @Body() body: any) {
+  @ApiOperation({ summary: 'Adicionar certificação ao meu perfil' })
+  addCertification(@Req() req: Request, @Body() body: AddMyCertificationDto) {
     const specialistId = this.specialistId(req);
-    return this.certRepo.save({
+    return this.addCertificationUseCase.execute({
       specialistId,
       name: body.title,
       issuer: body.institution,
-      issueDate: body.issuedAt ? new Date(body.issuedAt) : new Date(),
+      issueDate: body.issuedAt ? new Date(body.issuedAt) : undefined,
       credentialUrl: body.credentialUrl,
     });
   }

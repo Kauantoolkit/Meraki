@@ -6,11 +6,14 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { SubmitBidDto } from '../../application/dto/submit-bid.dto';
+import { SendBidMessageDto } from '../../application/dto/send-bid-message.dto';
 import { SubmitBidUseCase } from '../../application/use-cases/submit-bid.use-case';
 import { AcceptBidUseCase } from '../../application/use-cases/accept-bid.use-case';
 import { RejectBidUseCase } from '../../application/use-cases/reject-bid.use-case';
 import { WithdrawBidUseCase } from '../../application/use-cases/withdraw-bid.use-case';
 import { GetBidsUseCase } from '../../application/use-cases/get-bids.use-case';
+import { SendBidMessageUseCase } from '../../application/use-cases/send-bid-message.use-case';
+import { GetBidMessagesUseCase } from '../../application/use-cases/get-bid-messages.use-case';
 
 @ApiTags('Bids')
 @Controller('api/bids')
@@ -23,6 +26,8 @@ export class BidController {
     private readonly rejectBid: RejectBidUseCase,
     private readonly withdrawBid: WithdrawBidUseCase,
     private readonly getBids: GetBidsUseCase,
+    private readonly sendMessageUseCase: SendBidMessageUseCase,
+    private readonly getMessagesUseCase: GetBidMessagesUseCase,
   ) {}
 
   @Post()
@@ -72,5 +77,22 @@ export class BidController {
   @ApiOperation({ summary: 'Retirar proposta (especialista dono)' })
   withdraw(@Param('id') id: string, @CurrentUser('specialistId') specialistId: string) {
     return this.withdrawBid.execute(id, specialistId);
+  }
+
+  @Post(':id/messages')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Enviar mensagem de negociação na proposta' })
+  sendMessage(
+    @Param('id') id: string,
+    @Body() dto: SendBidMessageDto,
+    @CurrentUser('sub') senderId: string,
+  ) {
+    return this.sendMessageUseCase.execute(id, dto, senderId);
+  }
+
+  @Get(':id/messages')
+  @ApiOperation({ summary: 'Listar mensagens de negociação da proposta' })
+  getMessages(@Param('id') id: string) {
+    return this.getMessagesUseCase.execute(id);
   }
 }

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Company Profile</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', 
+                        },
+                        dark: {
+                            bg: '#09090b',    
+                            card: '#18181b',  
+                            border: '#27272a',
+                            input: '#121214', 
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .bg-grid { background-size: 32px 32px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px); }
+        .btn-sharp:active { transform: translate(2px, 2px); box-shadow: none !important; }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container" data-back-url="dashboard-especialista.html"></div>
+
+    <!-- BANNER & HEADER -->
+    <header class="w-full bg-dark-card border-b border-dark-border relative">
+        <div class="h-48 w-full bg-[#000] relative overflow-hidden">
+            <div class="absolute inset-0 opacity-20 bg-[url('https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop')] bg-cover bg-center"></div>
+            <div class="absolute inset-0 mix-blend-overlay bg-brand-500/10"></div>
+        </div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative pb-8">
+            <div class="flex flex-col md:flex-row items-end md:items-center gap-6 -mt-12 relative z-10">
+                <div class="w-24 h-24 bg-dark-input border-2 border-brand-500 p-1 flex items-center justify-center shadow-[4px_4px_0_rgba(85,202,124,0.2)]">
+                    <img src="https://api.dicebear.com/7.x/shapes/svg?seed=TechCorp" class="w-full h-full grayscale">
+                </div>
+                
+                <div class="flex-1 mt-4 md:mt-12">
+                    <div class="flex items-center gap-3 mb-1">
+                        <h1 class="text-3xl font-bold text-white tracking-tight">TechCorp Inc.</h1>
+                        <i data-lucide="badge-check" class="text-brand-500 w-6 h-6"></i>
+                    </div>
+                    <p class="text-xs font-mono text-zinc-400">Enterprise Solutions & Fintech Architecture • Desde 2021</p>
+                </div>
+
+                <div class="mt-4 md:mt-12 flex items-center gap-4 w-full md:w-auto">
+                    <div class="text-right">
+                        <p class="text-[10px] font-mono text-zinc-500 uppercase">Reputação</p>
+                        <div class="flex items-center gap-1 text-brand-500 mt-1">
+                            <i data-lucide="star" class="w-4 h-4 fill-brand-500"></i>
+                            <span class="font-bold text-sm">4.9</span>
+                        </div>
+                    </div>
+                    <div class="text-right pl-4 border-l border-dark-border">
+                        <p class="text-[10px] font-mono text-zinc-500 uppercase">Contratos Completos</p>
+                        <p class="font-bold text-sm text-white mt-1">42 OPs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- LEFT COL -->
+        <section class="lg:col-span-2 space-y-8">
+            
+            <!-- About -->
+            <div class="bg-dark-card border border-dark-border p-6">
+                <h2 class="font-mono text-xs font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
+                    <i data-lucide="info" class="w-4 h-4 text-brand-500"></i> Sobre a Entidade
+                </h2>
+                <p class="text-sm text-zinc-400 leading-relaxed font-sans text-justify">
+                    A TechCorp Inc. é uma empresa inovadora focada na modernização de sistemas legacy em instituições financeiras da Europa. Trabalhamos exclusivamente com freelancers seniores que partilham a nossa visão de código limpo, microsserviços e segurança robusta. A nossa stack principal é orientada a Node.js, NestJS, Go e React.
+                </p>
+            </div>
+
+            <!-- Active / Past Projects -->
+            <div>
+                <h2 class="font-mono text-xs font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
+                    <i data-lucide="folder-kanban" class="w-4 h-4 text-brand-500"></i> Histórico de Projetos (Mock)
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <div class="bg-[#000] border border-dark-border p-4 hover:border-brand-500/50 transition-colors">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-brand-500/10 text-brand-500 border border-brand-500/20 text-[10px] font-mono uppercase">
+                                Em Curso
+                            </span>
+                            <span class="text-[10px] font-mono text-zinc-500">PRJ-X92</span>
+                        </div>
+                        <h3 class="text-sm font-bold text-white mb-1">Migração Core Bank API</h3>
+                        <p class="text-xs text-zinc-500 line-clamp-2">Reescrever sistema legacy para NestJS + Prisma.</p>
+                    </div>
+
+                    <div class="bg-[#000] border border-dark-border p-4 opacity-75">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700 text-[10px] font-mono uppercase">
+                                Concluído
+                            </span>
+                            <span class="text-[10px] font-mono text-zinc-500">PRJ-V12</span>
+                        </div>
+                        <h3 class="text-sm font-bold text-white mb-1">App Mobile Flutter</h3>
+                        <p class="text-xs text-zinc-500 line-clamp-2">Aplicação para onboarding de clientes KYC.</p>
+                    </div>
+
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COL: Reviews -->
+        <aside class="space-y-4">
+            <h2 class="font-mono text-xs font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
+                <i data-lucide="message-square" class="w-4 h-4 text-brand-500"></i> Avaliações da Rede
+            </h2>
+
+            <div class="bg-dark-card border border-dark-border p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-dark-input border border-dark-border flex items-center justify-center">
+                            <i data-lucide="user" class="w-3 h-3 text-zinc-500"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white">Dev Sênior</span>
+                    </div>
+                    <div class="flex text-brand-500">
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-zinc-400 font-sans italic">"Excelente comunicação, milestones sempre pagos a tempo mediante aprovação no Kanban. Recomendo para projetos Node."</p>
+                <span class="block text-[9px] font-mono text-zinc-600 mt-2">Mês passado</span>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border p-4 opactiy-90">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 bg-dark-input border border-dark-border flex items-center justify-center">
+                            <i data-lucide="user" class="w-3 h-3 text-zinc-500"></i>
+                        </div>
+                        <span class="text-xs font-bold text-white">Fulano DevOps</span>
+                    </div>
+                    <div class="flex text-brand-500">
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-brand-500"></i>
+                        <i data-lucide="star" class="w-3 h-3 text-zinc-600"></i>
+                    </div>
+                </div>
+                <p class="text-xs text-zinc-400 font-sans italic">"Boa empresa, specs muito definidos. Houve apenas um pequeno atraso de 1 dia na liberação do M2."</p>
+                <span class="block text-[9px] font-mono text-zinc-600 mt-2">Há 3 meses</span>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+        function goBack() {
+            window.location.href = 'dashboard-especialista.html';
+        }
+    </script>
+</body>
+</html>

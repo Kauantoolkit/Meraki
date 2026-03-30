@@ -16,7 +16,7 @@ import { EscrowAccountRepository } from './infrastructure/repositories/escrow-ac
 import { PaymentFactory } from './domain/factories/payment.factory';
 
 // Domain Services
-import { FeeCalculationDomainService } from './domain/services/fee-calculation.domain-service';
+import { FeeCalculationDomainService, FEE_RATE_TOKEN } from './domain/services/fee-calculation.domain-service';
 
 // Use Cases (application)
 import { ReleasePaymentUseCase } from './application/use-cases/release-payment.use-case';
@@ -35,7 +35,7 @@ import { PaymentController } from './interfaces/controllers/payment.controller';
   imports: [
     TypeOrmModule.forFeature([Payment, EscrowAccount]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({ secret: process.env.JWT_SECRET || 'meraki-jwt-secret' }),
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
   ],
   controllers: [PaymentController],
   providers: [
@@ -45,7 +45,11 @@ import { PaymentController } from './interfaces/controllers/payment.controller';
     EscrowAccountRepository,
     // Factories
     PaymentFactory,
-    // Domain Services
+    // Domain Services — taxa injetada pelo módulo, sem process.env no domínio
+    {
+      provide: FEE_RATE_TOKEN,
+      useFactory: () => parseFloat(process.env.PLATFORM_FEE_RATE || '0.10'),
+    },
     FeeCalculationDomainService,
     // Event Publisher
     EventPublisherService,

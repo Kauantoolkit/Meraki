@@ -69,4 +69,11 @@ export class ProjectsController {
   getMilestones(@Param('id') id: string, @Req() req: Request) {
     return this.projectsService.getMilestones(id, this.token(req));
   }
+
+  @Put(':id/complete')
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Concluir projeto — valida todas as milestones APPROVED' })
+  complete(@Param('id') id: string, @Req() req: Request) {
+    return this.projectsService.complete(id, this.token(req));
+  }
 }

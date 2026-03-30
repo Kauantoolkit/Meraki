@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Registration</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="mock-db.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', // Verde Principal
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    // zinc-950
+                            card: '#18181b',  // zinc-900
+                            border: '#27272a',// zinc-800
+                            input: '#121214',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+
+        body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        
+        input:focus ~ .icon-focus {
+            color: #55CA7C;
+        }
+
+        .btn-sharp:active {
+            transform: translate(2px, 2px);
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen flex items-center justify-center p-4 sm:p-8 relative overflow-hidden antialiased text-zinc-300">
+
+    <div class="fixed top-[10%] left-[60%] w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] bg-brand-500/10 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none"></div>
+
+    <div class="w-full max-w-[480px] bg-dark-card/90 backdrop-blur-md border border-dark-border p-8 sm:p-10 relative z-10 shadow-2xl">
+        
+        <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500"></div>
+        <div class="absolute top-0 right-0 w-2 h-2 border-t border-r border-brand-500"></div>
+        <div class="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-brand-500"></div>
+        <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500"></div>
+
+        <div class="flex flex-col items-center justify-center mb-8">
+            <div class="w-12 h-12 bg-dark-input border border-brand-500 flex items-center justify-center mb-4 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]">
+                <i data-lucide="shield-check" class="text-brand-500 w-6 h-6" stroke-width="1.5"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-white uppercase font-mono">Registo</h1>
+            <p class="text-xs text-zinc-500 mt-1 font-mono tracking-wider" id="subtitle">SYS.ONBOARDING // INITIALIZE</p>
+        </div>
+
+        <!-- Seletor Tipo -->
+        <div class="grid grid-cols-2 gap-4 mb-8">
+            <button type="button" onclick="setType('company')" id="btn-company" class="flex flex-col items-center justify-center p-4 bg-dark-input border border-brand-500 text-brand-500 transition-colors">
+                <i data-lucide="building-2" class="w-6 h-6 mb-2"></i>
+                <span class="text-xs font-bold uppercase tracking-widest">Empresa</span>
+            </button>
+            <button type="button" onclick="setType('specialist')" id="btn-specialist" class="flex flex-col items-center justify-center p-4 bg-dark-input border border-dark-border text-zinc-500 hover:border-zinc-500 hover:text-zinc-400 transition-colors">
+                <i data-lucide="braces" class="w-6 h-6 mb-2"></i>
+                <span class="text-xs font-bold uppercase tracking-widest">Especialista</span>
+            </button>
+        </div>
+
+        <!-- Formulário -->
+        <form id="signupForm" onsubmit="handleSignup(event)" class="space-y-4">
+            
+            <div class="space-y-2">
+                <label for="name" class="text-xs font-mono text-zinc-400 uppercase tracking-wider block" id="name-label">Nome da Empresa</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="user" class="h-4 w-4 text-zinc-600 group-focus-within:text-brand-500 transition-colors icon-focus" stroke-width="1.5"></i>
+                    </div>
+                    <input type="text" id="name" required placeholder="Nova Corp S/A" 
+                        class="w-full pl-11 pr-4 py-3 bg-dark-input border border-dark-border text-sm text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label for="email" class="text-xs font-mono text-zinc-400 uppercase tracking-wider block">E-mail Profissional</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="mail" class="h-4 w-4 text-zinc-600 group-focus-within:text-brand-500 transition-colors icon-focus" stroke-width="1.5"></i>
+                    </div>
+                    <input type="email" id="email" required placeholder="admin@empresa.com" 
+                        class="w-full pl-11 pr-4 py-3 bg-dark-input border border-dark-border text-sm text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none">
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <label for="password" class="text-xs font-mono text-zinc-400 uppercase tracking-wider block">Senha Segura</label>
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i data-lucide="key" class="h-4 w-4 text-zinc-600 group-focus-within:text-brand-500 transition-colors icon-focus" stroke-width="1.5"></i>
+                    </div>
+                    <input type="password" id="password" required placeholder="••••••••" 
+                        class="w-full pl-11 pr-11 py-3 bg-dark-input border border-dark-border text-sm text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none">
+                </div>
+            </div>
+
+            <button type="submit" id="submit-btn" class="btn-sharp w-full bg-brand-500 text-dark-bg font-bold uppercase tracking-widest py-3.5 hover:bg-brand-400 border border-brand-500 transition-colors duration-200 flex justify-center items-center mt-6 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]">
+                <span>Criar Conta</span>
+                <i data-lucide="user-plus" class="w-4 h-4 ml-2"></i>
+            </button>
+        </form>
+
+        <p class="mt-8 text-center text-xs text-zinc-500 font-mono">
+            JÁ TEM ACESSO? 
+            <a href="login.html" class="font-bold text-brand-500 hover:text-brand-400 transition-colors ml-1 border-b border-brand-500/30 hover:border-brand-500">RETORNAR AO LOGIN</a>
+        </p>
+
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let currentType = 'company';
+
+        function setType(type) {
+            currentType = type;
+            const btnCompany = document.getElementById('btn-company');
+            const btnSpecialist = document.getElementById('btn-specialist');
+            const nameLabel = document.getElementById('name-label');
+            const emailInput = document.getElementById('email');
+
+            if (type === 'company') {
+                btnCompany.classList.replace('border-dark-border', 'border-brand-500');
+                btnCompany.classList.replace('text-zinc-500', 'text-brand-500');
+                btnSpecialist.classList.replace('border-brand-500', 'border-dark-border');
+                btnSpecialist.classList.replace('text-brand-500', 'text-zinc-500');
+                
+                nameLabel.textContent = 'Nome da Empresa';
+                emailInput.placeholder = 'admin@empresa.com';
+            } else {
+                btnSpecialist.classList.replace('border-dark-border', 'border-brand-500');
+                btnSpecialist.classList.replace('text-zinc-500', 'text-brand-500');
+                btnCompany.classList.replace('border-brand-500', 'border-dark-border');
+                btnCompany.classList.replace('text-brand-500', 'text-zinc-500');
+                
+                nameLabel.textContent = 'Nome / Handle Desenvolvedor';
+                emailInput.placeholder = 'dev@especialista.com';
+            }
+        }
+
+        function handleSignup(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const originalHTML = btn.innerHTML;
+            
+            btn.disabled = true;
+            btn.classList.add('opacity-80', 'cursor-wait');
+            btn.innerHTML = `<span class="font-mono">Criando Nodo...</span>`;
+            
+            setTimeout(() => {
+                alert(`Mock: Utilizador [${document.getElementById('name').value}] registado como ${currentType.toUpperCase()} com sucesso no banco em LocalStorage simulado!`);
+                window.location.href = 'login.html';
+            }, 1200);
+        }
+    </script>
+</body>
+</html>

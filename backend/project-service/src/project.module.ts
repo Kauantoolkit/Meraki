@@ -20,6 +20,7 @@ import { GetProjectsUseCase } from './application/use-cases/get-projects.use-cas
 import { GetProjectByIdUseCase } from './application/use-cases/get-project-by-id.use-case';
 import { UpdateProjectUseCase } from './application/use-cases/update-project.use-case';
 import { CancelProjectUseCase } from './application/use-cases/cancel-project.use-case';
+import { CompleteProjectUseCase } from './application/use-cases/complete-project.use-case';
 import { AssignSpecialistUseCase } from './application/use-cases/assign-specialist.use-case';
 import { CreateMilestoneUseCase } from './application/use-cases/create-milestone.use-case';
 import { GetMilestonesByProjectUseCase } from './application/use-cases/get-milestones-by-project.use-case';
@@ -36,7 +37,7 @@ import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.cons
   imports: [
     TypeOrmModule.forFeature([Project, Milestone]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({ secret: process.env.JWT_SECRET || 'meraki-jwt-secret' }),
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
   ],
   controllers: [ProjectController, MilestoneController],
   providers: [
@@ -54,6 +55,7 @@ import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.cons
     GetProjectByIdUseCase,
     UpdateProjectUseCase,
     CancelProjectUseCase,
+    CompleteProjectUseCase,
     AssignSpecialistUseCase,
     CreateMilestoneUseCase,
     GetMilestonesByProjectUseCase,

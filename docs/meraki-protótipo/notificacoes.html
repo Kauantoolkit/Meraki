@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Resumo de Eventos (Notificações)</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', 
+                        },
+                        dark: {
+                            bg: '#09090b',    
+                            card: '#18181b',  
+                            border: '#27272a',
+                            input: '#121214', 
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .bg-grid { background-size: 32px 32px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px); }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <div id="navbar-container"></div>
+
+    <main class="flex-1 max-w-4xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="flex justify-between items-end mb-8 border-b border-dark-border pb-4">
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-tight uppercase">Eventos do Sistema</h1>
+                <p class="text-xs font-mono text-zinc-500 mt-2">Log de notificações, alertas e pagamentos.</p>
+            </div>
+            <button class="bg-dark-input text-zinc-500 font-mono text-[10px] px-3 py-1.5 border border-dark-border hover:text-white transition-colors" onclick="alert('Histórico Limpo.')">
+                PURGE_ALL()
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            
+            <div class="bg-dark-card border border-brand-500/50 p-4 flex gap-4 shadow-[inset_2px_0_0_#55CA7C]">
+                <div class="mt-1">
+                    <i data-lucide="check-circle" class="w-5 h-5 text-brand-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-1">A sua proposta para [PRJ-8C3X] foi aceite!</h3>
+                    <p class="text-xs text-zinc-400 mb-2">A TechCorp aceitou o seu Bid. O valor de R$8.000 foi movido para o Escrow.</p>
+                    <span class="text-[10px] font-mono text-zinc-500">Há 2 horas</span>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-blue-400/30 p-4 flex gap-4 shadow-[inset_2px_0_0_#60A5FA]">
+                <div class="mt-1">
+                    <i data-lucide="coins" class="w-5 h-5 text-blue-400"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white mb-1">Pagamento Libertado (M1)</h3>
+                    <p class="text-xs text-zinc-400 mb-2">O cliente validou a sua entrega e libertou R$2.500 no seu Wallet. O saldo atualizará em 10 minutos.</p>
+                    <span class="text-[10px] font-mono text-zinc-500">Ontem às 14:30</span>
+                </div>
+            </div>
+
+            <div class="bg-dark-card border border-dark-border p-4 flex gap-4 opacity-75">
+                <div class="mt-1">
+                    <i data-lucide="file-text" class="w-5 h-5 text-zinc-500"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-zinc-300 mb-1">Novo Projeto Publicado (Recomendação)</h3>
+                    <p class="text-xs text-zinc-400 mb-2">Um projeto à procura da stack NestJS+PostgreSQL foi publicado. Veja se é o fit ideal.</p>
+                    <span class="text-[10px] font-mono text-zinc-500">Semana passada</span>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+        function goBack() {
+            const user = window.mockAPI.getCurrentUser();
+            window.location.href = (user && user.type === 'company') ? 'dashboard-empresa.html' : 'dashboard-especialista.html';
+        }
+    </script>
+</body>
+</html>

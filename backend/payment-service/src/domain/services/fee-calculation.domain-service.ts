@@ -1,17 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { DomainException } from '../exceptions/domain.exception';
+
+export const FEE_RATE_TOKEN = 'PLATFORM_FEE_RATE';
 
 /**
  * Domain Service — Cálculo de taxas de pagamento (RN06).
- * Encapsula a regra: plataforma retém 10% de cada pagamento liberado.
- * Separado da entity para facilitar mudança futura da taxa sem afetar o aggregate.
+ * A taxa é injetada pelo módulo (infrastructure) para manter o domínio
+ * livre de dependências de processo/ambiente (process.env).
  */
 @Injectable()
 export class FeeCalculationDomainService {
   private readonly feeRate: number;
 
-  constructor() {
-    this.feeRate = parseFloat(process.env.PLATFORM_FEE_RATE || '0.10');
+  constructor(@Inject(FEE_RATE_TOKEN) feeRate: number) {
+    this.feeRate = feeRate;
   }
 
   get rate(): number {

@@ -8,6 +8,8 @@ import { SubmitDeliveryUseCase } from '../../application/use-cases/submit-delive
 import { ReviewDeliveryUseCase } from '../../application/use-cases/review-delivery.use-case';
 import { GetKanbanBoardUseCase } from '../../application/use-cases/get-kanban-board.use-case';
 import { GetProjectHistoryUseCase } from '../../application/use-cases/get-project-history.use-case';
+import { AddMilestoneCommentUseCase } from '../../application/use-cases/add-milestone-comment.use-case';
+import { GetMilestoneCommentsUseCase } from '../../application/use-cases/get-milestone-comments.use-case';
 import { SubmitDeliveryDto } from '../dtos/submit-delivery.dto';
 
 @ApiTags('Deliveries')
@@ -69,5 +71,33 @@ export class HistoryController {
   @ApiOperation({ summary: 'Histórico de atividades do projeto (RF11)' })
   getHistory(@Param('projectId') projectId: string) {
     return this.historyUseCase.execute(projectId);
+  }
+}
+
+@ApiTags('Milestones')
+@Controller('api/deliveries')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+export class CommentController {
+  constructor(
+    private readonly addComment: AddMilestoneCommentUseCase,
+    private readonly getComments: GetMilestoneCommentsUseCase,
+  ) {}
+
+  @Post(':milestoneId/comments')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Adicionar comentário ao milestone' })
+  add(
+    @Param('milestoneId') milestoneId: string,
+    @Body() body: { comment: string },
+    @CurrentUser('sub') userId: string,
+  ) {
+    return this.addComment.execute(milestoneId, userId, body.comment);
+  }
+
+  @Get(':milestoneId/comments')
+  @ApiOperation({ summary: 'Listar comentários do milestone' })
+  list(@Param('milestoneId') milestoneId: string) {
+    return this.getComments.execute(milestoneId);
   }
 }

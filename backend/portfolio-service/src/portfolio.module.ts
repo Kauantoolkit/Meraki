@@ -32,10 +32,13 @@ import { RecordWorkHistoryUseCase } from './application/use-cases/record-work-hi
 import { GetCompanyProfileUseCase } from './application/use-cases/get-company-profile.use-case';
 import { CreateCompanyProfileUseCase } from './application/use-cases/create-company-profile.use-case';
 import { GetPortfolioUseCase } from './application/use-cases/get-portfolio.use-case';
+import { UpdateCompletedProjectsUseCase } from './application/use-cases/update-completed-projects.use-case';
+import { GetMyPortfolioUseCase } from './application/use-cases/get-my-portfolio.use-case';
 
 // Consumers (infrastructure)
 import { UserRegisteredConsumer } from './infrastructure/rabbitmq/consumers/user-registered.consumer';
 import { PaymentReleasedConsumer } from './infrastructure/rabbitmq/consumers/payment-released.consumer';
+import { ProjectCompletedConsumer } from './infrastructure/rabbitmq/consumers/project-completed.consumer';
 
 // Controllers (interfaces)
 import {
@@ -53,7 +56,7 @@ import {
       SpecialistPublicProfile, WorkHistory, CompanyPublicProfile,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({ secret: process.env.JWT_SECRET || 'meraki-jwt-secret' }),
+    JwtModule.register({ secret: process.env.JWT_SECRET }),
   ],
   controllers: [
     PortfolioController,
@@ -82,9 +85,12 @@ import {
     GetCompanyProfileUseCase,
     CreateCompanyProfileUseCase,
     GetPortfolioUseCase,
+    GetMyPortfolioUseCase,
+    UpdateCompletedProjectsUseCase,
     // Consumers
     UserRegisteredConsumer,
     PaymentReleasedConsumer,
+    ProjectCompletedConsumer,
   ],
 })
 export class PortfolioModule {}

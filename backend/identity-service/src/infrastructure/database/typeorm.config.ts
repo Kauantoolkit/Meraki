@@ -6,9 +6,9 @@ import { CompanyProfile } from '../../domain/entities/company-profile.entity';
 export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT) || 5432,
-  username: process.env.DB_USERNAME || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
+  port: parseInt(process.env.DB_PORT || '5432'),
+  username: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASS || 'postgres',
   database: process.env.DB_NAME || 'identity_db',
   entities: [User, SpecialistProfile, CompanyProfile],
   // synchronize: true apenas em desenvolvimento — cria/atualiza tabelas automaticamente

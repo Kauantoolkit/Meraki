@@ -12,7 +12,9 @@ import { GetProjectsUseCase } from '../../application/use-cases/get-projects.use
 import { GetProjectByIdUseCase } from '../../application/use-cases/get-project-by-id.use-case';
 import { UpdateProjectUseCase } from '../../application/use-cases/update-project.use-case';
 import { CancelProjectUseCase } from '../../application/use-cases/cancel-project.use-case';
+import { CompleteProjectUseCase } from '../../application/use-cases/complete-project.use-case';
 import { ProjectStatus } from '../../domain/enums/project-status.enum';
+import { FindProjectsFilter } from '../../domain/repositories/project.repository.interface';
 
 @ApiTags('Projects')
 @Controller('api/projects')
@@ -25,6 +27,7 @@ export class ProjectController {
     private readonly getProjectById: GetProjectByIdUseCase,
     private readonly updateProject: UpdateProjectUseCase,
     private readonly cancelProject: CancelProjectUseCase,
+    private readonly completeProject: CompleteProjectUseCase,
   ) {}
 
   @Post()
@@ -46,7 +49,7 @@ export class ProjectController {
     @CurrentUser('companyId') companyId?: string,
     @CurrentUser('specialistId') specialistId?: string,
   ) {
-    const filter: any = { status, page, limit };
+    const filter: FindProjectsFilter = { status, page, limit };
     if (userType === 'COMPANY') filter.companyId = companyId;
     if (userType === 'SPECIALIST') filter.specialistId = specialistId;
     return this.getProjects.execute(filter);
@@ -73,5 +76,12 @@ export class ProjectController {
   @ApiOperation({ summary: 'Cancelar projeto (empresa dona)' })
   cancel(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
     return this.cancelProject.execute(id, companyId);
+  }
+
+  @Put(':id/complete')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Concluir projeto — valida que todas as milestones estão APPROVED' })
+  complete(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
+    return this.completeProject.execute(id, companyId);
   }
 }

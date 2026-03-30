@@ -3,7 +3,7 @@ import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 
-const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL || 'http://localhost:3001';
+const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL as string;
 
 @Injectable()
 export class AuthService {

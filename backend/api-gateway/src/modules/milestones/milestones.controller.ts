@@ -47,6 +47,12 @@ export class MilestonesController {
   addComment(@Param('id') id: string, @Body() body: AddCommentDto, @Req() req: Request) {
     return this.milestonesService.addComment(id, body.comment, this.token(req));
   }
+
+  @Get(':id/comments')
+  @ApiOperation({ summary: 'Listar comentários do milestone' })
+  getComments(@Param('id') id: string, @Req() req: Request) {
+    return this.milestonesService.getComments(id, this.token(req));
+  }
 }
 
 // Controller separado para o Kanban board (RF08)

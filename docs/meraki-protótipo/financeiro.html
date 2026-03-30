@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Workspace // Finance & Escrow</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Mock DB Simulator -->
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', // Verde Principal
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    // zinc-950
+                            card: '#18181b',  // zinc-900
+                            border: '#27272a',// zinc-800
+                            input: '#121214', // zinc-950/80
+                            hover: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Background Tech Grid */
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        /* Scanline sutil */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(85,202,124,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: fixed;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        /* Scrollbar customizada Sharp */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b; 
+            border: 1px solid #27272a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #55CA7C; 
+        }
+
+        /* Efeito de Glitch/Sharp */
+        .btn-sharp:active {
+            transform: translate(2px, 2px);
+            box-shadow: none !important;
+        }
+        
+        /* Table Rows Hover */
+        .tx-row:hover td {
+            background-color: #121214; /* dark-input */
+            border-top-color: #55CA7C;
+            border-bottom-color: #55CA7C;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <div class="scanline"></div>
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container"></div>
+
+    <!-- MAIN GRID -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- HEADER -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8 border-b border-dark-border pb-6">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <i data-lucide="shield-check" class="w-3 h-3 text-brand-500"></i>
+                    <span class="font-mono text-[10px] tracking-widest text-brand-500 uppercase">Gateway de Pagamentos Seguro</span>
+                </div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-white uppercase tracking-tight">Gestão de Fundo de Garantia</h1>
+                <p class="text-xs sm:text-sm text-zinc-400 font-mono mt-2">Controle os depósitos em Escrow e a libertação de pagamentos por Milestone.</p>
+            </div>
+            
+            <div class="flex gap-3">
+                <button class="btn-sharp bg-dark-input text-zinc-300 font-bold uppercase tracking-widest text-xs px-4 py-3 hover:text-white border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    Exportar CSV
+                </button>
+                <button class="btn-sharp bg-brand-500 text-dark-bg font-bold uppercase tracking-widest text-xs px-4 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Adicionar Fundos
+                </button>
+            </div>
+        </div>
+
+        <!-- FINANCIAL METRICS GRID -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            
+            <!-- Metric 1: Escrow Locked -->
+            <div class="bg-dark-card border border-brand-500/30 p-5 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-brand-500/5 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2"></div>
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-brand-500"></div>
+                
+                <div class="flex justify-between items-start mb-6">
+                    <span class="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">Fundos Retidos (Escrow)</span>
+                    <i data-lucide="lock" class="w-4 h-4 text-brand-500"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-3xl font-bold text-white font-mono" id="metric-escrow">R$ 0,00</span>
+                    <span class="text-[10px] text-brand-500 font-mono mt-1" id="metric-escrow-sub">Garantido em X projetos ativos</span>
+                </div>
+            </div>
+
+            <!-- Metric 2: Funds Released -->
+            <div class="bg-dark-card border border-dark-border p-5 relative overflow-hidden">
+                <div class="flex justify-between items-start mb-6">
+                    <span class="font-mono text-[10px] text-zinc-400 uppercase tracking-widest">Total Libertado (Pago)</span>
+                    <i data-lucide="send" class="w-4 h-4 text-blue-400"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-3xl font-bold text-white font-mono" id="metric-released">R$ 0,00</span>
+                    <span class="text-[10px] text-zinc-500 font-mono mt-1" id="metric-released-sub">Referente a X milestones concluídos</span>
+                </div>
+            </div>
+
+            <!-- Metric 3: Pending Authorization -->
+            <div class="bg-dark-input border border-orange-500/30 p-5 relative overflow-hidden">
+                <div class="absolute left-0 top-0 bottom-0 w-1 bg-orange-500"></div>
+                <div class="flex justify-between items-start mb-6">
+                    <span class="font-mono text-[10px] text-orange-400 uppercase tracking-widest">Aguardando Autorização</span>
+                    <i data-lucide="clock" class="w-4 h-4 text-orange-500"></i>
+                </div>
+                <div class="flex flex-col">
+                    <span class="text-3xl font-bold text-white font-mono" id="metric-pending">R$ 0,00</span>
+                    <span class="text-[10px] text-orange-400 font-mono mt-1" id="metric-pending-sub">X Milestones validados pendentes de pagamento</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN LAYOUT: Ledger & Actions -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- LEFT AREA: TRANSACTION LEDGER (2 Columns) -->
+            <div class="lg:col-span-2 flex flex-col gap-4">
+                
+                <div class="flex items-center justify-between border-b border-dark-border pb-2">
+                    <h2 class="font-mono text-sm font-bold text-white uppercase tracking-wider">
+                        <i data-lucide="file-text" class="w-4 h-4 inline-block mr-2 text-brand-500"></i>
+                        Livro-Razão de Transações
+                    </h2>
+                    
+                    <div class="flex items-center gap-2">
+                        <div class="relative">
+                            <i data-lucide="search" class="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500"></i>
+                            <input type="text" placeholder="TX_ID ou Projeto..." class="bg-dark-input border border-dark-border text-[10px] font-mono text-zinc-300 pl-7 pr-2 py-1 focus:outline-none focus:border-brand-500 w-40">
+                        </div>
+                        <button class="bg-dark-input border border-dark-border p-1 hover:text-white transition-colors">
+                            <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TABLE: System Ledger -->
+                <div class="bg-dark-card border border-dark-border overflow-x-auto">
+                    <table class="w-full text-left border-collapse whitespace-nowrap">
+                        <thead>
+                            <tr class="bg-dark-input border-b border-dark-border">
+                                <th class="py-3 px-4 font-mono text-[10px] text-zinc-500 uppercase tracking-widest">TX_ID</th>
+                                <th class="py-3 px-4 font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Data / Hora</th>
+                                <th class="py-3 px-4 font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Tipo</th>
+                                <th class="py-3 px-4 font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Ref. Projeto</th>
+                                <th class="py-3 px-4 font-mono text-[10px] text-zinc-500 uppercase tracking-widest text-right">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-mono text-xs">
+                            
+                            <!-- TX 1: Lock -->
+                            <tr class="tx-row border-b border-dark-border/50 transition-colors cursor-default">
+                                <td class="py-3 px-4 text-zinc-400 font-bold">TX-0x8A91B</td>
+                                <td class="py-3 px-4 text-zinc-500 text-[10px]">23/03/2026 14:30</td>
+                                <td class="py-3 px-4">
+                                    <span class="border border-orange-500/30 bg-orange-500/10 text-orange-500 px-2 py-0.5 text-[9px] uppercase tracking-widest">ESCROW_LOCK</span>
+                                </td>
+                                <td class="py-3 px-4 text-zinc-400 text-[10px]">PRJ-2A9B (Milestone 1)</td>
+                                <td class="py-3 px-4 text-white font-bold text-right">R$ 4.500,00</td>
+                            </tr>
+
+                            <!-- TX 2: Release -->
+                            <tr class="tx-row border-b border-dark-border/50 transition-colors cursor-default">
+                                <td class="py-3 px-4 text-zinc-400 font-bold">TX-0x7F22C</td>
+                                <td class="py-3 px-4 text-zinc-500 text-[10px]">22/03/2026 16:45</td>
+                                <td class="py-3 px-4">
+                                    <span class="border border-brand-500/30 bg-brand-500/10 text-brand-500 px-2 py-0.5 text-[9px] uppercase tracking-widest">FUNDS_RELEASED</span>
+                                </td>
+                                <td class="py-3 px-4 text-zinc-400 text-[10px]">PRJ-8C3X (Milestone 1)</td>
+                                <td class="py-3 px-4 text-brand-500 font-bold text-right">- R$ 5.000,00</td>
+                            </tr>
+
+                            <!-- TX 3: Fee -->
+                            <tr class="tx-row border-b border-dark-border/50 transition-colors cursor-default">
+                                <td class="py-3 px-4 text-zinc-400 font-bold">TX-0x7F22D</td>
+                                <td class="py-3 px-4 text-zinc-500 text-[10px]">22/03/2026 16:45</td>
+                                <td class="py-3 px-4">
+                                    <span class="border border-purple-500/30 bg-purple-500/10 text-purple-400 px-2 py-0.5 text-[9px] uppercase tracking-widest">PLATFORM_FEE</span>
+                                </td>
+                                <td class="py-3 px-4 text-zinc-400 text-[10px]">PRJ-8C3X (Fee 10%)</td>
+                                <td class="py-3 px-4 text-purple-400 font-bold text-right">- R$ 500,00</td>
+                            </tr>
+
+                            <!-- TX 4: Lock -->
+                            <tr class="tx-row border-b border-dark-border/50 transition-colors cursor-default">
+                                <td class="py-3 px-4 text-zinc-400 font-bold">TX-0x5E11A</td>
+                                <td class="py-3 px-4 text-zinc-500 text-[10px]">10/03/2026 09:15</td>
+                                <td class="py-3 px-4">
+                                    <span class="border border-orange-500/30 bg-orange-500/10 text-orange-500 px-2 py-0.5 text-[9px] uppercase tracking-widest">ESCROW_LOCK</span>
+                                </td>
+                                <td class="py-3 px-4 text-zinc-400 text-[10px]">PRJ-8C3X (Total)</td>
+                                <td class="py-3 px-4 text-white font-bold text-right">R$ 25.000,00</td>
+                            </tr>
+                            
+                            <!-- TX 5: Release -->
+                            <tr class="tx-row border-b border-dark-border/50 transition-colors cursor-default">
+                                <td class="py-3 px-4 text-zinc-400 font-bold">TX-0x3B99X</td>
+                                <td class="py-3 px-4 text-zinc-500 text-[10px]">28/02/2026 11:20</td>
+                                <td class="py-3 px-4">
+                                    <span class="border border-brand-500/30 bg-brand-500/10 text-brand-500 px-2 py-0.5 text-[9px] uppercase tracking-widest">FUNDS_RELEASED</span>
+                                </td>
+                                <td class="py-3 px-4 text-zinc-400 text-[10px]">PRJ-1X7Y (Milestone 4)</td>
+                                <td class="py-3 px-4 text-brand-500 font-bold text-right">- R$ 7.500,00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <!-- Paginator -->
+                    <div class="p-3 border-t border-dark-border bg-dark-bg flex justify-center items-center gap-2">
+                        <button class="text-zinc-500 hover:text-brand-500"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <span class="font-mono text-[10px] text-zinc-400">Pág 1 de 12</span>
+                        <button class="text-zinc-500 hover:text-brand-500"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT AREA: PENDING ACTIONS (1 Column) -->
+            <div class="lg:col-span-1 flex flex-col gap-4">
+                
+                <div class="flex items-center justify-between border-b border-dark-border pb-2">
+                    <h2 class="font-mono text-sm font-bold text-white uppercase tracking-wider">
+                        <i data-lucide="zap" class="w-4 h-4 inline-block mr-2 text-orange-500"></i>
+                        Ações Pendentes
+                    </h2>
+                    <span class="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></span>
+                </div>
+
+                <div id="pending-actions-list" class="flex flex-col gap-4">
+                    <!-- Dynamic rendering of pending items -->
+                </div>
+                
+                <div id="pending-empty-state" class="hidden bg-dark-input border border-dashed border-dark-border p-8 flex flex-col items-center justify-center text-center">
+                    <i data-lucide="check-circle-2" class="w-8 h-8 text-zinc-600 mb-2"></i>
+                    <p class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Nenhuma ação financeira pendente.</p>
+                </div> 
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal de Sucesso (Oculto) -->
+    <div id="success-modal" class="fixed inset-0 bg-dark-bg/90 backdrop-blur-sm z-50 hidden flex-col items-center justify-center p-4">
+        <div class="bg-dark-card border border-brand-500 max-w-sm w-full p-6 shadow-2xl relative">
+            <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500"></div>
+            <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500"></div>
+            
+            <div class="flex flex-col items-center text-center">
+                <div class="w-12 h-12 rounded-full bg-brand-500/20 flex items-center justify-center mb-4 border border-brand-500">
+                    <i data-lucide="check" class="w-6 h-6 text-brand-500"></i>
+                </div>
+                <h2 class="text-xl font-mono font-bold text-white mb-2">FUNDOS LIBERTADOS</h2>
+                <p class="text-[10px] font-mono text-zinc-400 mb-6 border-b border-dark-border pb-4" id="success-modal-desc">
+                    O evento `payment.released` foi emitido para o RabbitMQ. O valor foi transferido com sucesso.
+                </p>
+                
+                <button onclick="window.location.reload()" class="btn-sharp w-full bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 hover:bg-brand-400 transition-colors">
+                    FECHAR
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar Lucide Icons
+        lucide.createIcons();
+
+        // Startup Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = window.mockAPI.getCurrentUser();
+            if(!user || user.type !== 'company') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('user-name').textContent = user.name;
+            document.getElementById('user-role').textContent = 'ID: ' + user.id;
+
+            loadFinanceData(user);
+        });
+
+        function loadFinanceData(user) {
+            const projects = window.mockAPI.getProjects().filter(p => p.companyName === user.name);
+            let totalEscrow = 0;
+            let totalReleased = 0;
+            let totalPending = 0;
+            let escrowCount = 0;
+            let releasedCount = 0;
+            let pendingCount = 0;
+
+            const pendingActionsList = document.getElementById('pending-actions-list');
+            pendingActionsList.innerHTML = '';
+            
+            projects.forEach(project => {
+                const milestones = window.mockAPI.getMilestonesByProjectId(project.id);
+                
+                milestones.forEach((m, index) => {
+                    const status = m.status || 'PENDING';
+                    
+                    if (status === 'APPROVED') {
+                        totalReleased += m.amount;
+                        releasedCount++;
+                    } else if (status === 'SUBMITTED_REVIEW') {
+                        totalPending += m.amount;
+                        pendingCount++;
+                        escrowCount++; // It's still in escrow
+                        totalEscrow += m.amount;
+                        
+                        // Add to UI as Pending Action
+                        pendingActionsList.innerHTML += createPendingActionCard(project, m, index + 1);
+
+                    } else {
+                        // PENDING or IN_PROGRESS are in escrow
+                        totalEscrow += m.amount;
+                        escrowCount++;
+                    }
+                });
+            });
+
+            // Update Metrics
+            const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+            
+            document.getElementById('metric-escrow').textContent = formatter.format(totalEscrow);
+            document.getElementById('metric-escrow-sub').textContent = `Garantido em ${escrowCount} milestones ativos`;
+            
+            document.getElementById('metric-released').textContent = formatter.format(totalReleased);
+            document.getElementById('metric-released-sub').textContent = `Referente a ${releasedCount} milestones concluídos`;
+            
+            document.getElementById('metric-pending').textContent = formatter.format(totalPending);
+            document.getElementById('metric-pending-sub').textContent = `${pendingCount} Milestones pendentes de pagamento`;
+
+            const emptyState = document.getElementById('pending-empty-state');
+            if (pendingCount === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+            }
+
+            lucide.createIcons();
+        }
+
+        function createPendingActionCard(project, milestone, index) {
+            const amountFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+            return `
+                <div class="bg-dark-card border border-orange-500/50 p-5 shadow-[0_0_15px_rgba(249,115,22,0.05)]">
+                    <div class="flex items-center justify-between mb-3 border-b border-dark-border pb-3">
+                        <span class="font-mono text-[10px] text-orange-400 border border-orange-400/30 bg-orange-400/10 px-2 py-0.5">
+                            REQ_RELEASE
+                        </span>
+                        <span class="font-mono text-[10px] text-zinc-500">M${index}</span>
+                    </div>
+
+                    <h3 class="font-bold text-white text-sm mb-1">Autorizar Pagamento: ${milestone.title}</h3>
+                    <p class="font-mono text-[10px] text-zinc-400 mb-4">Projeto: ${project.title} (${project.id})</p>
+
+                    <div class="bg-[#000] border border-dark-border p-3 mb-4 space-y-2">
+                        <div class="flex justify-between items-center font-mono text-xs">
+                            <span class="text-zinc-500">Beneficiário:</span>
+                            <span class="text-white">${project.specialistId || 'Especialista Anônimo'}</span>
+                        </div>
+                        <div class="flex justify-between items-center font-mono text-xs">
+                            <span class="text-zinc-500">Valor a Libertar:</span>
+                            <span class="text-white font-bold">${amountFormatter.format(milestone.amount)}</span>
+                        </div>
+                        <div class="flex justify-between items-center font-mono text-xs">
+                            <span class="text-zinc-500">Taxa Plat. (0%):</span>
+                            <span class="text-zinc-400">R$ 0,00 (Paga no Lock)</span>
+                        </div>
+                    </div>
+
+                    <p class="text-[10px] text-zinc-400 font-sans leading-relaxed mb-5">
+                        <i data-lucide="info" class="w-3 h-3 inline text-blue-400 mr-1"></i>
+                        A entrega deste Milestone já foi validada no painel de Kanban. Ao autorizar, o valor será transferido do Escrow para a carteira do especialista via Payment Service.
+                    </p>
+
+                    <button id="auth-btn-${milestone.id}" onclick="authorizePayment('${milestone.id}', ${milestone.amount})" class="btn-sharp w-full bg-orange-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 hover:bg-orange-400 transition-colors flex items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(249,115,22,0.2)]">
+                        <i data-lucide="key" class="w-4 h-4"></i>
+                        <span id="auth-text-${milestone.id}">AUTHORIZE_RELEASE()</span>
+                    </button>
+                </div>
+            `;
+        }
+
+        // Simulação da Libertação do Pagamento (Integration with Payment Service)
+        function authorizePayment(milestoneId, amount) {
+            const btn = document.getElementById(`auth-btn-${milestoneId}`);
+            const text = document.getElementById(`auth-text-${milestoneId}`);
+            const icon = btn.querySelector('i');
+            
+            // Estado de processamento
+            btn.disabled = true;
+            btn.classList.replace('bg-orange-500', 'bg-zinc-700');
+            btn.classList.replace('hover:bg-orange-400', 'hover:bg-zinc-600');
+            btn.classList.remove('shadow-[4px_4px_0px_rgba(249,115,22,0.2)]');
+            text.textContent = 'A COMUNICAR COM O BROKER...';
+            
+            icon.setAttribute('data-lucide', 'loader-2');
+            icon.classList.add('animate-spin');
+            lucide.createIcons();
+
+            // Simular delay de processamento seguro
+            setTimeout(() => {
+                // Update Milestone Status internally
+                window.mockAPI.updateMilestoneStatus(milestoneId, 'APPROVED');
+                
+                // Emulate RabbitMQ Event
+                window.dispatchEvent(new CustomEvent('payment.released', { detail: { milestoneId, amount } }));
+
+                const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+                document.getElementById('success-modal-desc').textContent = `O evento \`payment.released\` foi emitido para o RabbitMQ. O valor de ${formatter.format(amount)} foi transferido com sucesso.`;
+                
+                const modal = document.getElementById('success-modal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

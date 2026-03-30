@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { SubmitBidDto } from './dto/submit-bid.dto';
 
-const BIDDING_URL = process.env.BIDDING_SERVICE_URL || 'http://localhost:3003';
+const BIDDING_URL = process.env.BIDDING_SERVICE_URL as string;
 
 @Injectable()
 export class BidsService {
@@ -34,5 +34,13 @@ export class BidsService {
 
   withdraw(bidId: string, token: string) {
     return this.proxy.put(`${BIDDING_URL}/api/bids/${bidId}/withdraw`, {}, this.proxy.authHeaders(token));
+  }
+
+  sendMessage(bidId: string, message: string, token: string) {
+    return this.proxy.post(`${BIDDING_URL}/api/bids/${bidId}/messages`, { message }, this.proxy.authHeaders(token));
+  }
+
+  getMessages(bidId: string, token: string) {
+    return this.proxy.get(`${BIDDING_URL}/api/bids/${bidId}/messages`, this.proxy.authHeaders(token));
   }
 }

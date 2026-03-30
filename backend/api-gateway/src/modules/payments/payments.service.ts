@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { CreateEscrowDto } from './dto/create-escrow.dto';
 
-const PAYMENT_URL = process.env.PAYMENT_SERVICE_URL || 'http://localhost:3005';
+const PAYMENT_URL = process.env.PAYMENT_SERVICE_URL as string;
 
 @Injectable()
 export class PaymentsService {

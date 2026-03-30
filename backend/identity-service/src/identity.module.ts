@@ -30,8 +30,10 @@ import { UserController } from './interfaces/controllers/user.controller';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET || 'meraki-jwt-secret-key',
-      signOptions: { expiresIn: (process.env.JWT_EXPIRES_IN || '7d') as any },
+      secret: process.env.JWT_SECRET,
+      signOptions: {
+  expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as any
+},
     }),
     RabbitMQModule,
   ],

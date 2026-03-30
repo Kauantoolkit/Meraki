@@ -12,7 +12,8 @@ export class RabbitMQConfigService implements OnModuleInit, OnModuleDestroy {
   async onModuleDestroy() { await this.close(); }
 
   private async connectWithRetry(attempt = 1, maxAttempts = 10) {
-    const url = process.env.RABBITMQ_URL || 'amqp://meraki:meraki@localhost:5672';
+    const url = process.env.RABBITMQ_URL;
+    if (!url) throw new Error('RABBITMQ_URL não configurado. Defina a variável de ambiente antes de iniciar.');
     try {
       this.connection = await amqp.connect(url);
       this.channel = await this.connection.createChannel();

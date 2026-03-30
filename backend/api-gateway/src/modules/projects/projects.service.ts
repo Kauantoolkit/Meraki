@@ -5,7 +5,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { ListProjectsQueryDto } from './dto/list-projects-query.dto';
 
-const PROJECT_URL = process.env.PROJECT_SERVICE_URL || 'http://localhost:3002';
+const PROJECT_URL = process.env.PROJECT_SERVICE_URL as string;
 
 @Injectable()
 export class ProjectsService {
@@ -38,5 +38,9 @@ export class ProjectsService {
 
   getMilestones(projectId: string, token: string) {
     return this.proxy.get(`${PROJECT_URL}/api/projects/${projectId}/milestones`, this.proxy.authHeaders(token));
+  }
+
+  complete(id: string, token: string) {
+    return this.proxy.put(`${PROJECT_URL}/api/projects/${id}/complete`, {}, this.proxy.authHeaders(token));
   }
 }

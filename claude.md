@@ -176,10 +176,54 @@ Se você encontrar qualquer um dos bloqueios abaixo, **PARE IMEDIATAMENTE**:
 
 ## 9. Docker e Infraestrutura
 
-- Cada serviço deve ter seu próprio `Dockerfile`
-- O `docker-compose.yml` na raiz orquestra todos os serviços e bancos
+### Estrutura de deploy
+
+Cada serviço é implantado de forma **completamente independente**, em seu próprio servidor:
+
+```
+backend/
+├── docker-compose.infra.yml        → RabbitMQ central (servidor de infra dedicado)
+├── docker-compose.yml              → SOMENTE para desenvolvimento local monorepo
+│
+├── api-gateway/
+│   ├── docker-compose.yml          → deploy isolado do gateway (sem banco)
+│   └── .env.example
+│
+├── identity-service/
+│   ├── docker-compose.yml          → serviço + PostgreSQL próprio
+│   └── .env.example
+│
+├── project-service/   (mesma estrutura)
+├── bidding-service/   (mesma estrutura)
+├── delivery-service/  (mesma estrutura)
+├── payment-service/   (mesma estrutura)
+└── portfolio-service/ (mesma estrutura)
+```
+
+### Regras de infraestrutura
+
+- Cada serviço tem seu próprio `Dockerfile` e `docker-compose.yml`
+- Cada serviço sobe com seu próprio PostgreSQL (porta padrão `5432` no container)
+- O RabbitMQ é centralizado e compartilhado — configurado via `docker-compose.infra.yml`
+- Todos os serviços apontam para o RabbitMQ externo via `RABBITMQ_URL` (variável de ambiente)
+- O `api-gateway` é stateless — não tem banco, só aponta para os outros via `*_SERVICE_URL`
 - Variáveis de ambiente ficam em `.env` (nunca hardcoded)
 - Nunca suba credenciais no código
+- O `JWT_SECRET` deve ser **idêntico** em todos os servidores
+
+### Portas padrão por serviço
+
+| Serviço | Porta |
+|---|---|
+| api-gateway | 3000 |
+| identity-service | 3001 |
+| project-service | 3002 |
+| bidding-service | 3003 |
+| delivery-service | 3004 |
+| payment-service | 3005 |
+| portfolio-service | 3006 |
+
+Consulte `backend/DEPLOY.md` para o guia completo de deploy distribuído.
 
 ---
 

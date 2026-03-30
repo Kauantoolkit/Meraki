@@ -19,8 +19,10 @@ import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'meraki-jwt-secret',
-      signOptions: { expiresIn: '7d' },
+      secret: process.env.JWT_SECRET,
+      signOptions: {
+  expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as any
+},
     }),
     HttpModule.register({ timeout: 10000 }),
     AuthModule,

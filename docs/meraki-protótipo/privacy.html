@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Privacy & Security</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', // Verde Principal
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    // zinc-950
+                            card: '#18181b',  // zinc-900
+                            border: '#27272a',// zinc-800
+                            input: '#121214',
+                            hover: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        .scanline {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(85,202,124,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: fixed;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #09090b; border: 1px solid #27272a; }
+        ::-webkit-scrollbar-thumb { background: #27272a; }
+        ::-webkit-scrollbar-thumb:hover { background: #55CA7C; }
+
+        .btn-sharp:active { transform: translate(2px, 2px); box-shadow: none !important; }
+        
+        .toggle-checkbox:checked { right: 0; border-color: #55CA7C; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #55CA7C; }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <div class="scanline"></div>
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container"></div>
+
+    <!-- CONTENT -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col lg:flex-row gap-8">
+        
+        <!-- SIDEBAR SETTINGS -->
+        <aside class="w-full lg:w-64 shrink-0">
+            <div class="bg-dark-card border border-dark-border p-2">
+                <a href="settings.html" class="flex items-center gap-3 px-4 py-3 bg-transparent text-zinc-500 hover:bg-dark-hover hover:text-white transition-colors mb-2">
+                    <i data-lucide="user" class="w-4 h-4"></i>
+                    <span class="font-mono text-xs font-bold uppercase tracking-wider">Conta Básica</span>
+                </a>
+                <a href="privacy.html" class="flex items-center gap-3 px-4 py-3 bg-dark-input border border-zinc-500 text-white mb-2 transition-colors shadow-[ inset_2px_0_0_#A1A1AA]">
+                    <i data-lucide="shield-alert" class="w-4 h-4"></i>
+                    <span class="font-mono text-xs font-bold uppercase tracking-wider">Segurança</span>
+                </a>
+                <a href="javascript:void(0)" onclick="alert('Funcionalidade não simulada')" class="flex items-center gap-3 px-4 py-3 bg-transparent text-zinc-500 hover:bg-dark-hover hover:text-white transition-colors">
+                    <i data-lucide="credit-card" class="w-4 h-4"></i>
+                    <span class="font-mono text-xs font-bold uppercase tracking-wider">Faturação</span>
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN PANEL -->
+        <section class="flex-1">
+            <div class="mb-8 border-b border-dark-border pb-4">
+                <h1 class="text-2xl font-bold text-white tracking-tight uppercase">Segurança e Privacidade</h1>
+                <p class="text-xs font-mono text-zinc-500 mt-2">Gira o acesso à conta e proteja os seus dados sensíveis no Ecossistema Meraki.</p>
+            </div>
+
+            <div class="space-y-8 max-w-2xl">
+                
+                <!-- 2FA -->
+                <div class="bg-dark-card border border-dark-border p-6 shadow-xl relative">
+                    <h2 class="font-mono text-sm font-bold text-white mb-6 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="smartphone" class="w-4 h-4 text-brand-500"></i> Autenticação de 2 Fatores (2FA)
+                    </h2>
+                    
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs text-zinc-400 font-mono mb-2">Aumente a segurança exigindo um código de um app autenticador ao fazer login.</p>
+                            <span class="inline-block text-[10px] font-mono bg-red-500/10 text-red-500 border border-red-500/30 px-2 py-1 mt-1">STATUS: DESATIVADO</span>
+                        </div>
+                        <button onclick="alert('Mock: Flow de QR Code do 2FA seria aberto aqui.')" class="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-2 hover:bg-brand-400 border border-brand-500 transition-colors">
+                            ATIVAR 2FA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Alterar Senha -->
+                <div class="bg-dark-card border border-dark-border p-6 shadow-xl relative">
+                    <h2 class="font-mono text-sm font-bold text-white mb-6 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="key" class="w-4 h-4 text-zinc-400"></i> Atualizar Senha
+                    </h2>
+                    
+                    <form class="space-y-4" onsubmit="event.preventDefault(); alert('Senha alterada no mock db!');">
+                        <div>
+                            <label class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Senha Atual</label>
+                            <input type="password" class="w-full bg-[#000] border border-dark-border p-3 text-sm font-mono text-white focus:outline-none focus:border-brand-500 transition-colors" placeholder="••••••••" required>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Nova Senha</label>
+                                <input type="password" class="w-full bg-[#000] border border-dark-border p-3 text-sm font-mono text-white focus:outline-none focus:border-brand-500 transition-colors" placeholder="••••••••" required>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2 block">Confirmar Nova Senha</label>
+                                <input type="password" class="w-full bg-[#000] border border-dark-border p-3 text-sm font-mono text-white focus:outline-none focus:border-brand-500 transition-colors" placeholder="••••••••" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-sharp bg-dark-input text-white font-bold font-mono text-xs px-6 py-2 border border-dark-border hover:border-zinc-500 transition-colors mt-2">
+                            MODIFICAR CHAVE
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Export & Delete -->
+                <div class="bg-dark-card border border-red-500/20 p-6 shadow-xl relative mt-12">
+                    <h2 class="font-mono text-sm font-bold text-red-500 mb-6 uppercase tracking-widest flex items-center gap-2">
+                        <i data-lucide="alert-triangle" class="w-4 h-4"></i> Zona de Perigo
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-center justify-between border-b border-dark-border pb-4">
+                            <div>
+                                <h3 class="text-sm font-bold text-white">Exportação de Dados</h3>
+                                <p class="text-[10px] font-mono text-zinc-500 mt-1">Download completo do seu histórico, faturas e logs em formato JSON.</p>
+                            </div>
+                            <button onclick="alert('Iniciando dump da base de dados local... mock-db.json baixado.')" class="btn-sharp bg-dark-input text-white font-mono text-xs px-4 py-2 border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
+                                <i data-lucide="download" class="w-3 h-3"></i> EXPORTAR
+                            </button>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-2">
+                            <div>
+                                <h3 class="text-sm font-bold text-red-500">Apagar Conta</h3>
+                                <p class="text-[10px] font-mono text-red-400/50 mt-1">Ação irreversível. Todos os dados associados serão removidos do sistema.</p>
+                            </div>
+                            <button onclick="confirm('ATENÇÃO: Este comando é irreversível. Deseja mesmo deletar sua conta do sistema?') ? alert('Conta excluída (Mock)') : null" class="btn-sharp bg-red-500/10 text-red-500 font-bold font-mono text-xs px-4 py-2 hover:bg-red-500 hover:text-white border border-red-500/50 transition-colors">
+                                INICIAR PURGA
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <script>
+        lucide.createIcons();
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            currentUser = window.mockAPI.getCurrentUser();
+            if(!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+            document.getElementById('nav-user-name').textContent = currentUser.name;
+            document.getElementById('nav-user-role').textContent = currentUser.type === 'company' ? 'COMPANHIA' : 'ESPECIALISTA';
+        });
+
+        function goBack() {
+            if (currentUser && currentUser.type === 'company') {
+                window.location.href = 'dashboard-empresa.html';
+            } else {
+                window.location.href = 'dashboard-especialista.html';
+            }
+        }
+    </script>
+</body>
+</html>

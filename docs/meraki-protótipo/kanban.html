@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Workspace // Kanban</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- SortableJS para Drag and Drop (opcional, ou podemos usar botões simples) - vou usar botões simples para manter fiabilidade -->
+    <!-- Mock DB Simulator -->
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', // Verde Principal
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    // zinc-950
+                            card: '#18181b',  // zinc-900
+                            border: '#27272a',// zinc-800
+                            input: '#121214', // zinc-950/80
+                            hover: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Background Tech Grid */
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        /* Scanline sutil */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(85,202,124,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: fixed;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        /* Scrollbar customizada Sharp */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b; 
+            border: 1px solid #27272a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #55CA7C; 
+        }
+
+        /* Botão Glitch/Sharp */
+        .btn-sharp {
+            position: relative;
+        }
+        .btn-sharp:active {
+            transform: translate(2px, 2px);
+            box-shadow: none !important;
+        }
+
+        /* Terminal Scrollbar specific for history log */
+        .terminal-scroll::-webkit-scrollbar-track {
+            background: #000;
+            border-left: 1px solid #27272a;
+        }
+        .terminal-scroll::-webkit-scrollbar-thumb {
+            background: #27272a;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-hidden flex flex-col">
+
+    <div class="scanline"></div>
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container" data-back-url="dashboard-empresa.html" data-project-title="PRJ-8C3X // DELIVERY_BOARD"></div>
+
+    <!-- HEADER DO PROJETO -->
+    <header class="shrink-0 bg-dark-card border-b border-dark-border px-4 sm:px-6 lg:px-8 py-4">
+        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+            <div>
+                <h1 class="text-xl font-bold text-white uppercase tracking-tight mb-1" id="header-title">App Mobile de Logística</h1>
+                <div class="flex flex-wrap items-center gap-3">
+                    <span class="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 tracking-widest flex items-center gap-1.5" id="header-status">
+                        <span class="w-1.5 h-1.5 bg-brand-500 rounded-none animate-pulse"></span>
+                        IN_PROGRESS
+                    </span>
+                    <span class="font-mono text-[10px] text-zinc-400 border border-dark-border px-2 py-0.5 flex items-center gap-1" id="header-specialist">
+                        <i data-lucide="user" class="w-3 h-3 text-brand-500"></i> Kauan Silva (Especialista)
+                    </span>
+                    <span class="font-mono text-[10px] text-zinc-400 border border-dark-border px-2 py-0.5 flex items-center gap-1" id="header-deadline">
+                        <i data-lucide="calendar" class="w-3 h-3 text-brand-500"></i> Deadline: 12/10/2026
+                    </span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <div class="text-right border-r border-dark-border pr-3">
+                    <p class="font-mono text-[10px] text-zinc-500 uppercase">Orçamento em Escrow</p>
+                    <p class="font-mono font-bold text-brand-500" id="header-budget">R$ 25.000,00</p>
+                </div>
+                <button class="btn-sharp bg-dark-input hover:bg-dark-hover text-white font-mono text-xs px-4 py-2 border border-dark-border hover:border-brand-500 transition-colors shadow-[2px_2px_0px_rgba(85,202,124,0.1)]">
+                    <i data-lucide="settings-2" class="w-4 h-4 inline-block mr-1"></i> OPTIONS
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT (Split: Kanban + History) -->
+    <main class="flex-1 flex overflow-hidden">
+        
+        <!-- KANBAN BOARD AREA -->
+        <section class="flex-1 overflow-x-auto overflow-y-hidden bg-dark-bg p-4 flex gap-4">
+            
+            <!-- COLUMN: PENDING -->
+            <div class="flex-shrink-0 w-80 flex flex-col h-full">
+                <!-- Column Header -->
+                <div class="bg-dark-card border border-dark-border p-3 flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-zinc-600"></div>
+                        <h2 class="font-mono font-bold text-xs text-zinc-300">PENDING</h2>
+                    </div>
+                    <span class="font-mono text-xs bg-dark-input border border-dark-border px-2 py-0.5 text-zinc-500" id="count-pending">0</span>
+                </div>
+
+                <!-- Cards Container -->
+                <div class="flex-1 overflow-y-auto pr-2 space-y-3 pb-4" id="col-pending">
+                    <!-- Rendered Via JS -->
+                </div>
+            </div>
+
+            <!-- COLUMN: IN_PROGRESS -->
+            <div class="flex-shrink-0 w-80 flex flex-col h-full">
+                <!-- Column Header -->
+                <div class="bg-dark-card border border-brand-500/30 p-3 flex justify-between items-center mb-3 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-brand-500/5"></div>
+                    <div class="flex items-center gap-2 relative z-10">
+                        <div class="w-2 h-2 bg-brand-500 animate-pulse"></div>
+                        <h2 class="font-mono font-bold text-xs text-brand-500">IN_PROGRESS</h2>
+                    </div>
+                    <span class="font-mono text-xs bg-dark-input border border-brand-500/30 px-2 py-0.5 text-brand-500 relative z-10" id="count-inprogress">0</span>
+                </div>
+
+                <!-- Cards Container -->
+                <div class="flex-1 overflow-y-auto pr-2 space-y-3 pb-4" id="col-inprogress">
+                    <!-- Rendered Via JS -->
+                </div>
+            </div>
+
+            <!-- COLUMN: SUBMITTED (Review) -->
+            <div class="flex-shrink-0 w-80 flex flex-col h-full">
+                <!-- Column Header -->
+                <div class="bg-dark-card border border-blue-500/30 p-3 flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-blue-500"></div>
+                        <h2 class="font-mono font-bold text-xs text-blue-400">SUBMITTED_REVIEW</h2>
+                    </div>
+                    <span class="font-mono text-xs bg-dark-input border border-blue-500/30 px-2 py-0.5 text-blue-400" id="count-submitted">0</span>
+                </div>
+
+                <!-- Cards Container -->
+                <div class="flex-1 overflow-y-auto pr-2 space-y-3 pb-4" id="col-submitted">
+                    <!-- Rendered Via JS -->
+                </div>
+            </div>
+
+            <!-- COLUMN: APPROVED (Done) -->
+            <div class="flex-shrink-0 w-80 flex flex-col h-full">
+                <!-- Column Header -->
+                <div class="bg-dark-card border border-zinc-700 p-3 flex justify-between items-center mb-3">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="check" class="w-3 h-3 text-zinc-400"></i>
+                        <h2 class="font-mono font-bold text-xs text-zinc-400 line-through decoration-zinc-600">APPROVED</h2>
+                    </div>
+                    <span class="font-mono text-xs bg-dark-input border border-dark-border px-2 py-0.5 text-zinc-500" id="count-approved">0</span>
+                </div>
+
+                <!-- Cards Container -->
+                <div class="flex-1 overflow-y-auto pr-2 space-y-3 pb-4" id="col-approved">
+                    <!-- Rendered Via JS -->
+                </div>
+            </div>
+
+        </section>
+
+        <!-- PROJECT HISTORY PANEL (RN07 Implementation) -->
+        <aside class="w-80 border-l border-dark-border bg-[#000] flex flex-col h-full hidden lg:flex shrink-0">
+            <!-- Panel Header -->
+            <div class="p-3 border-b border-dark-border bg-dark-card flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-4 h-4 text-brand-500"></i>
+                    <h2 class="font-mono font-bold text-xs text-white uppercase tracking-wider">Project_History</h2>
+                </div>
+                <div class="w-2 h-2 bg-brand-500 animate-pulse rounded-full"></div>
+            </div>
+
+            <!-- Terminal Log Area -->
+            <div class="flex-1 overflow-y-auto p-4 terminal-scroll font-mono text-[10px] leading-relaxed space-y-3">
+                
+                <!-- Log entries mimicking RabbitMQ 'history.recorded' events -->
+                
+                <div class="text-zinc-500">
+                    <span class="text-zinc-600">[2026-03-24 08:30:12]</span> 
+                    <span class="text-brand-500">SYS_EVENT:</span> 
+                    <span class="text-white">Empresa (TechCorp)</span> acessou o Kanban.
+                </div>
+
+                <div class="text-zinc-500">
+                    <span class="text-zinc-600">[2026-03-22 16:45:00]</span> 
+                    <span class="text-blue-400">PAYMENT_EVENT:</span> 
+                    Pagamento de <span class="text-white">R$ 5.000,00</span> libertado do Escrow para <span class="text-white">Kauan Silva</span>. Ref: M1.
+                </div>
+
+                <div class="text-zinc-500">
+                    <span class="text-zinc-600">[2026-03-22 16:44:10]</span> 
+                    <span class="text-brand-500">DELIVERY_EVENT:</span> 
+                    <span class="text-white">Empresa (TechCorp)</span> validou a entrega. <br>
+                    <span class="pl-4 text-zinc-400">> Status(M1) alterado para APPROVED.</span>
+                </div>
+
+                <div class="text-zinc-500">
+                    <span class="text-zinc-600">[2026-03-22 14:20:33]</span> 
+                    <span class="text-brand-500">DELIVERY_EVENT:</span> 
+                    <span class="text-white">Kauan Silva</span> submeteu arquivos para revisão. <br>
+                    <span class="pl-4 text-zinc-400">> Status(M1) alterado para SUBMITTED.</span><br>
+                    <span class="pl-4 text-zinc-400">> Anexos: `ui_ux_assets.zip`, `flutter_code_v1.tar.gz`</span>
+                </div>
+
+                <div class="text-zinc-500">
+                    <span class="text-zinc-600">[2026-03-10 09:00:00]</span> 
+                    <span class="text-brand-500">DELIVERY_EVENT:</span> 
+                    <span class="text-white">Kauan Silva</span> iniciou o trabalho. <br>
+                    <span class="pl-4 text-zinc-400">> Status(M1) alterado para IN_PROGRESS.</span>
+                </div>
+
+                <div class="text-zinc-500">
+                    <span class="text-zinc-600">[2026-03-09 18:30:00]</span> 
+                    <span class="text-purple-400">BID_EVENT:</span> 
+                    <span class="text-white">Empresa (TechCorp)</span> aceitou a proposta. <br>
+                    <span class="pl-4 text-zinc-400">> Especialista atribuído: Kauan Silva.</span><br>
+                    <span class="pl-4 text-zinc-400">> Status(PRJ-8C3X) alterado para IN_PROGRESS.</span>
+                </div>
+
+                <div class="text-zinc-500">
+                    <span class="text-zinc-600">[2026-03-01 10:15:22]</span> 
+                    <span class="text-brand-500">PROJECT_EVENT:</span> 
+                    Projeto criado e publicado. <br>
+                    <span class="pl-4 text-zinc-400">> Status(PRJ-8C3X) setado como OPEN.</span><br>
+                    <span class="pl-4 text-zinc-400">> 4 Milestones gerados (RN04 validadas).</span>
+                </div>
+
+                <!-- Prompt cursor at the bottom -->
+                <div class="text-brand-500 flex items-center mt-4">
+                    <span>meraki@delivery-service:~$</span>
+                    <span class="w-2 h-3 bg-brand-500 ml-1 animate-pulse"></span>
+                </div>
+            </div>
+            
+            <!-- Send Comment / Action -->
+            <div class="p-3 border-t border-dark-border bg-dark-card">
+                <div class="relative">
+                    <input type="text" placeholder="Executar comando ou registar nota..." 
+                        class="w-full pl-3 pr-10 py-2 bg-dark-input border border-dark-border text-[10px] font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none">
+                    <button class="absolute inset-y-0 right-0 px-3 flex items-center text-zinc-500 hover:text-brand-500 transition-colors">
+                        <i data-lucide="send" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+    </main>
+
+    <!-- SUBMIT MODAL (Especialista) -->
+    <div id="submit-modal" class="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-dark-card border border-blue-500 w-full max-w-md p-6 shadow-[0_0_30px_rgba(59,130,246,0.15)] transform scale-95 opacity-0 transition-all duration-200" id="submit-modal-content">
+            <h2 class="text-lg font-bold text-white uppercase tracking-tight mb-2 flex items-center gap-2">
+                <i data-lucide="upload-cloud" class="w-5 h-5 text-blue-400"></i> Submeter Entrega
+            </h2>
+            <p class="text-xs font-mono text-zinc-400 mb-6">Associe os links ou ficheiros a esta entrega. O cliente será notificado e os fundos em <span class="text-brand-500">Escrow</span> ficarão pendentes da sua aprovação.</p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Repositório / URL</label>
+                    <input type="text" class="w-full bg-[#000] border border-dark-border p-3 text-xs font-mono text-white focus:outline-none focus:border-blue-500" placeholder="https://github.com/techcorp/meraki/pull/14">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Notas de Release</label>
+                    <textarea class="w-full bg-[#000] border border-dark-border p-3 text-xs font-sans text-white focus:outline-none focus:border-blue-500 resize-none h-20" placeholder="Endpoints /auth e /wallet integrados e com coverage de 95%..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeSubmitModal()" class="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 hover:text-white transition-colors">
+                    CANCELAR
+                </button>
+                <button onclick="confirmSubmit()" class="flex-1 btn-sharp bg-blue-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-blue-500 hover:bg-blue-400 transition-colors shadow-[2px_2px_0px_rgba(59,130,246,0.2)]">
+                    DEPLOY_SUBMIT()
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- APPROVE MODAL (Empresa) -->
+    <div id="approve-modal" class="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-dark-card border border-brand-500 w-full max-w-md p-6 shadow-[0_0_30px_rgba(85,202,124,0.15)] transform scale-95 opacity-0 transition-all duration-200" id="approve-modal-content">
+            <h2 class="text-lg font-bold text-white uppercase tracking-tight mb-2 flex items-center gap-2">
+                <i data-lucide="shield-check" class="w-5 h-5 text-brand-500"></i> Aprovar Milestone
+            </h2>
+            <div class="bg-brand-500/10 border border-brand-500/30 p-3 mb-4">
+                <p class="text-[10px] font-mono text-brand-500 uppercase">Warning: Ação Irreversível</p>
+                <p class="text-xs text-zinc-300 mt-1">Ao aprovar, o valor estipulado no Escrow será transferido instantaneamente e livre de forma criptográfica para a Wallet do especialista.</p>
+            </div>
+            
+            <div class="flex items-center gap-3 mb-6 bg-dark-input p-3 border border-dark-border">
+                <i data-lucide="lock" class="w-4 h-4 text-zinc-500"></i>
+                <div class="flex-1">
+                    <p class="text-[10px] font-mono text-zinc-500 uppercase">Valor a Libertar</p>
+                    <p class="text-sm font-bold text-white font-mono">≈ R$ 2.500,00</p>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeApproveModal()" class="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 hover:text-white transition-colors">
+                    CANCELAR
+                </button>
+                <button onclick="confirmApprove()" class="flex-1 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-brand-500 hover:bg-brand-400 transition-colors shadow-[2px_2px_0px_rgba(85,202,124,0.2)]">
+                    CONFIRMAR_PAGAMENTO()
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProjectData = null;
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            currentUser = window.mockAPI.getCurrentUser();
+            if(!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('user-role').textContent = currentUser.type === 'company' ? 'COMPANHIA' : 'ESPECIALISTA';
+
+            // Como mockup, vamos buscar qualquer projeto que tenha milestones
+            const activeProjectId = localStorage.getItem('meraki_active_kanban_project') || window.mockAPI.getProjects()[0]?.id;
+            
+            if(!activeProjectId) {
+                alert('Nenhum projeto selecionado ou existente.');
+                return;
+            }
+
+            currentProjectData = window.mockAPI.getProjects().find(p => p.id === activeProjectId);
+            
+            if(currentProjectData) {
+                document.getElementById('header-prj-id').textContent = `${currentProjectData.id} // DELIVERY_BOARD`;
+                document.getElementById('header-title').textContent = currentProjectData.title;
+                document.getElementById('header-budget').textContent = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(currentProjectData.budget);
+                document.getElementById('header-status').innerHTML = `<span class="w-1.5 h-1.5 bg-brand-500 rounded-none animate-pulse"></span>${currentProjectData.status}`;
+                document.getElementById('header-deadline').innerHTML = `<i data-lucide="calendar" class="w-3 h-3 text-brand-500"></i> Deadline: ${currentProjectData.deadline}`;
+                
+                loadKanbanBoard(activeProjectId);
+            }
+        });
+
+        function goBack() {
+            if (currentUser && currentUser.type === 'company') {
+                window.location.href = 'dashboard-empresa.html';
+            } else {
+                window.location.href = 'dashboard-especialista.html';
+            }
+        }
+
+        function loadKanbanBoard(projectId) {
+            const milestones = window.mockAPI.getMilestonesByProjectId(projectId);
+            
+            const cols = {
+                'PENDING': document.getElementById('col-pending'),
+                'IN_PROGRESS': document.getElementById('col-inprogress'),
+                'SUBMITTED_REVIEW': document.getElementById('col-submitted'),
+                'APPROVED': document.getElementById('col-approved')
+            };
+            
+            const counts = { 'PENDING': 0, 'IN_PROGRESS': 0, 'SUBMITTED_REVIEW': 0, 'APPROVED': 0 };
+
+            // Reset
+            Object.values(cols).forEach(col => col.innerHTML = '');
+
+            milestones.forEach((m, index) => {
+                const status = m.status || 'PENDING';
+                counts[status]++;
+                
+                const amountFormatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(m.amount);
+                const mIndex = index + 1;
+                
+                let actionBtn = '';
+                
+                // Regras de negócio de mock:
+                if (currentUser.type === 'specialist') {
+                    if (status === 'PENDING') {
+                        actionBtn = `<button onclick="advanceMilestone('${m.id}', 'IN_PROGRESS')" class="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase">INICIAR TRABALHO</button>`;
+                    } else if (status === 'IN_PROGRESS') {
+                        actionBtn = `<button onclick="openSubmitModal('${m.id}')" class="mt-3 w-full text-[10px] font-mono border border-blue-400 bg-blue-400/10 text-blue-400 py-1.5 hover:bg-blue-400 hover:text-dark-bg transition-colors uppercase">SUBMETER ENTREGA</button>`;
+                    }
+                } else if (currentUser.type === 'company') {
+                    if (status === 'SUBMITTED_REVIEW') {
+                        actionBtn = `<button onclick="openApproveModal('${m.id}')" class="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase flex justify-center items-center gap-2"><i data-lucide="check" class="w-3 h-3"></i> APROVAR & PAGAR</button>`;
+                    }
+                }
+
+                if (status === 'APPROVED') {
+                    actionBtn = `<button class="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card py-1.5 text-zinc-500 cursor-not-allowed uppercase">PAGO E FINALIZADO</button>`;
+                }
+
+                const cardHTML = `
+                    <div class="bg-dark-card border ${status === 'IN_PROGRESS' ? 'border-brand-500/50' : 'border-dark-border'} p-4 transition-colors group relative flex flex-col">
+                        ${status === 'IN_PROGRESS' ? '<div class="absolute left-0 top-0 bottom-0 w-1 bg-brand-500"></div>' : ''}
+                        
+                        <div class="flex justify-between items-start mb-3 ${status === 'IN_PROGRESS' ? 'pl-2' : ''}">
+                            <span class="font-mono text-[10px] ${status==='IN_PROGRESS'?'text-brand-500':'text-zinc-500'} bg-dark-input px-1.5 py-0.5 border border-dark-border">M${mIndex}</span>
+                            ${status === 'APPROVED' ? '<i data-lucide="shield-check" class="w-4 h-4 text-brand-600"></i>' : ''}
+                        </div>
+                        <h3 class="font-semibold text-sm ${status==='APPROVED'?'text-zinc-400 line-through':'text-white'} mb-2 ${status === 'IN_PROGRESS' ? 'pl-2' : ''}">${m.title}</h3>
+                        
+                        <div class="border-t border-dark-border pt-3 mt-auto ${status === 'IN_PROGRESS' ? 'ml-2' : ''}">
+                            <div class="flex justify-between items-center bg-dark-input p-2 rounded-sm border border-dark-border">
+                                <span class="font-mono font-bold text-xs text-white">${amountFormatted}</span>
+                            </div>
+                            ${actionBtn}
+                        </div>
+                    </div>
+                `;
+                
+                cols[status].innerHTML += cardHTML;
+            });
+
+            // Empty states se necessário
+            ['PENDING', 'IN_PROGRESS', 'SUBMITTED_REVIEW'].forEach(s => {
+                if (counts[s] === 0) {
+                    cols[s].innerHTML = `
+                        <div class="flex-1 border border-dashed border-dark-border flex flex-col items-center justify-center p-6 bg-dark-input/30 min-h-[100px]">
+                            <p class="font-mono text-[10px] text-zinc-500 text-center uppercase tracking-widest">Sem Registos</p>
+                        </div>
+                    `;
+                }
+            });
+
+            document.getElementById('count-pending').textContent = counts['PENDING'];
+            document.getElementById('count-inprogress').textContent = counts['IN_PROGRESS'];
+            document.getElementById('count-submitted').textContent = counts['SUBMITTED_REVIEW'];
+            document.getElementById('count-approved').textContent = counts['APPROVED'];
+            
+            lucide.createIcons();
+        }
+
+        let pendingMilestoneId = null;
+
+        function openSubmitModal(id) {
+            pendingMilestoneId = id;
+            const modal = document.getElementById('submit-modal');
+            const content = document.getElementById('submit-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => content.classList.remove('scale-95', 'opacity-0'), 10);
+        }
+
+        function closeSubmitModal() {
+            const modal = document.getElementById('submit-modal');
+            const content = document.getElementById('submit-modal-content');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+            pendingMilestoneId = null;
+        }
+
+        function confirmSubmit() {
+            if (pendingMilestoneId) {
+                advanceMilestone(pendingMilestoneId, 'SUBMITTED_REVIEW');
+                closeSubmitModal();
+            }
+        }
+
+        function openApproveModal(id) {
+            pendingMilestoneId = id;
+            const modal = document.getElementById('approve-modal');
+            const content = document.getElementById('approve-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => content.classList.remove('scale-95', 'opacity-0'), 10);
+        }
+
+        function closeApproveModal() {
+            const modal = document.getElementById('approve-modal');
+            const content = document.getElementById('approve-modal-content');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 200);
+            pendingMilestoneId = null;
+        }
+
+        function confirmApprove() {
+            if (pendingMilestoneId) {
+                advanceMilestone(pendingMilestoneId, 'APPROVED');
+                closeApproveModal();
+            }
+        }
+
+        function advanceMilestone(id, newStatus) {
+            window.mockAPI.updateMilestoneStatus(id, newStatus);
+            // Emite um event de re-render (RabbitMQ Sim)
+            window.dispatchEvent(new CustomEvent('milestone.updated', { detail: { id, newStatus } }));
+            
+            // Recarrega
+            loadKanbanBoard(currentProjectData.id);
+        }
+
+        lucide.createIcons();
+    </script>
+</body>
+</html>

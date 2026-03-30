@@ -1,0 +1,26 @@
+# ─── api-gateway — deploy independente ─────────────────────────────────────
+# O api-gateway não tem banco próprio — é stateless.
+# Configure as URLs dos serviços no .env apontando para seus respectivos
+# servidores (IPs ou hostnames públicos/privados).
+#
+# Uso:
+#   cp .env.example .env   # preencha os valores
+#   docker compose up -d
+
+services:
+  api-gateway:
+    build: .
+    container_name: meraki-api-gateway
+    ports:
+      - '${PORT:-3000}:${PORT:-3000}'
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3000}
+      JWT_SECRET: ${JWT_SECRET}
+      IDENTITY_SERVICE_URL: ${IDENTITY_SERVICE_URL}
+      PROJECT_SERVICE_URL: ${PROJECT_SERVICE_URL}
+      BIDDING_SERVICE_URL: ${BIDDING_SERVICE_URL}
+      DELIVERY_SERVICE_URL: ${DELIVERY_SERVICE_URL}
+      PAYMENT_SERVICE_URL: ${PAYMENT_SERVICE_URL}
+      PORTFOLIO_SERVICE_URL: ${PORTFOLIO_SERVICE_URL}
+    restart: unless-stopped

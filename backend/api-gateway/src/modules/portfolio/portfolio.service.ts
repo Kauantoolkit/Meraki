@@ -4,7 +4,7 @@ import { UpdatePortfolioProfileDto } from './dto/update-profile.dto';
 import { AddSkillDto } from './dto/add-skill.dto';
 import { AddCertificationDto } from './dto/add-certification.dto';
 
-const PORTFOLIO_URL = process.env.PORTFOLIO_SERVICE_URL || 'http://localhost:3006';
+const PORTFOLIO_URL = process.env.PORTFOLIO_SERVICE_URL as string;
 
 @Injectable()
 export class PortfolioService {

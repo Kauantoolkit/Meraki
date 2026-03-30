@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { SubmitDeliveryDto } from './dto/submit-delivery.dto';
 
-const DELIVERY_URL = process.env.DELIVERY_SERVICE_URL || 'http://localhost:3004';
+const DELIVERY_URL = process.env.DELIVERY_SERVICE_URL as string;
 
 @Injectable()
 export class MilestonesService {
@@ -26,6 +26,10 @@ export class MilestonesService {
 
   addComment(milestoneId: string, comment: string, token: string) {
     return this.proxy.post(`${DELIVERY_URL}/api/deliveries/${milestoneId}/comments`, { comment }, this.proxy.authHeaders(token));
+  }
+
+  getComments(milestoneId: string, token: string) {
+    return this.proxy.get(`${DELIVERY_URL}/api/deliveries/${milestoneId}/comments`, this.proxy.authHeaders(token));
   }
 
   getProjectHistory(projectId: string, token: string) {

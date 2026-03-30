@@ -1,9 +1,11 @@
+import { InvalidEmailException } from '../exceptions/domain.exception';
+
 export class Email {
   private readonly _value: string;
 
   constructor(email: string) {
     if (!Email.isValid(email)) {
-      throw new Error('Invalid email format');
+      throw new InvalidEmailException(email);
     }
     this._value = email.toLowerCase().trim();
   }
