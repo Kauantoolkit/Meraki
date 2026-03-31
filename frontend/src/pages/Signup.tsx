@@ -20,7 +20,7 @@ export default function Signup() {
     setError('')
     try {
       const res = await authApi.register({ name, email, password, type })
-      login(res.data.access_token, res.data.user)
+      login(res.data.accessToken, res.data.user)
       navigate('/dashboard')
     } catch {
       setError('Erro ao criar conta. Verifique os dados e tente novamente.')

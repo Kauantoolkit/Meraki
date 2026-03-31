@@ -17,7 +17,7 @@ export default function Navbar({ backUrl, projectTitle }: NavbarProps) {
   const location = useLocation()
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
-  const isCompany = user?.type === 'company'
+  const isCompany = (user?.userType ?? user?.type) === 'company'
 
   const navLinks = [
     { label: '/HOME', path: isCompany ? '/dashboard' : '/dashboard' },

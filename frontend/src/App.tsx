@@ -24,7 +24,7 @@ import Privacy from './pages/Privacy'
 function DashboardRoute() {
   const { user } = useAuth()
   if (!user) return <Navigate to="/login" replace />
-  return user.type === 'company'
+  return (user.userType ?? user.type) === 'company'
     ? <DashboardEmpresa />
     : <DashboardEspecialista />
 }

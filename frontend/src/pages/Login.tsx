@@ -20,7 +20,7 @@ export default function Login() {
     setError('')
     try {
       const res = await authApi.login({ email, password })
-      login(res.data.access_token, res.data.user)
+      login(res.data.accessToken, res.data.user)
       navigate('/dashboard')
     } catch {
       setError('Credenciais inválidas. Verifique seu e-mail e senha.')

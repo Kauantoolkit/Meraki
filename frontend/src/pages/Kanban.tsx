@@ -33,7 +33,7 @@ export default function Kanban() {
   const [releaseNotes, setReleaseNotes] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
 
-  const isCompany = user?.type === 'company'
+  const isCompany = (user?.userType ?? user?.type) === 'company'
 
   useEffect(() => {
     if (!projectId) return

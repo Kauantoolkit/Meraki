@@ -45,7 +45,7 @@ export default function SettingsPage() {
               <div>
                 <label className="text-[10px] font-mono text-zinc-500 uppercase block mb-1">Tipo de Conta</label>
                 <div className="px-4 py-3 bg-dark-input border border-dark-border text-sm font-mono text-brand-500">
-                  {user?.type?.toUpperCase() ?? '—'}
+                  {(user?.userType ?? user?.type)?.toUpperCase() ?? '—'}
                 </div>
               </div>
               <button onClick={handleSave}
