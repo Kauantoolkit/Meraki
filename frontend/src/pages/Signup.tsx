@@ -19,8 +19,8 @@ export default function Signup() {
     setLoading(true)
     setError('')
     try {
-      const res = await authApi.register({ name, email, password, type })
-      login(res.data.access_token, res.data.user)
+      const { token, user } = await authApi.register({ name, email, password, userType: type === 'company' ? 'COMPANY' : 'SPECIALIST' })
+      login(token, user)
       navigate('/dashboard')
     } catch {
       setError('Erro ao criar conta. Verifique os dados e tente novamente.')

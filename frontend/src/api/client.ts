@@ -15,10 +15,13 @@ api.interceptors.request.use((config) => {
 })
 
 // Notifica o AuthContext quando o token expirar (sem hard reload)
+// Ignora rotas de auth para não interferir com credenciais inválidas
 api.interceptors.response.use(
   (res) => res,
   (error) => {
-    if (error.response?.status === 401) {
+    const url: string = error.config?.url ?? ''
+    const isAuthRoute = url.includes('/auth/')
+    if (error.response?.status === 401 && !isAuthRoute) {
       localStorage.removeItem('meraki_token')
       localStorage.removeItem('meraki_user')
       window.dispatchEvent(new CustomEvent('meraki:unauthorized'))

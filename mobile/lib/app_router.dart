@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'features/auth/view/login_screen.dart';
 import 'features/auth/view/register_screen.dart';
+import 'features/auth/view/forgot_password_screen.dart';
 import 'features/auth/viewmodel/auth_viewmodel.dart';
+import 'features/dashboard/view/dashboard_screen.dart';
+import 'features/inbox/view/inbox_screen.dart';
 import 'features/projects/view/projects_list_screen.dart';
 import 'features/projects/view/project_detail_screen.dart';
 import 'features/projects/view/create_project_screen.dart';
@@ -39,19 +42,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = ref.read(authViewModelProvider).isAuthenticated;
       final loc = state.matchedLocation;
-      final isPublic = loc == '/login' || loc == '/register';
+      final isPublic = loc == '/login' || loc == '/register' || loc == '/forgot-password';
       if (!isAuthenticated && !isPublic) return '/login';
-      if (isAuthenticated && isPublic) return '/projects';
+      if (isAuthenticated && isPublic) return '/dashboard';
       return null;
     },
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
 
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => MainShell(child: child),
         routes: [
+          // ─── Dashboard ────────────────────────────────────────────────
+          GoRoute(
+            path: '/dashboard',
+            builder: (_, __) => const DashboardScreen(),
+          ),
+
+          // ─── Inbox ────────────────────────────────────────────────────
+          GoRoute(
+            path: '/inbox',
+            builder: (_, __) => const InboxScreen(),
+          ),
+
           // ─── Projetos ─────────────────────────────────────────────────
           GoRoute(
             path: '/projects',

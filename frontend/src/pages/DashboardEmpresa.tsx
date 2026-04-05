@@ -3,42 +3,22 @@ import { useNavigate } from 'react-router-dom'
 import { Activity, Inbox, Wallet, PlusSquare, FolderCode, FolderGit2, Users, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
-import { bidsApi } from '../api/bids'
-import { paymentsApi } from '../api/payments'
-import { useAuth } from '../contexts/AuthContext'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
 export default function DashboardEmpresa() {
-  const { user } = useAuth()
   const navigate = useNavigate()
   const [projects, setProjects] = useState<Project[]>([])
-  const [escrow, setEscrow] = useState(0)
   const [filter, setFilter] = useState('ALL')
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    Promise.all([projectsApi.listByCompany(), paymentsApi.getEscrowBalance()])
-      .then(([pRes, eRes]) => {
-        setProjects(pRes.data)
-        setEscrow(eRes.data.balance)
-      })
+    projectsApi.listByCompany()
+      .then(res => setProjects(res.data.data))
+      .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
-
-  async function handleAcceptBid(projectId: string) {
-    try {
-      const bids = await bidsApi.listForProject(projectId)
-      const pending = bids.data.find(b => b.status === 'PENDING')
-      if (!pending) { alert('Nenhuma proposta pendente para este projeto.'); return }
-      await bidsApi.accept(pending.id)
-      const updated = await projectsApi.listByCompany()
-      setProjects(updated.data)
-    } catch {
-      alert('Erro ao aceitar proposta.')
-    }
-  }
 
   const filtered = projects.filter(p => {
     const matchFilter = filter === 'ALL' || p.status === filter
@@ -48,6 +28,7 @@ export default function DashboardEmpresa() {
 
   const inProgress = projects.filter(p => p.status === 'IN_PROGRESS').length
   const open = projects.filter(p => p.status === 'OPEN').length
+  const committed = projects.filter(p => p.status === 'IN_PROGRESS').reduce((sum, p) => sum + p.budget, 0)
 
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden">
@@ -102,7 +83,7 @@ export default function DashboardEmpresa() {
               <Wallet className="w-4 h-4 text-purple-400" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white font-mono">{fmt(escrow)}</span>
+              <span className="text-2xl font-bold text-white font-mono">{fmt(committed)}</span>
               <span className="text-xs text-purple-400 font-mono">/ ESCROW</span>
             </div>
           </div>
@@ -145,7 +126,7 @@ export default function DashboardEmpresa() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filtered.map(p => (
-              <ProjectCard key={p.id} project={p} onAcceptBid={handleAcceptBid} onOpenKanban={() => navigate(`/kanban/${p.id}`)} />
+              <ProjectCard key={p.id} project={p} onViewBids={() => navigate(`/projects/${p.id}/bids`)} onOpenKanban={() => navigate(`/kanban/${p.id}`)} />
             ))}
           </div>
         )}
@@ -154,9 +135,9 @@ export default function DashboardEmpresa() {
   )
 }
 
-function ProjectCard({ project: p, onAcceptBid, onOpenKanban }: {
+function ProjectCard({ project: p, onViewBids, onOpenKanban }: {
   project: Project
-  onAcceptBid: (id: string) => void
+  onViewBids: () => void
   onOpenKanban: () => void
 }) {
   const isOpen = p.status === 'OPEN'
@@ -199,13 +180,13 @@ function ProjectCard({ project: p, onAcceptBid, onOpenKanban }: {
         <div className="flex items-center justify-between border-t border-dark-border pt-4 mt-2">
           <div className="flex items-center gap-2">
             <Users className="w-4 h-4 text-zinc-600" />
-            <span className="font-mono text-[10px] text-zinc-500">Ver propostas</span>
+            <span className="font-mono text-[10px] text-zinc-500">Avaliar candidaturas</span>
           </div>
           <button
-            onClick={() => onAcceptBid(p.id)}
+            onClick={onViewBids}
             className="btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs px-4 py-2 border border-brand-500 transition-colors"
           >
-            ACEITAR_BID()
+            VER_PROPOSTAS()
           </button>
         </div>
       ) : (

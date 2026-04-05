@@ -19,9 +19,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const storedToken = localStorage.getItem('meraki_token')
     const storedUser = localStorage.getItem('meraki_user')
-    if (storedToken && storedUser) {
-      setToken(storedToken)
-      setUser(JSON.parse(storedUser))
+    // Reject tokens that were incorrectly saved as the literal string "undefined"
+    if (storedToken && storedToken !== 'undefined' && storedUser && storedUser !== 'undefined') {
+      try {
+        setToken(storedToken)
+        setUser(JSON.parse(storedUser))
+      } catch {
+        localStorage.removeItem('meraki_token')
+        localStorage.removeItem('meraki_user')
+      }
+    } else {
+      localStorage.removeItem('meraki_token')
+      localStorage.removeItem('meraki_user')
     }
     setIsLoading(false)
 

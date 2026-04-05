@@ -1,43 +1,122 @@
-import { Bell, CheckCircle, AlertTriangle, Info } from 'lucide-react'
+import { useState } from 'react'
+import { CheckCircle, Wallet, FileText, Trash2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 
-const MOCK_NOTIFICATIONS = [
-  { id: 1, type: 'success', title: 'Pagamento Liberado!', desc: 'R$ 3.500 foram adicionados à sua carteira após aprovação do Milestone 1.', time: 'Há 2h' },
-  { id: 2, type: 'warning', title: 'Milestone Próximo do Prazo', desc: 'O Milestone 2 vence em 2 dias. Submeta a entrega para evitar penalizações.', time: 'Há 5h' },
-  { id: 3, type: 'info', title: 'Nova Proposta Recebida', desc: 'Você recebeu uma nova proposta para o projeto PRJ-8C3X.', time: 'Há 1 dia' },
-  { id: 4, type: 'success', title: 'Proposta Aceite', desc: 'Sua proposta para o projeto "App Mobile de Logística" foi aceite!', time: 'Há 3 dias' },
+type EventType = 'bid' | 'payment' | 'project' | 'system'
+
+interface SysEvent {
+  id: number
+  type: EventType
+  title: string
+  desc: string
+  time: string
+  read: boolean
+}
+
+const MOCK_EVENTS: SysEvent[] = [
+  {
+    id: 1, type: 'bid', read: false,
+    title: 'A sua proposta para [PRJ-8C3X] foi aceite!',
+    desc: 'A TechCorp aceitou o seu Bid. O valor de R$8.000 foi movido para o Escrow.',
+    time: 'Há 2 horas',
+  },
+  {
+    id: 2, type: 'payment', read: false,
+    title: 'Pagamento Libertado (M1)',
+    desc: 'O cliente validou a sua entrega e libertou R$2.500 no seu Wallet. O saldo actualizará em 10 minutos.',
+    time: 'Antes de 2h:30',
+  },
+  {
+    id: 3, type: 'project', read: true,
+    title: 'Novo Projeto Publicado (Recomendação)',
+    desc: 'Um projeto à procura da stack NestJS+PostgreSQL foi publicado. Veja se é o fit ideal.',
+    time: 'Semana passada',
+  },
 ]
 
+const TYPE_META: Record<EventType, { icon: React.ElementType; color: string; border: string; bg: string }> = {
+  bid:     { icon: CheckCircle, color: 'text-brand-500',  border: 'border-brand-500/40',  bg: 'bg-brand-500/5' },
+  payment: { icon: Wallet,      color: 'text-blue-400',   border: 'border-blue-500/40',   bg: 'bg-blue-500/5' },
+  project: { icon: FileText,    color: 'text-zinc-400',   border: 'border-dark-border',   bg: '' },
+  system:  { icon: FileText,    color: 'text-zinc-400',   border: 'border-dark-border',   bg: '' },
+}
+
 export default function Notificacoes() {
+  const [events, setEvents] = useState<SysEvent[]>(MOCK_EVENTS)
+
+  function markRead(id: number) {
+    setEvents(prev => prev.map(e => e.id === id ? { ...e, read: true } : e))
+  }
+
+  function purgeAll() {
+    setEvents([])
+  }
+
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased">
       <div className="scanline" />
       <Navbar />
+
       <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-between mb-8">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Notificações</h1>
-            <p className="text-sm text-zinc-400 font-mono mt-2">Alertas do sistema e atualizações em tempo real.</p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="w-2 h-2 bg-brand-500 animate-pulse" />
+              <span className="font-mono text-[10px] tracking-widest text-brand-500 uppercase">
+                MERAKI // SYS_EVENTS
+              </span>
+            </div>
+            <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Eventos do Sistema</h1>
+            <p className="text-sm text-zinc-400 font-mono mt-2">Log de notificações, alertas e pagamentos.</p>
           </div>
-          <Bell className="w-6 h-6 text-brand-500" />
+          <button
+            onClick={purgeAll}
+            className="shrink-0 flex items-center gap-2 px-4 py-2 bg-dark-input border border-dark-border hover:border-red-500/50 hover:text-red-400 text-zinc-400 font-mono text-xs font-bold uppercase tracking-wider transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> PURGE_ALL
+          </button>
         </div>
 
-        <div className="space-y-3">
-          {MOCK_NOTIFICATIONS.map(n => (
-            <div key={n.id} className="bg-dark-card border border-dark-border p-4 hover:border-zinc-600 transition-colors flex gap-4">
-              <div className={`shrink-0 mt-0.5 ${n.type === 'success' ? 'text-brand-500' : n.type === 'warning' ? 'text-orange-400' : 'text-blue-400'}`}>
-                {n.type === 'success' ? <CheckCircle className="w-5 h-5" /> : n.type === 'warning' ? <AlertTriangle className="w-5 h-5" /> : <Info className="w-5 h-5" />}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-mono text-xs font-bold text-white">{n.title}</p>
-                  <span className="font-mono text-[10px] text-zinc-600 shrink-0">{n.time}</span>
+        {events.length === 0 ? (
+          <div className="border border-dashed border-zinc-700 py-16 text-center font-mono text-zinc-600 text-sm">
+            &gt; Nenhum evento no sistema. Queue limpa.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {events.map(ev => {
+              const meta = TYPE_META[ev.type]
+              const Icon = meta.icon
+              return (
+                <div
+                  key={ev.id}
+                  className={`border ${meta.border} ${meta.bg} p-5 flex gap-4 transition-colors ${ev.read ? 'opacity-60' : ''}`}
+                >
+                  <div className={`shrink-0 mt-0.5 ${meta.color}`}>
+                    <Icon className="w-5 h-5" strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3 mb-1">
+                      <p className={`font-mono text-xs font-bold ${ev.read ? 'text-zinc-400' : 'text-white'}`}>
+                        {ev.title}
+                      </p>
+                      <span className="font-mono text-[10px] text-zinc-600 shrink-0">{ev.time}</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{ev.desc}</p>
+                    {!ev.read && (
+                      <button
+                        onClick={() => markRead(ev.id)}
+                        className={`mt-3 font-mono text-[10px] font-bold ${meta.color} hover:underline uppercase tracking-wider`}
+                      >
+                        Marcar como lido
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <p className="text-xs text-zinc-400 mt-1">{n.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </main>
     </div>
   )

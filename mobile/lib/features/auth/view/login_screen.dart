@@ -18,6 +18,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   bool _obscure = true;
+  String _loginType = 'COMPANY'; // COMPANY | SPECIALIST
 
   @override
   void dispose() {
@@ -32,7 +33,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           _emailCtrl.text.trim(),
           _passwordCtrl.text,
         );
-    if (ok && mounted) context.go('/projects');
+    if (ok && mounted) context.go('/dashboard');
   }
 
   @override
@@ -44,158 +45,269 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       child: Scaffold(
         backgroundColor: AppTheme.slate900,
         resizeToAvoidBottomInset: true,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        body: Stack(
           children: [
-            // ─── Dark hero ─────────────────────────────────────────────
-            Expanded(
-              child: SafeArea(
-                bottom: false,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(32, 40, 32, 24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Logo mark
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.hub_rounded,
-                          color: Colors.white,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      Text(
-                        'meraki',
-                        style: GoogleFonts.plusJakartaSans(
-                          color: Colors.white,
-                          fontSize: 44,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -2,
-                          height: 1,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      Text(
-                        'Conectando empresas\ne especialistas',
-                        style: GoogleFonts.plusJakartaSans(
-                          color: Colors.white.withOpacity(0.45),
-                          fontSize: 17,
-                          height: 1.45,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
+            // Green glow background
+            Positioned(
+              top: -100,
+              left: -80,
+              child: Container(
+                width: 320,
+                height: 320,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.brand.withOpacity(0.06),
                 ),
               ),
             ),
 
-            // ─── White form card ────────────────────────────────────────
-            Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius:
-                    BorderRadius.vertical(top: Radius.circular(32)),
-              ),
-              child: SafeArea(
-                top: false,
+            SafeArea(
+              child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          'Entrar na conta',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.slate900,
-                            letterSpacing: -0.5,
-                          ),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 40),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // ─── Logo ───────────────────────────────────────
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppTheme.brandLight,
+                          border: Border.all(
+                              color: AppTheme.brand, width: 1.5),
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Bem-vindo de volta',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            color: AppTheme.slate400,
-                          ),
+                        child: const Icon(
+                          Icons.terminal_rounded,
+                          color: AppTheme.brand,
+                          size: 26,
                         ),
-                        const SizedBox(height: 24),
-                        TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            labelText: 'E-mail',
-                            prefixIcon: Icon(Icons.email_outlined),
-                          ),
-                          validator: (v) =>
-                              (v == null || !v.contains('@'))
-                                  ? 'E-mail inválido'
-                                  : null,
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'MERAKI',
+                        style: GoogleFonts.sourceCodePro(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 6,
                         ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          controller: _passwordCtrl,
-                          obscureText: _obscure,
-                          decoration: InputDecoration(
-                            labelText: 'Senha',
-                            prefixIcon: const Icon(Icons.lock_outline),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscure
-                                    ? Icons.visibility_outlined
-                                    : Icons.visibility_off_outlined,
-                                size: 20,
-                              ),
-                              onPressed: () =>
-                                  setState(() => _obscure = !_obscure),
-                            ),
-                          ),
-                          validator: (v) =>
-                              (v == null || v.length < 6)
-                                  ? 'Mínimo 6 caracteres'
-                                  : null,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'TECH FREELANCE MARKETPLACE',
+                        style: GoogleFonts.sourceCodePro(
+                          color: AppTheme.slate500,
+                          fontSize: 9,
+                          letterSpacing: 2,
                         ),
-                        if (state.error != null) ...[
-                          const SizedBox(height: 12),
-                          _ErrorBanner(message: state.error!),
-                        ],
-                        const SizedBox(height: 20),
-                        FilledButton(
-                          onPressed: state.isLoading ? null : _submit,
-                          child: state.isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.5,
-                                    color: Colors.white,
+                      ),
+                      const SizedBox(height: 32),
+
+                      // ─── Card ────────────────────────────────────────
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppTheme.slate100,
+                          border: Border.all(color: AppTheme.slate200),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        padding: const EdgeInsets.all(24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.stretch,
+                            children: [
+                              // ─── Type tabs ───────────────────────
+                              Row(
+                                children: [
+                                  _Tab(
+                                    label: 'EMPRESA',
+                                    selected: _loginType == 'COMPANY',
+                                    onTap: () => setState(
+                                        () => _loginType = 'COMPANY'),
                                   ),
-                                )
-                              : const Text('Entrar'),
+                                  const SizedBox(width: 8),
+                                  _Tab(
+                                    label: 'ESPECIALISTA',
+                                    selected:
+                                        _loginType == 'SPECIALIST',
+                                    onTap: () => setState(
+                                        () => _loginType = 'SPECIALIST'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              // ─── E-mail ──────────────────────────
+                              Text(
+                                'E-MAIL',
+                                style: GoogleFonts.sourceCodePro(
+                                  color: AppTheme.slate500,
+                                  fontSize: 10,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _emailCtrl,
+                                keyboardType:
+                                    TextInputType.emailAddress,
+                                style: GoogleFonts.sourceCodePro(
+                                    color: Colors.white, fontSize: 13),
+                                decoration: InputDecoration(
+                                  hintText: _loginType == 'COMPANY'
+                                      ? 'admin@empresa.com'
+                                      : 'dev@especialista.com',
+                                ),
+                                validator: (v) =>
+                                    (v == null || !v.contains('@'))
+                                        ? 'E-mail inválido'
+                                        : null,
+                              ),
+                              const SizedBox(height: 14),
+
+                              // ─── Senha ───────────────────────────
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'SENHA',
+                                    style: GoogleFonts.sourceCodePro(
+                                      color: AppTheme.slate500,
+                                      fontSize: 10,
+                                      letterSpacing: 1.5,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () => context
+                                        .go('/forgot-password'),
+                                    child: Text(
+                                      'Esquecer?',
+                                      style: GoogleFonts.sourceCodePro(
+                                        color: AppTheme.brand,
+                                        fontSize: 10,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _passwordCtrl,
+                                obscureText: _obscure,
+                                style: GoogleFonts.sourceCodePro(
+                                    color: Colors.white, fontSize: 13),
+                                decoration: InputDecoration(
+                                  hintText: '••••••••',
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscure
+                                          ? Icons.visibility_outlined
+                                          : Icons
+                                              .visibility_off_outlined,
+                                      size: 18,
+                                      color: AppTheme.slate500,
+                                    ),
+                                    onPressed: () => setState(
+                                        () => _obscure = !_obscure),
+                                  ),
+                                ),
+                                validator: (v) =>
+                                    (v == null || v.length < 6)
+                                        ? 'Mínimo 6 caracteres'
+                                        : null,
+                              ),
+
+                              if (state.error != null) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.dangerLight,
+                                    border: Border.all(
+                                        color: AppTheme.danger
+                                            .withOpacity(0.3)),
+                                    borderRadius:
+                                        BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    state.error!,
+                                    style: GoogleFonts.sourceCodePro(
+                                        color: AppTheme.danger,
+                                        fontSize: 11),
+                                  ),
+                                ),
+                              ],
+
+                              const SizedBox(height: 20),
+
+                              // ─── Submit button ───────────────────
+                              SizedBox(
+                                height: 48,
+                                child: FilledButton(
+                                  onPressed:
+                                      state.isLoading ? null : _submit,
+                                  child: state.isLoading
+                                      ? const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppTheme.slate900,
+                                          ),
+                                        )
+                                      : Text(
+                                          'INICIALIZAR  >',
+                                          style:
+                                              GoogleFonts.sourceCodePro(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                            letterSpacing: 2,
+                                            color: AppTheme.slate900,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 4),
-                        TextButton(
-                          onPressed: () => context.go('/register'),
-                          child: const Text('Não tem conta? Cadastre-se'),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ─── Register link ───────────────────────────────
+                      GestureDetector(
+                        onTap: () => context.go('/register'),
+                        child: RichText(
+                          text: TextSpan(
+                            style: GoogleFonts.sourceCodePro(
+                              fontSize: 11,
+                              color: AppTheme.slate500,
+                              letterSpacing: 0.5,
+                            ),
+                            children: [
+                              const TextSpan(
+                                  text: 'JÁ TEM CONTA? '),
+                              TextSpan(
+                                text: 'SOLICITAR REGISTRO',
+                                style: GoogleFonts.sourceCodePro(
+                                  fontSize: 11,
+                                  color: AppTheme.brand,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -207,35 +319,46 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 }
 
-class _ErrorBanner extends StatelessWidget {
-  final String message;
-  const _ErrorBanner({required this.message});
+class _Tab extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _Tab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.dangerLight,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.danger.withOpacity(0.25)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline_rounded,
-              size: 16, color: AppTheme.danger),
-          const SizedBox(width: 8),
-          Expanded(
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: selected ? AppTheme.brand : AppTheme.slate50,
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: selected
+                  ? AppTheme.brand
+                  : AppTheme.slate200,
+            ),
+          ),
+          child: Center(
             child: Text(
-              message,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                color: AppTheme.danger,
-                fontWeight: FontWeight.w500,
+              label,
+              style: GoogleFonts.sourceCodePro(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: selected ? AppTheme.slate900 : AppTheme.slate500,
+                letterSpacing: 1,
               ),
             ),
           ),
-        ],
+        ),
       ),
     );
   }

@@ -31,11 +31,13 @@ export interface CreateProjectPayload {
   milestones: { title: string; description: string; amount: number }[]
 }
 
+export interface ProjectsPage { data: Project[]; total: number }
+
 export const projectsApi = {
-  list: () => api.get<Project[]>('/projects'),
-  listOpen: () => api.get<Project[]>('/projects?status=OPEN'),
-  listByCompany: () => api.get<Project[]>('/projects/my'),
-  listBySpecialist: () => api.get<Project[]>('/projects/assigned'),
+  list: () => api.get<ProjectsPage>('/projects'),
+  listOpen: () => api.get<ProjectsPage>('/projects?status=OPEN'),
+  listByCompany: () => api.get<ProjectsPage>('/projects'),
+  listBySpecialist: () => api.get<ProjectsPage>('/projects'),
   getById: (id: string) => api.get<Project>(`/projects/${id}`),
   create: (data: CreateProjectPayload) => api.post<Project>('/projects', data),
   getMilestones: (projectId: string) => api.get<Milestone[]>(`/projects/${projectId}/milestones`),

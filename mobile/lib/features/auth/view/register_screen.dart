@@ -19,7 +19,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
   final _companyNameCtrl = TextEditingController();
-  String _userType = 'SPECIALIST';
+  String _userType = 'COMPANY';
   bool _obscure = true;
 
   @override
@@ -41,7 +41,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (_userType == 'COMPANY') 'companyName': _companyNameCtrl.text.trim(),
     };
     final ok = await ref.read(authViewModelProvider.notifier).register(dto);
-    if (ok && mounted) context.go('/projects');
+    if (ok && mounted) context.go('/dashboard');
   }
 
   @override
@@ -53,168 +53,281 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       child: Scaffold(
         backgroundColor: AppTheme.slate900,
         resizeToAvoidBottomInset: true,
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+        body: Stack(
           children: [
-            // ─── Dark hero ─────────────────────────────────────────────
-            SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(32, 32, 32, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: () => context.go('/login'),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_back_rounded,
-                          color: Colors.white,
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      'Criar conta',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: Colors.white,
-                        fontSize: 30,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -1,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Comece agora, é grátis',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: Colors.white.withOpacity(0.45),
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
+            // Green glow background
+            Positioned(
+              top: -120,
+              right: -80,
+              child: Container(
+                width: 280,
+                height: 280,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.brand.withOpacity(0.05),
                 ),
               ),
             ),
 
-            // ─── White form card ────────────────────────────────────────
-            Expanded(
-              child: Container(
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius:
-                      BorderRadius.vertical(top: Radius.circular(32)),
-                ),
-                child: SafeArea(
-                  top: false,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // ─── Type toggle ─────────────────────────────
-                          _TypeSelector(
-                            value: _userType,
-                            onChanged: (v) => setState(() => _userType = v),
-                          ),
-                          const SizedBox(height: 20),
-                          TextFormField(
-                            controller: _nameCtrl,
-                            decoration: const InputDecoration(
-                              labelText: 'Nome completo',
-                              prefixIcon: Icon(Icons.person_outline_rounded),
-                            ),
-                            validator: (v) =>
-                                (v == null || v.isEmpty)
-                                    ? 'Obrigatório'
-                                    : null,
-                          ),
-                          if (_userType == 'COMPANY') ...[
-                            const SizedBox(height: 12),
-                            TextFormField(
-                              controller: _companyNameCtrl,
-                              decoration: const InputDecoration(
-                                labelText: 'Nome da empresa',
-                                prefixIcon:
-                                    Icon(Icons.business_outlined),
-                              ),
-                              validator: (v) =>
-                                  (v == null || v.isEmpty)
-                                      ? 'Obrigatório para empresa'
-                                      : null,
-                            ),
-                          ],
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _emailCtrl,
-                            keyboardType: TextInputType.emailAddress,
-                            decoration: const InputDecoration(
-                              labelText: 'E-mail',
-                              prefixIcon: Icon(Icons.email_outlined),
-                            ),
-                            validator: (v) =>
-                                (v == null || !v.contains('@'))
-                                    ? 'E-mail inválido'
-                                    : null,
-                          ),
-                          const SizedBox(height: 12),
-                          TextFormField(
-                            controller: _passwordCtrl,
-                            obscureText: _obscure,
-                            decoration: InputDecoration(
-                              labelText: 'Senha',
-                              prefixIcon:
-                                  const Icon(Icons.lock_outline_rounded),
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscure
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                  size: 20,
-                                ),
-                                onPressed: () =>
-                                    setState(() => _obscure = !_obscure),
-                              ),
-                            ),
-                            validator: (v) =>
-                                (v == null || v.length < 6)
-                                    ? 'Mínimo 6 caracteres'
-                                    : null,
-                          ),
-                          if (state.error != null) ...[
-                            const SizedBox(height: 12),
-                            _ErrorBanner(message: state.error!),
-                          ],
-                          const SizedBox(height: 20),
-                          FilledButton(
-                            onPressed: state.isLoading ? null : _submit,
-                            child: state.isLoading
-                                ? const SizedBox(
-                                    height: 20,
-                                    width: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Text('Criar conta'),
-                          ),
-                          const SizedBox(height: 4),
-                          TextButton(
-                            onPressed: () => context.go('/login'),
-                            child: const Text('Já tem conta? Entrar'),
-                          ),
-                        ],
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 24, vertical: 40),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // ─── Logo ────────────────────────────────────────────
+                      Container(
+                        width: 52,
+                        height: 52,
+                        decoration: BoxDecoration(
+                          color: AppTheme.brandLight,
+                          border: Border.all(
+                              color: AppTheme.brand, width: 1.5),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Icon(
+                          Icons.terminal_rounded,
+                          color: AppTheme.brand,
+                          size: 26,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'REGISTO',
+                        style: GoogleFonts.sourceCodePro(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 6,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'CRIE SUA CONTA DE PROFISSIONAL',
+                        style: GoogleFonts.sourceCodePro(
+                          color: AppTheme.slate500,
+                          fontSize: 9,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+
+                      // ─── Card ─────────────────────────────────────────────
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: AppTheme.slate100,
+                          border: Border.all(color: AppTheme.slate200),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        padding: const EdgeInsets.all(24),
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment:
+                                CrossAxisAlignment.stretch,
+                            children: [
+                              // ─── Type tabs ──────────────────────────────
+                              Row(
+                                children: [
+                                  _Tab(
+                                    label: 'EMPRESA',
+                                    selected: _userType == 'COMPANY',
+                                    onTap: () => setState(
+                                        () => _userType = 'COMPANY'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _Tab(
+                                    label: 'ESPECIALISTA',
+                                    selected: _userType == 'SPECIALIST',
+                                    onTap: () => setState(
+                                        () => _userType = 'SPECIALIST'),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+
+                              // ─── Nome ────────────────────────────────────
+                              Text(
+                                _userType == 'COMPANY'
+                                    ? 'NOME DA EMPRESA'
+                                    : 'NOME COMPLETO',
+                                style: GoogleFonts.sourceCodePro(
+                                  color: AppTheme.slate500,
+                                  fontSize: 10,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _userType == 'COMPANY'
+                                    ? _companyNameCtrl
+                                    : _nameCtrl,
+                                style: GoogleFonts.sourceCodePro(
+                                    color: Colors.white, fontSize: 13),
+                                decoration: InputDecoration(
+                                  hintText: _userType == 'COMPANY'
+                                      ? 'Meraki Corp.'
+                                      : 'Ana Silva',
+                                ),
+                                validator: (v) =>
+                                    (v == null || v.isEmpty)
+                                        ? 'Obrigatório'
+                                        : null,
+                              ),
+                              const SizedBox(height: 14),
+
+                              // ─── E-mail ──────────────────────────────────
+                              Text(
+                                'E-MAIL PROFISSIONAL',
+                                style: GoogleFonts.sourceCodePro(
+                                  color: AppTheme.slate500,
+                                  fontSize: 10,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _emailCtrl,
+                                keyboardType:
+                                    TextInputType.emailAddress,
+                                style: GoogleFonts.sourceCodePro(
+                                    color: Colors.white, fontSize: 13),
+                                decoration: InputDecoration(
+                                  hintText: _userType == 'COMPANY'
+                                      ? 'admin@empresa.com'
+                                      : 'dev@especialista.com',
+                                ),
+                                validator: (v) =>
+                                    (v == null || !v.contains('@'))
+                                        ? 'E-mail inválido'
+                                        : null,
+                              ),
+                              const SizedBox(height: 14),
+
+                              // ─── Senha ───────────────────────────────────
+                              Text(
+                                'SENHA SEGURA',
+                                style: GoogleFonts.sourceCodePro(
+                                  color: AppTheme.slate500,
+                                  fontSize: 10,
+                                  letterSpacing: 1.5,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              TextFormField(
+                                controller: _passwordCtrl,
+                                obscureText: _obscure,
+                                style: GoogleFonts.sourceCodePro(
+                                    color: Colors.white, fontSize: 13),
+                                decoration: InputDecoration(
+                                  hintText: '••••••••',
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscure
+                                          ? Icons.visibility_outlined
+                                          : Icons
+                                              .visibility_off_outlined,
+                                      size: 18,
+                                      color: AppTheme.slate500,
+                                    ),
+                                    onPressed: () => setState(
+                                        () => _obscure = !_obscure),
+                                  ),
+                                ),
+                                validator: (v) =>
+                                    (v == null || v.length < 6)
+                                        ? 'Mínimo 6 caracteres'
+                                        : null,
+                              ),
+
+                              if (state.error != null) ...[
+                                const SizedBox(height: 12),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.dangerLight,
+                                    border: Border.all(
+                                        color: AppTheme.danger
+                                            .withOpacity(0.3)),
+                                    borderRadius:
+                                        BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    state.error!,
+                                    style: GoogleFonts.sourceCodePro(
+                                        color: AppTheme.danger,
+                                        fontSize: 11),
+                                  ),
+                                ),
+                              ],
+
+                              const SizedBox(height: 20),
+
+                              // ─── Submit button ───────────────────────────
+                              SizedBox(
+                                height: 48,
+                                child: FilledButton(
+                                  onPressed:
+                                      state.isLoading ? null : _submit,
+                                  child: state.isLoading
+                                      ? const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: AppTheme.slate900,
+                                          ),
+                                        )
+                                      : Text(
+                                          'CRIAR CONTA  >>',
+                                          style:
+                                              GoogleFonts.sourceCodePro(
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 13,
+                                            letterSpacing: 2,
+                                            color: AppTheme.slate900,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // ─── Login link ──────────────────────────────────────
+                      GestureDetector(
+                        onTap: () => context.go('/login'),
+                        child: RichText(
+                          text: TextSpan(
+                            style: GoogleFonts.sourceCodePro(
+                              fontSize: 11,
+                              color: AppTheme.slate500,
+                              letterSpacing: 0.5,
+                            ),
+                            children: [
+                              const TextSpan(
+                                  text: 'JÁ TEM CONTA? '),
+                              TextSpan(
+                                text: 'RETORNAR AO LOGIN',
+                                style: GoogleFonts.sourceCodePro(
+                                  fontSize: 11,
+                                  color: AppTheme.brand,
+                                  fontWeight: FontWeight.w700,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -226,41 +339,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 }
 
-class _TypeSelector extends StatelessWidget {
-  final String value;
-  final ValueChanged<String> onChanged;
-  const _TypeSelector({required this.value, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _TypeOption(
-          label: 'Especialista',
-          icon: Icons.code_rounded,
-          selected: value == 'SPECIALIST',
-          onTap: () => onChanged('SPECIALIST'),
-        ),
-        const SizedBox(width: 10),
-        _TypeOption(
-          label: 'Empresa',
-          icon: Icons.business_rounded,
-          selected: value == 'COMPANY',
-          onTap: () => onChanged('COMPANY'),
-        ),
-      ],
-    );
-  }
-}
-
-class _TypeOption extends StatelessWidget {
+class _Tab extends StatelessWidget {
   final String label;
-  final IconData icon;
   final bool selected;
   final VoidCallback onTap;
-  const _TypeOption({
+
+  const _Tab({
     required this.label,
-    required this.icon,
     required this.selected,
     required this.onTap,
   });
@@ -271,73 +356,27 @@ class _TypeOption extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: selected ? AppTheme.brandLight : AppTheme.slate50,
-            borderRadius: BorderRadius.circular(12),
+            color: selected ? AppTheme.brand : AppTheme.slate50,
+            borderRadius: BorderRadius.circular(4),
             border: Border.all(
-              color: selected
-                  ? AppTheme.brand.withOpacity(0.4)
-                  : AppTheme.slate200,
-              width: selected ? 1.5 : 1,
+              color: selected ? AppTheme.brand : AppTheme.slate200,
             ),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 22,
-                color:
-                    selected ? AppTheme.brand : AppTheme.slate400,
+          child: Center(
+            child: Text(
+              label,
+              style: GoogleFonts.sourceCodePro(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: selected ? AppTheme.slate900 : AppTheme.slate500,
+                letterSpacing: 1,
               ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: selected ? AppTheme.brand : AppTheme.slate500,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _ErrorBanner extends StatelessWidget {
-  final String message;
-  const _ErrorBanner({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.dangerLight,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppTheme.danger.withOpacity(0.25)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline_rounded,
-              size: 16, color: AppTheme.danger),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                color: AppTheme.danger,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

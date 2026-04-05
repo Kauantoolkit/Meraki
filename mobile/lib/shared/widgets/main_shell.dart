@@ -32,34 +32,40 @@ class _CompanyShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int selectedIndex = 0;
-    if (location.startsWith('/projects')) selectedIndex = 0;
-    if (location.startsWith('/payments')) selectedIndex = 1;
+    if (location.startsWith('/projects') ||
+        location.startsWith('/dashboard')) selectedIndex = 0;
+    if (location.startsWith('/inbox')) selectedIndex = 1;
+    if (location.startsWith('/payments')) selectedIndex = 2;
     if (location.startsWith('/profile') ||
-        location.startsWith('/portfolio')) {
-      selectedIndex = 2;
-    }
+        location.startsWith('/portfolio')) selectedIndex = 3;
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: _FloatingNavBar(
+      bottomNavigationBar: _TerminalNavBar(
         selectedIndex: selectedIndex,
         destinations: [
           _NavDest(
             icon: Icons.folder_outlined,
             activeIcon: Icons.folder_rounded,
-            label: 'Projetos',
+            label: 'PROJETOS',
             onTap: () => context.go('/projects'),
+          ),
+          _NavDest(
+            icon: Icons.mail_outline_rounded,
+            activeIcon: Icons.mail_rounded,
+            label: 'INBOX',
+            onTap: () => context.go('/inbox'),
           ),
           _NavDest(
             icon: Icons.account_balance_wallet_outlined,
             activeIcon: Icons.account_balance_wallet_rounded,
-            label: 'Pagamentos',
+            label: 'FINANCEIRO',
             onTap: () => context.go('/payments'),
           ),
           _NavDest(
             icon: Icons.business_outlined,
             activeIcon: Icons.business_rounded,
-            label: 'Empresa',
+            label: 'EMPRESA',
             onTap: () => context.go('/profile'),
           ),
         ],
@@ -78,41 +84,47 @@ class _SpecialistShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int selectedIndex = 0;
-    if (location.startsWith('/projects')) selectedIndex = 0;
+    if (location.startsWith('/projects') ||
+        location.startsWith('/dashboard')) selectedIndex = 0;
     if (location.startsWith('/bids')) selectedIndex = 1;
-    if (location.startsWith('/payments')) selectedIndex = 2;
+    if (location.startsWith('/inbox')) selectedIndex = 2;
+    if (location.startsWith('/payments')) selectedIndex = 3;
     if (location.startsWith('/profile') ||
-        location.startsWith('/portfolio')) {
-      selectedIndex = 3;
-    }
+        location.startsWith('/portfolio')) selectedIndex = 4;
 
     return Scaffold(
       body: child,
-      bottomNavigationBar: _FloatingNavBar(
+      bottomNavigationBar: _TerminalNavBar(
         selectedIndex: selectedIndex,
         destinations: [
           _NavDest(
             icon: Icons.explore_outlined,
             activeIcon: Icons.explore_rounded,
-            label: 'Explorar',
+            label: 'EXPLORAR',
             onTap: () => context.go('/projects'),
           ),
           _NavDest(
             icon: Icons.description_outlined,
             activeIcon: Icons.description_rounded,
-            label: 'Propostas',
+            label: 'PROPOSTAS',
             onTap: () => context.go('/bids'),
+          ),
+          _NavDest(
+            icon: Icons.mail_outline_rounded,
+            activeIcon: Icons.mail_rounded,
+            label: 'INBOX',
+            onTap: () => context.go('/inbox'),
           ),
           _NavDest(
             icon: Icons.account_balance_wallet_outlined,
             activeIcon: Icons.account_balance_wallet_rounded,
-            label: 'Pagamentos',
+            label: 'GANHOS',
             onTap: () => context.go('/payments'),
           ),
           _NavDest(
             icon: Icons.person_outline_rounded,
             activeIcon: Icons.person_rounded,
-            label: 'Perfil',
+            label: 'PERFIL',
             onTap: () => context.go('/profile'),
           ),
         ],
@@ -121,7 +133,7 @@ class _SpecialistShell extends StatelessWidget {
   }
 }
 
-// ─── Floating nav bar ─────────────────────────────────────────────────────────
+// ─── Terminal nav bar ─────────────────────────────────────────────────────────
 
 class _NavDest {
   final IconData icon;
@@ -136,37 +148,25 @@ class _NavDest {
   });
 }
 
-class _FloatingNavBar extends StatelessWidget {
+class _TerminalNavBar extends StatelessWidget {
   final int selectedIndex;
   final List<_NavDest> destinations;
-  const _FloatingNavBar({
+  const _TerminalNavBar({
     required this.selectedIndex,
     required this.destinations,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-        child: Container(
-          height: 64,
-          decoration: BoxDecoration(
-            color: AppTheme.slate900,
-            borderRadius: BorderRadius.circular(32),
-            boxShadow: [
-              BoxShadow(
-                color: AppTheme.slate900.withOpacity(0.3),
-                blurRadius: 32,
-                offset: const Offset(0, 8),
-              ),
-              BoxShadow(
-                color: AppTheme.brand.withOpacity(0.08),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppTheme.slate900,
+        border: Border(top: BorderSide(color: AppTheme.slate200, width: 1)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 58,
           child: Row(
             children: List.generate(destinations.length, (i) {
               final dest = destinations[i];
@@ -175,45 +175,39 @@ class _FloatingNavBar extends StatelessWidget {
                 child: GestureDetector(
                   onTap: dest.onTap,
                   behavior: HitTestBehavior.opaque,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    curve: Curves.easeInOut,
-                    margin: const EdgeInsets.all(6),
-                    decoration: isSelected
-                        ? BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(26),
-                          )
-                        : null,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 180),
-                          child: Icon(
-                            isSelected ? dest.activeIcon : dest.icon,
-                            key: ValueKey(isSelected),
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.35),
-                            size: 22,
-                          ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 150),
+                        child: Icon(
+                          isSelected ? dest.activeIcon : dest.icon,
+                          key: ValueKey(isSelected),
+                          color: isSelected ? AppTheme.brand : AppTheme.slate500,
+                          size: 20,
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          dest.label,
-                          style: GoogleFonts.plusJakartaSans(
-                            color: isSelected
-                                ? Colors.white
-                                : Colors.white.withOpacity(0.35),
-                            fontSize: 10,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w400,
-                          ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        dest.label,
+                        style: GoogleFonts.sourceCodePro(
+                          color: isSelected ? AppTheme.brand : AppTheme.slate500,
+                          fontSize: 8,
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      if (isSelected) ...[
+                        const SizedBox(height: 2),
+                        Container(
+                          width: 20,
+                          height: 2,
+                          color: AppTheme.brand,
                         ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               );

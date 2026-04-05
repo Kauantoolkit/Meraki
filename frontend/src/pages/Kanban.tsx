@@ -36,7 +36,10 @@ export default function Kanban() {
   const isCompany = user?.type === 'company'
 
   useEffect(() => {
-    if (!projectId) return
+    if (!projectId) {
+      navigate('/dashboard', { replace: true })
+      return
+    }
     Promise.all([projectsApi.getById(projectId), projectsApi.getMilestones(projectId)])
       .then(([pRes, mRes]) => {
         setProject(pRes.data)
@@ -82,6 +85,18 @@ export default function Kanban() {
   }
 
   const byStatus = (status: KanbanStatus) => milestones.filter(m => m.status === status)
+
+  // RN04: only the first PENDING milestone (by order) whose all predecessors are APPROVED can be started
+  const sorted = [...milestones].sort((a, b) => a.order - b.order)
+  const nextStartableId = (() => {
+    for (const m of sorted) {
+      if (m.status !== 'PENDING') continue
+      const predecessors = sorted.filter(x => x.order < m.order)
+      if (predecessors.every(x => x.status === 'APPROVED')) return m.id
+      break
+    }
+    return null
+  })()
 
   if (loading) return (
     <div className="bg-dark-bg min-h-screen flex items-center justify-center">
@@ -152,8 +167,9 @@ export default function Kanban() {
                     <MilestoneCard
                       key={m.id}
                       milestone={m}
-                      index={milestones.indexOf(m) + 1}
+                      index={sorted.indexOf(m) + 1}
                       isCompany={isCompany}
+                      canStart={m.id === nextStartableId}
                       onStart={() => advanceMilestone(m.id, 'IN_PROGRESS')}
                       onSubmit={() => { setPendingMilestoneId(m.id); setSubmitModal(true) }}
                       onApprove={() => { setPendingMilestoneId(m.id); setApproveModal(true) }}
@@ -267,10 +283,11 @@ export default function Kanban() {
   )
 }
 
-function MilestoneCard({ milestone: m, index, isCompany, onStart, onSubmit, onApprove }: {
+function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSubmit, onApprove }: {
   milestone: Milestone
   index: number
   isCompany: boolean
+  canStart: boolean
   onStart: () => void
   onSubmit: () => void
   onApprove: () => void
@@ -295,8 +312,10 @@ function MilestoneCard({ milestone: m, index, isCompany, onStart, onSubmit, onAp
 
         {isApproved ? (
           <button disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card py-1.5 text-zinc-500 cursor-not-allowed uppercase">PAGO E FINALIZADO</button>
-        ) : !isCompany && m.status === 'PENDING' ? (
+        ) : !isCompany && m.status === 'PENDING' && canStart ? (
           <button onClick={onStart} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase">INICIAR TRABALHO</button>
+        ) : !isCompany && m.status === 'PENDING' && !canStart ? (
+          <button disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card text-zinc-600 py-1.5 cursor-not-allowed uppercase" title="Conclua a milestone anterior primeiro (RN04)">BLOQUEADA</button>
         ) : !isCompany && m.status === 'IN_PROGRESS' ? (
           <button onClick={onSubmit} className="mt-3 w-full text-[10px] font-mono border border-blue-400 bg-blue-400/10 text-blue-400 py-1.5 hover:bg-blue-400 hover:text-dark-bg transition-colors uppercase">SUBMETER ENTREGA</button>
         ) : isCompany && m.status === 'SUBMITTED_REVIEW' ? (

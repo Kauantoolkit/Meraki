@@ -19,8 +19,8 @@ class WorkHistoryModel {
 
   factory WorkHistoryModel.fromJson(Map<String, dynamic> json) =>
       WorkHistoryModel(
-        id: json['id'] as String,
-        projectId: json['projectId'] as String,
+        id: json['id'] as String? ?? '',
+        projectId: json['projectId'] as String? ?? '',
         projectTitle: json['projectTitle'] as String? ?? '',
         companyId: json['companyId'] as String?,
         companyName: json['companyName'] as String? ?? '',
@@ -54,8 +54,8 @@ class CompanyProfileModel {
 
   factory CompanyProfileModel.fromJson(Map<String, dynamic> json) =>
       CompanyProfileModel(
-        id: json['id'] as String,
-        userId: json['userId'] as String,
+        id: json['id'] as String? ?? '',
+        userId: json['userId'] as String? ?? '',
         companyName: json['companyName'] as String? ?? '',
         description: json['description'] as String?,
         website: json['website'] as String?,
@@ -82,10 +82,10 @@ class CertificationModel {
 
   factory CertificationModel.fromJson(Map<String, dynamic> json) =>
       CertificationModel(
-        id: json['id'] as String,
-        title: json['title'] as String,
-        institution: json['institution'] as String,
-        issuedAt: json['issuedAt'] as String,
+        id: json['id'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        institution: json['institution'] as String? ?? '',
+        issuedAt: json['issuedAt'] as String? ?? '',
         credentialUrl: json['credentialUrl'] as String?,
       );
 }
@@ -106,9 +106,9 @@ class ReviewModel {
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) => ReviewModel(
-        id: json['id'] as String,
+        id: json['id'] as String? ?? '',
         reviewerName: json['reviewerName'] as String? ?? 'Anônimo',
-        rating: json['rating'] as int,
+        rating: (json['rating'] as num?)?.toInt() ?? 0,
         comment: json['comment'] as String? ?? '',
         createdAt: json['createdAt'] as String? ?? '',
       );
@@ -138,8 +138,8 @@ class PortfolioModel {
   });
 
   factory PortfolioModel.fromJson(Map<String, dynamic> json) => PortfolioModel(
-        id: json['id'] as String,
-        specialistId: json['specialistId'] as String,
+        id: json['id'] as String? ?? '',
+        specialistId: json['specialistId'] as String? ?? '',
         bio: json['bio'] as String? ?? '',
         skills: (json['skills'] as List<dynamic>?)
                 ?.map((e) => e as String)
@@ -187,8 +187,8 @@ class SpecialistSummaryModel {
 
   factory SpecialistSummaryModel.fromJson(Map<String, dynamic> json) =>
       SpecialistSummaryModel(
-        id: json['id'] as String,
-        userId: json['userId'] as String,
+        id: json['id'] as String? ?? '',
+        userId: json['userId'] as String? ?? '',
         name: json['name'] as String? ?? 'Especialista',
         bio: json['bio'] as String? ?? '',
         skills: (json['skills'] as List<dynamic>?)

@@ -22,9 +22,11 @@ export default function DashboardEspecialista() {
       projectsApi.listBySpecialist(),
       bidsApi.myBids(),
     ]).then(([open, mine, bids]) => {
-      setOpenProjects(open.data)
-      setMyProjects(mine.data.filter(p => p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
+      setOpenProjects(open.data.data)
+      setMyProjects(mine.data.data.filter(p => p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
       setMyBids(bids.data)
+    }).catch(() => {
+      // handled by the 401 interceptor — user will be redirected to login
     }).finally(() => setLoading(false))
   }, [])
 

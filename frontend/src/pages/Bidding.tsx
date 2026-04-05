@@ -20,12 +20,18 @@ export default function Bidding() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState<Bid | null>(null)
+  const [existingBid, setExistingBid] = useState<Bid | null>(null)
 
   useEffect(() => {
     if (!projectId) return
-    projectsApi.getById(projectId)
-      .then(res => setProject(res.data))
-      .finally(() => setLoading(false))
+    Promise.all([
+      projectsApi.getById(projectId),
+      bidsApi.myBids(),
+    ]).then(([pRes, bRes]) => {
+      setProject(pRes.data)
+      const active = bRes.data.find(b => b.projectId === projectId && b.status !== 'WITHDRAWN')
+      if (active) setExistingBid(active)
+    }).finally(() => setLoading(false))
   }, [projectId])
 
   async function handleSubmit(e: FormEvent) {
@@ -190,6 +196,34 @@ export default function Bidding() {
                   </button>
                 </div>
               </form>
+
+              {/* RN02: Already submitted overlay */}
+              {existingBid && !submitted && (
+                <div className="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 border border-blue-500">
+                  <ShieldAlert className="w-16 h-16 text-blue-400 mb-4" />
+                  <h2 className="text-xl font-mono font-bold text-white mb-2">PROPOSTA JÁ SUBMETIDA</h2>
+                  <p className="text-xs font-mono text-blue-400 text-center mb-6">&gt; RN02: Apenas uma proposta ativa por projeto é permitida.</p>
+                  <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-6">
+                    <p className="font-mono text-[10px] text-zinc-500 mb-1">PROPOSTA EXISTENTE:</p>
+                    <div className="flex justify-between font-mono text-[10px]">
+                      <span className="text-zinc-400">ID:</span><span className="text-white">{existingBid.id}</span>
+                    </div>
+                    <div className="flex justify-between font-mono text-[10px]">
+                      <span className="text-zinc-400">Valor:</span><span className="text-white">{fmt(existingBid.amount)}</span>
+                    </div>
+                    <div className="flex justify-between font-mono text-[10px]">
+                      <span className="text-zinc-400">Status:</span>
+                      <span className={existingBid.status === 'ACCEPTED' ? 'text-brand-500' : existingBid.status === 'REJECTED' ? 'text-red-400' : 'text-blue-400'}>
+                        {existingBid.status}
+                      </span>
+                    </div>
+                  </div>
+                  <button onClick={() => navigate('/dashboard')}
+                    className="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-brand-500 hover:text-brand-500 transition-colors">
+                    &lt; Retornar ao Workspace
+                  </button>
+                </div>
+              )}
 
               {/* Success Overlay */}
               {submitted && (

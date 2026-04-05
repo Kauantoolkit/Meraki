@@ -22,7 +22,12 @@ export interface WorkHistoryItem {
 
 export const portfolioApi = {
   getMyProfile: () => api.get<PublicProfile>('/portfolio/me'),
-  getPublicProfile: (userId: string) => api.get<PublicProfile>(`/portfolio/${userId}`),
-  listSpecialists: (search?: string) =>
-    api.get<PublicProfile[]>(`/portfolio/specialists${search ? `?search=${search}` : ''}`),
+  getPublicProfile: (specialistId: string) => api.get<PublicProfile>(`/portfolio/specialist/${specialistId}`),
+  listSpecialists: (search?: string, skills?: string) => {
+    const params = new URLSearchParams()
+    if (search) params.set('search', search)
+    if (skills) params.set('skills', skills)
+    const qs = params.toString()
+    return api.get<PublicProfile[]>(`/portfolio/specialists${qs ? `?${qs}` : ''}`)
+  },
 }

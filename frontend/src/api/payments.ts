@@ -13,5 +13,6 @@ export interface Payment {
 
 export const paymentsApi = {
   list: () => api.get<Payment[]>('/payments'),
-  getEscrowBalance: () => api.get<{ balance: number }>('/payments/escrow'),
+  listMine: () => api.get<Payment[]>('/payments/my'),
+  releaseMilestone: (milestoneId: string) => api.post<Payment>(`/payments/release/${milestoneId}`),
 }
