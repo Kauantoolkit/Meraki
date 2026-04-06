@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  messaging-service:
+    build: .
+    ports:
+      - '3007:3007'
+    environment:
+      PORT: 3007
+      JWT_SECRET: ${JWT_SECRET}
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: ${DB_USER:-messaging}
+      DB_PASS: ${DB_PASS:-messaging}
+      DB_NAME: ${DB_NAME:-messaging_db}
+      RABBITMQ_URL: ${RABBITMQ_URL}
+      NODE_ENV: production
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${DB_USER:-messaging}
+      POSTGRES_PASSWORD: ${DB_PASS:-messaging}
+      POSTGRES_DB: ${DB_NAME:-messaging_db}
+    volumes:
+      - messaging_pgdata:/var/lib/postgresql/data
+    ports:
+      - '5437:5432'
+    restart: unless-stopped
+
+volumes:
+  messaging_pgdata:
