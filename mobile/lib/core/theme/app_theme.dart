@@ -309,7 +309,8 @@ abstract final class AppTheme {
         labelStyle: GoogleFonts.sourceCodePro(
             fontWeight: FontWeight.w500,
             fontSize: 11,
-            letterSpacing: 0.5),
+            letterSpacing: 0.5,
+            color: slate300),
         padding:
             const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       ),

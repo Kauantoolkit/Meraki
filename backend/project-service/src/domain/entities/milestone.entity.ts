@@ -4,6 +4,8 @@ import {
 } from 'typeorm';
 import { MilestoneStatus } from '../enums/milestone-status.enum';
 import { Project } from './project.entity';
+import { MilestoneNotSequentialError } from '../exceptions/milestone-not-sequential.error';
+import { InvalidMilestoneTransitionError } from '../exceptions/invalid-milestone-transition.error';
 import { DomainException } from '../exceptions/domain.exception';
 
 @Entity('milestones')
@@ -54,9 +56,7 @@ export class Milestone {
       (m) => m.order < this.order && m.status !== MilestoneStatus.APPROVED,
     );
     if (previousNotApproved.length > 0) {
-      throw new DomainException(
-        `Não é possível iniciar o milestone: milestones anteriores ainda não aprovados (RN04)`,
-      );
+      throw new MilestoneNotSequentialError(this.order);
     }
     if (this.status !== MilestoneStatus.PENDING) {
       throw new DomainException('Milestone já foi iniciado');
@@ -66,21 +66,21 @@ export class Milestone {
 
   submit(): void {
     if (this.status !== MilestoneStatus.IN_PROGRESS) {
-      throw new DomainException('Só é possível submeter milestones IN_PROGRESS');
+      throw new InvalidMilestoneTransitionError('submeter', 'IN_PROGRESS');
     }
     this.status = MilestoneStatus.SUBMITTED;
   }
 
   approve(): void {
     if (this.status !== MilestoneStatus.SUBMITTED) {
-      throw new DomainException('Só é possível aprovar milestones SUBMITTED');
+      throw new InvalidMilestoneTransitionError('aprovar', 'SUBMITTED');
     }
     this.status = MilestoneStatus.APPROVED;
   }
 
   reject(): void {
     if (this.status !== MilestoneStatus.SUBMITTED) {
-      throw new DomainException('Só é possível rejeitar milestones SUBMITTED');
+      throw new InvalidMilestoneTransitionError('rejeitar', 'SUBMITTED');
     }
     this.status = MilestoneStatus.IN_PROGRESS;
   }

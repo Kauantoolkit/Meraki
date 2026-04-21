@@ -14,6 +14,16 @@ export default function PasswordRecovery() {
 
   return (
     <div className="bg-dark-bg bg-grid min-h-screen flex items-center justify-center p-4 relative overflow-hidden antialiased text-zinc-300">
+      {/* FORA DO ESCOPO INICIAL */}
+      <div className="fixed top-0 left-0 right-0 z-50 border-b border-amber-500/40 bg-amber-500/10 px-4 py-2.5">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <div className="w-1.5 h-1.5 bg-amber-400 animate-pulse shrink-0" />
+          <span className="font-mono text-[10px] text-amber-400 uppercase tracking-widest font-bold">
+            FORA DO ESCOPO INICIAL — Esta tela não está prevista nos requisitos funcionais (RF01–RF14) do Meraki v1.0
+          </span>
+        </div>
+      </div>
+
       <div className="fixed top-[10%] right-[20%] w-[40vw] h-[40vw] max-w-[500px] max-h-[500px] bg-brand-500/10 rounded-full mix-blend-screen filter blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-[420px] bg-dark-card/90 backdrop-blur-md border border-dark-border p-8 sm:p-10 relative z-10 shadow-2xl">

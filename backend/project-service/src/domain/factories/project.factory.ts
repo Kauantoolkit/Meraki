@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Project } from '../entities/project.entity';
 import { ProjectStatus } from '../enums/project-status.enum';
-import { DomainException } from '../exceptions/domain.exception';
+import { InvalidProjectScopeError } from '../exceptions/invalid-project-scope.error';
 import { Budget } from '../value-objects/budget.value-object';
 import { Deadline } from '../value-objects/deadline.value-object';
 
@@ -23,10 +23,10 @@ export class ProjectFactory {
    */
   create(data: CreateProjectData): Project {
     if (!data.title || data.title.trim().length < 10) {
-      throw new DomainException('Título do projeto deve ter pelo menos 10 caracteres (RN01)');
+      throw new InvalidProjectScopeError('Título do projeto deve ter pelo menos 10 caracteres');
     }
     if (!data.requirements || data.requirements.length === 0) {
-      throw new DomainException('Projeto deve ter pelo menos um requisito (RN01)');
+      throw new InvalidProjectScopeError('Projeto deve ter pelo menos um requisito');
     }
 
     // Value Objects validam budget e deadline

@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { DomainException } from '../exceptions/domain.exception';
+import { InvalidPaymentAmountError } from '../exceptions/invalid-payment-amount.error';
 
 export const FEE_RATE_TOKEN = 'PLATFORM_FEE_RATE';
 
@@ -22,7 +22,7 @@ export class FeeCalculationDomainService {
 
   calculate(amount: number): { specialistAmount: number; platformFee: number } {
     if (amount <= 0) {
-      throw new DomainException('Valor do pagamento deve ser maior que zero (RN06)');
+      throw new InvalidPaymentAmountError();
     }
     const platformFee = Number((amount * this.feeRate).toFixed(2));
     const specialistAmount = Number((amount - platformFee).toFixed(2));

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../model/portfolio_model.dart';
@@ -45,8 +46,8 @@ class _PublicProfileContent extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 32,
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: const Icon(Icons.person, size: 32),
+                backgroundColor: AppTheme.brandLight,
+                child: const Icon(Icons.person, size: 32, color: AppTheme.brand),
               ),
               const SizedBox(width: 16),
               Column(
@@ -56,46 +57,71 @@ class _PublicProfileContent extends StatelessWidget {
                     children: [
                       const Icon(Icons.star, color: Colors.amber, size: 18),
                       const SizedBox(width: 4),
-                      Text(portfolio.rating.toStringAsFixed(1),
-                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        portfolio.rating.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ],
                   ),
-                  Text('${portfolio.completedProjects} projetos concluídos'),
+                  Text(
+                    '${portfolio.completedProjects} projetos concluídos',
+                    style: const TextStyle(color: AppTheme.slate300, fontSize: 12),
+                  ),
                 ],
               ),
             ],
           ),
           if (portfolio.bio.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Sobre', style: Theme.of(context).textTheme.titleMedium),
+            const Text('Sobre',
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: 4),
-            Text(portfolio.bio),
+            Text(portfolio.bio,
+                style: const TextStyle(color: AppTheme.slate300, height: 1.5)),
           ],
           if (portfolio.skills.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Habilidades', style: Theme.of(context).textTheme.titleMedium),
+            const Text('Habilidades',
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 4,
-              children: portfolio.skills.map((s) => Chip(label: Text(s))).toList(),
+              children: portfolio.skills
+                  .map(
+                    (s) => Chip(
+                      label: Text(s,
+                          style: const TextStyle(
+                              color: AppTheme.slate300, fontSize: 11)),
+                      backgroundColor: AppTheme.slate700,
+                      side: const BorderSide(color: AppTheme.slate200),
+                    ),
+                  )
+                  .toList(),
             ),
           ],
           if (portfolio.certifications.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Certificações', style: Theme.of(context).textTheme.titleMedium),
+            const Text('Certificações',
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
             ...portfolio.certifications.map(
               (c) => ListTile(
                 dense: true,
                 leading: const Icon(Icons.verified, color: Colors.blue),
-                title: Text(c.title),
-                subtitle: Text(c.institution),
+                title: Text(c.title,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                subtitle: Text(c.institution,
+                    style: const TextStyle(color: AppTheme.slate400)),
               ),
             ),
           ],
           if (portfolio.reviews.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Text('Avaliações', style: Theme.of(context).textTheme.titleMedium),
+            const Text('Avaliações',
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
             const SizedBox(height: 8),
             ...portfolio.reviews.map(
               (r) => Card(
@@ -108,7 +134,9 @@ class _PublicProfileContent extends StatelessWidget {
                       Row(
                         children: [
                           Text(r.reviewerName,
-                              style: const TextStyle(fontWeight: FontWeight.w600)),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600)),
                           const Spacer(),
                           Row(
                             children: List.generate(
@@ -124,7 +152,8 @@ class _PublicProfileContent extends StatelessWidget {
                       ),
                       if (r.comment.isNotEmpty) ...[
                         const SizedBox(height: 4),
-                        Text(r.comment),
+                        Text(r.comment,
+                            style: const TextStyle(color: AppTheme.slate300)),
                       ],
                     ],
                   ),

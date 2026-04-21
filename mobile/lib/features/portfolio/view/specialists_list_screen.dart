@@ -93,16 +93,18 @@ class _SpecialistsListScreenState
                       ),
                       child: TextField(
                         controller: _searchController,
-                        style: const TextStyle(fontSize: 14),
+                        style: const TextStyle(fontSize: 14, color: Colors.black87),
                         decoration: InputDecoration(
                           hintText: 'Buscar por nome, bio ou habilidade...',
                           hintStyle: const TextStyle(
-                              color: AppTheme.slate400, fontSize: 14),
+                              color: Color(0xFF9E9E9E), fontSize: 14),
                           prefixIcon: const Icon(
                             Icons.search_rounded,
                             size: 20,
-                            color: AppTheme.slate400,
+                            color: Color(0xFF9E9E9E),
                           ),
+                          filled: true,
+                          fillColor: Colors.white,
                           suffixIcon: _searchQuery.isNotEmpty
                               ? IconButton(
                                   icon: const Icon(Icons.close_rounded,

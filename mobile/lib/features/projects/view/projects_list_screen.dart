@@ -133,18 +133,20 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                         ),
                         child: TextField(
                           controller: _searchController,
-                          style: const TextStyle(fontSize: 14),
+                          style: const TextStyle(fontSize: 14, color: Colors.black87),
                           decoration: InputDecoration(
                             hintText: 'Buscar por título ou descrição...',
-                            hintStyle: TextStyle(
-                              color: AppTheme.slate400,
+                            hintStyle: const TextStyle(
+                              color: Color(0xFF9E9E9E),
                               fontSize: 14,
                             ),
                             prefixIcon: const Icon(
                               Icons.search_rounded,
                               size: 20,
-                              color: AppTheme.slate400,
+                              color: Color(0xFF9E9E9E),
                             ),
+                            filled: true,
+                            fillColor: Colors.white,
                             suffixIcon: _searchQuery.isNotEmpty
                                 ? IconButton(
                                     icon: const Icon(

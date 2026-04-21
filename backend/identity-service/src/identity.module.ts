@@ -14,6 +14,9 @@ import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 import { RabbitMQModule } from './infrastructure/rabbitmq/rabbitmq.module';
 import { EventPublisherService } from './infrastructure/rabbitmq/event-publisher.service';
 
+// Domain Factories
+import { UserFactory } from './domain/factories/user.factory';
+
 // Use Cases
 import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
 import { AuthenticateUseCase } from './application/use-cases/authenticate.use-case';
@@ -51,6 +54,9 @@ import { UserController } from './interfaces/controllers/user.controller';
 
     // Events
     EventPublisherService,
+
+    // Domain Factories
+    UserFactory,
 
     // Use Cases
     RegisterUserUseCase,

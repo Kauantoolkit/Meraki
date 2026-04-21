@@ -2,7 +2,7 @@ import {
   Entity, PrimaryGeneratedColumn, Column,
   CreateDateColumn, UpdateDateColumn,
 } from 'typeorm';
-import { DomainException } from '../exceptions/domain.exception';
+import { PaymentNotInEscrowError } from '../exceptions/payment-not-in-escrow.error';
 
 export enum PaymentStatus {
   ESCROW_HELD = 'ESCROW_HELD',
@@ -55,7 +55,7 @@ export class Payment {
 
   release(feeRate: number): { specialistAmount: number; platformFee: number } {
     if (this.status !== PaymentStatus.ESCROW_HELD) {
-      throw new DomainException('Só é possível liberar pagamentos em ESCROW_HELD (RN06)');
+      throw new PaymentNotInEscrowError();
     }
     const fee = Number((this.amount * feeRate).toFixed(2));
     const specialist = Number((this.amount - fee).toFixed(2));

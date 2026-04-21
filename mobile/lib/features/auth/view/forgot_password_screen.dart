@@ -39,6 +39,29 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // FORA DO ESCOPO INICIAL
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: const Color(0x1AFFC107),
+              child: Row(
+                children: [
+                  Container(width: 6, height: 6, color: const Color(0xFFFFC107)),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'FORA DO ESCOPO INICIAL — Tela não prevista nos requisitos RF01–RF14',
+                      style: TextStyle(
+                        color: Color(0xFFFFC107),
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             Expanded(
               child: SafeArea(
                 bottom: false,
@@ -125,9 +148,25 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         TextFormField(
                           controller: _emailCtrl,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
+                          style: const TextStyle(color: Colors.black87, fontSize: 14),
+                          decoration: InputDecoration(
                             labelText: 'E-mail',
-                            prefixIcon: Icon(Icons.email_outlined),
+                            labelStyle: const TextStyle(color: Color(0xFF6B6B6B)),
+                            prefixIcon: const Icon(Icons.email_outlined, color: Color(0xFF6B6B6B)),
+                            filled: true,
+                            fillColor: const Color(0xFFF5F5F5),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFFDDDDDD)),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              borderSide: const BorderSide(color: Color(0xFF55CA7C), width: 1.5),
+                            ),
                           ),
                           validator: (v) =>
                               (v == null || !v.contains('@')) ? 'E-mail inválido' : null,

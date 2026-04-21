@@ -52,6 +52,29 @@ class _InboxScreenState extends ConsumerState<InboxScreen> {
         backgroundColor: AppTheme.slate900,
         body: Column(
           children: [
+            // FORA DO ESCOPO INICIAL
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              color: const Color(0x1AFFC107),
+              child: Row(
+                children: [
+                  Container(width: 6, height: 6, color: const Color(0xFFFFC107)),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'FORA DO ESCOPO INICIAL — Tela não prevista nos requisitos RF01–RF14',
+                      style: TextStyle(
+                        color: Color(0xFFFFC107),
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.0,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
             // ─── Header ───────────────────────────────────────────────────
             SafeArea(
               bottom: false,

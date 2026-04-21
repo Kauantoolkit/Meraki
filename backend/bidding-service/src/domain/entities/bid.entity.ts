@@ -4,7 +4,7 @@ import {
 } from 'typeorm';
 import { BidStatus } from '../enums/bid-status.enum';
 import { BidMessage } from './bid-message.entity';
-import { DomainException } from '../exceptions/domain.exception';
+import { BidNotPendingError } from '../exceptions/bid-not-pending.error';
 
 @Entity('bids')
 export class Bid {
@@ -44,21 +44,21 @@ export class Bid {
 
   accept(): void {
     if (this.status !== BidStatus.PENDING) {
-      throw new DomainException('Só é possível aceitar propostas PENDING');
+      throw new BidNotPendingError('aceitar');
     }
     this.status = BidStatus.ACCEPTED;
   }
 
   reject(): void {
     if (this.status !== BidStatus.PENDING) {
-      throw new DomainException('Só é possível rejeitar propostas PENDING');
+      throw new BidNotPendingError('rejeitar');
     }
     this.status = BidStatus.REJECTED;
   }
 
   withdraw(): void {
     if (this.status !== BidStatus.PENDING) {
-      throw new DomainException('Só é possível retirar propostas PENDING');
+      throw new BidNotPendingError('retirar');
     }
     this.status = BidStatus.WITHDRAWN;
   }

@@ -5,6 +5,16 @@ export default function Privacy() {
   const navigate = useNavigate()
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased p-4 sm:p-8">
+      {/* FORA DO ESCOPO INICIAL */}
+      <div className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-2.5 -mx-4 -mt-4 sm:-mx-8 sm:-mt-8 mb-8">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <div className="w-1.5 h-1.5 bg-amber-400 animate-pulse shrink-0" />
+          <span className="font-mono text-[10px] text-amber-400 uppercase tracking-widest font-bold">
+            FORA DO ESCOPO INICIAL — Esta tela não está prevista nos requisitos funcionais (RF01–RF14) do Meraki v1.0
+          </span>
+        </div>
+      </div>
+
       <div className="max-w-3xl mx-auto">
         <button onClick={() => navigate(-1)} className="flex items-center gap-2 font-mono text-xs text-zinc-500 hover:text-brand-500 mb-8 transition-colors">
           <ArrowLeft className="w-4 h-4" /> Voltar

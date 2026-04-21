@@ -33,7 +33,7 @@ export default function Kanban() {
   const [releaseNotes, setReleaseNotes] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
 
-  const isCompany = (user?.userType ?? user?.type) === 'company'
+  const isCompany = ((user?.userType ?? user?.type) as string)?.toUpperCase() === 'COMPANY'
 
   useEffect(() => {
     if (!projectId) {
@@ -105,7 +105,7 @@ export default function Kanban() {
   )
 
   return (
-    <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-hidden flex flex-col">
+    <div className="bg-dark-bg bg-grid h-screen text-zinc-300 antialiased overflow-hidden flex flex-col">
       <div className="scanline" />
       <Navbar backUrl="/dashboard" projectTitle={project ? `${project.id} // DELIVERY_BOARD` : undefined} />
 

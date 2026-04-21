@@ -65,6 +65,16 @@ export default function LandingPage() {
         </div>
       </nav>
 
+      {/* FORA DO ESCOPO INICIAL */}
+      <div className="border-b border-amber-500/40 bg-amber-500/10 px-4 py-2.5">
+        <div className="max-w-7xl mx-auto flex items-center gap-3">
+          <div className="w-1.5 h-1.5 bg-amber-400 animate-pulse shrink-0" />
+          <span className="font-mono text-[10px] text-amber-400 uppercase tracking-widest font-bold">
+            FORA DO ESCOPO INICIAL — Esta tela não está prevista nos requisitos funcionais (RF01–RF14) do Meraki v1.0
+          </span>
+        </div>
+      </div>
+
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
         <div className="mb-3 flex items-center gap-2">
