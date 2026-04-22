@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Bid } from '../entities/bid.entity';
 import { BidStatus } from '../enums/bid-status.enum';
 import { ProposedValue } from '../value-objects/proposed-value.value-object';
@@ -12,7 +11,6 @@ export interface CreateBidData {
   estimatedDuration: number;
 }
 
-@Injectable()
 export class BidFactory {
   create(data: CreateBidData): Bid {
     if (!data.projectId) throw new DomainException('projectId é obrigatório');

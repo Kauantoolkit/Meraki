@@ -1,18 +1,13 @@
-import { Injectable, Inject } from '@nestjs/common';
 import { InvalidPaymentAmountError } from '../exceptions/invalid-payment-amount.error';
-
-export const FEE_RATE_TOKEN = 'PLATFORM_FEE_RATE';
 
 /**
  * Domain Service — Cálculo de taxas de pagamento (RN06).
- * A taxa é injetada pelo módulo (infrastructure) para manter o domínio
- * livre de dependências de processo/ambiente (process.env).
+ * A taxa é passada via construtor (injeção configurada na camada de infraestrutura).
  */
-@Injectable()
 export class FeeCalculationDomainService {
   private readonly feeRate: number;
 
-  constructor(@Inject(FEE_RATE_TOKEN) feeRate: number) {
+  constructor(feeRate: number) {
     this.feeRate = feeRate;
   }
 

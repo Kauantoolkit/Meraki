@@ -1,13 +1,13 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Request } from 'express';
 import { GetPaymentsUseCase } from '../../application/use-cases/get-payments.use-case';
 
 @ApiTags('Payments')
 @Controller('api/payments')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class PaymentController {
   constructor(private readonly getPaymentsUseCase: GetPaymentsUseCase) {}
 

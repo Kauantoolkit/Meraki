@@ -1,8 +1,6 @@
-import { Injectable } from '@nestjs/common';
 import { KanbanColumn } from '../entities/kanban-column.entity';
 import { DomainException } from '../exceptions/domain.exception';
 
-@Injectable()
 export class KanbanColumnFactory {
   /** Cria as 4 colunas padrão do Kanban para um projeto */
   createDefaultColumns(projectId: string): KanbanColumn[] {

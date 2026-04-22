@@ -1,27 +1,32 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-} from 'typeorm';
+import { DomainException } from '../exceptions/domain.exception';
 
-@Entity('messages')
 export class Message {
-  @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column()
   conversationId: string;
-
-  @Column()
   senderId: string;
-
-  @Column()
   senderName: string;
-
-  @Column('text')
   text: string;
-
-  @CreateDateColumn()
   createdAt: Date;
+
+  // ── Behavior Methods ──────────────────────────────────────────────
+
+  static create(conversationId: string, senderId: string, senderName: string, text: string): Message {
+    if (!conversationId) throw new DomainException('conversationId é obrigatório');
+    if (!senderId) throw new DomainException('senderId é obrigatório');
+    if (!text || text.trim().length === 0) {
+      throw new DomainException('Texto da mensagem não pode ser vazio');
+    }
+
+    const msg = new Message();
+    msg.conversationId = conversationId;
+    msg.senderId = senderId;
+    msg.senderName = senderName;
+    msg.text = text.trim();
+    msg.createdAt = new Date();
+    return msg;
+  }
+
+  belongsToConversation(conversationId: string): boolean {
+    return this.conversationId === conversationId;
+  }
 }

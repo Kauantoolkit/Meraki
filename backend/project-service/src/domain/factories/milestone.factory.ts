@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Milestone } from '../entities/milestone.entity';
 import { MilestoneStatus } from '../enums/milestone-status.enum';
 import { DomainException } from '../exceptions/domain.exception';
@@ -10,7 +9,6 @@ export interface CreateMilestoneData {
   dueDate?: string;
 }
 
-@Injectable()
 export class MilestoneFactory {
   create(data: CreateMilestoneData, projectId: string, order: number): Milestone {
     if (!data.title || data.title.trim().length === 0) {

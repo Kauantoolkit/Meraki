@@ -53,11 +53,11 @@ import { DeliveryController, KanbanController, HistoryController, CommentControl
     KanbanRepository,
     HistoryRepository,
     CommentRepository,
-    // Factories
-    DeliveryFactory,
-    KanbanColumnFactory,
-    // Domain Services
-    MilestoneProgressionDomainService,
+    // Domain Factories (instanciadas sem @Injectable — domain puro)
+    { provide: DeliveryFactory, useFactory: () => new DeliveryFactory() },
+    { provide: KanbanColumnFactory, useFactory: () => new KanbanColumnFactory() },
+    // Domain Services (instanciados sem @Injectable — domain puro)
+    { provide: MilestoneProgressionDomainService, useFactory: () => new MilestoneProgressionDomainService() },
     // Use Cases
     SubmitDeliveryUseCase,
     ReviewDeliveryUseCase,

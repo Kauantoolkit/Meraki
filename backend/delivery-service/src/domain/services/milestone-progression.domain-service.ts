@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { DomainException } from '../exceptions/domain.exception';
 
 /**
@@ -6,7 +5,6 @@ import { DomainException } from '../exceptions/domain.exception';
  * Encapsula a regra que não pertence a nenhum aggregate isolado:
  * a progressão depende do estado de TODOS os milestones do projeto.
  */
-@Injectable()
 export class MilestoneProgressionDomainService {
   /**
    * Valida se o milestone pode ser iniciado com base no progresso dos anteriores.

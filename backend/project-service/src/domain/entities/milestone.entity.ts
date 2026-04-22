@@ -1,48 +1,23 @@
-import {
-  Entity, PrimaryGeneratedColumn, Column,
-  CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn,
-} from 'typeorm';
 import { MilestoneStatus } from '../enums/milestone-status.enum';
 import { Project } from './project.entity';
 import { MilestoneNotSequentialError } from '../exceptions/milestone-not-sequential.error';
 import { InvalidMilestoneTransitionError } from '../exceptions/invalid-milestone-transition.error';
 import { DomainException } from '../exceptions/domain.exception';
 
-@Entity('milestones')
 export class Milestone {
-  @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column()
   projectId: string;
-
-  @ManyToOne(() => Project, (p) => p.milestones, { onDelete: 'CASCADE' })
-  @JoinColumn({ name: 'projectId' })
   project: Project;
-
-  @Column()
   title: string;
-
-  @Column('text')
   description: string;
-
-  @Column('decimal', { precision: 10, scale: 2 })
   amount: number;
-
-  @Column({ type: 'enum', enum: MilestoneStatus, default: MilestoneStatus.PENDING })
   status: MilestoneStatus;
 
   /** Ordem sequencial — usado na invariante RN04 */
-  @Column()
   order: number;
 
-  @Column({ nullable: true })
   dueDate: Date;
-
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
 
   // ─── Domain behavior (invariante RN04) ────────────────────────────────────

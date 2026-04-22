@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Payment, PaymentStatus } from '../entities/payment.entity';
 import { DomainException } from '../exceptions/domain.exception';
 
@@ -9,7 +8,6 @@ export interface CreatePaymentData {
   amount: number;
 }
 
-@Injectable()
 export class PaymentFactory {
   create(data: CreatePaymentData): Payment {
     if (!data.milestoneId) throw new DomainException('milestoneId é obrigatório');

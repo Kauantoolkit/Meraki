@@ -74,8 +74,8 @@ import {
     ReviewRepository,
     PortfolioItemRepository,
     CompanyProfileRepository,
-    // Factories
-    SpecialistProfileFactory,
+    // Domain Factories (instanciadas sem @Injectable — domain puro)
+    { provide: SpecialistProfileFactory, useFactory: () => new SpecialistProfileFactory() },
     // Use Cases
     CreateSpecialistProfileUseCase,
     AddCertificationUseCase,

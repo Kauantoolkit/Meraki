@@ -16,7 +16,7 @@ import { EscrowAccountRepository } from './infrastructure/repositories/escrow-ac
 import { PaymentFactory } from './domain/factories/payment.factory';
 
 // Domain Services
-import { FeeCalculationDomainService, FEE_RATE_TOKEN } from './domain/services/fee-calculation.domain-service';
+import { FeeCalculationDomainService } from './domain/services/fee-calculation.domain-service';
 
 // Use Cases (application)
 import { ReleasePaymentUseCase } from './application/use-cases/release-payment.use-case';
@@ -43,14 +43,15 @@ import { PaymentController } from './interfaces/controllers/payment.controller';
     // Repositories
     PaymentRepository,
     EscrowAccountRepository,
-    // Factories
-    PaymentFactory,
-    // Domain Services — taxa injetada pelo módulo, sem process.env no domínio
+    // Domain Factories (instanciadas sem @Injectable — domain puro)
+    { provide: PaymentFactory, useFactory: () => new PaymentFactory() },
+    // Domain Services — taxa injetada pelo módulo, domain livre de NestJS
     {
-      provide: FEE_RATE_TOKEN,
-      useFactory: () => parseFloat(process.env.PLATFORM_FEE_RATE || '0.10'),
+      provide: FeeCalculationDomainService,
+      useFactory: () => new FeeCalculationDomainService(
+        parseFloat(process.env.PLATFORM_FEE_RATE || '0.10'),
+      ),
     },
-    FeeCalculationDomainService,
     // Event Publisher
     EventPublisherService,
     // Use Cases

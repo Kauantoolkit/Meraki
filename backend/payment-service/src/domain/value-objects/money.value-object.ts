@@ -1,40 +1,44 @@
 import { DomainException } from '../exceptions/domain.exception';
 
 export class Money {
-  readonly amount: number;
+  private readonly _amount: number;
 
   constructor(amount: number) {
     if (amount < 0) {
       throw new DomainException('Valor monetário não pode ser negativo');
     }
-    this.amount = Number(amount.toFixed(2));
+    this._amount = Number(amount.toFixed(2));
+  }
+
+  getAmount(): number {
+    return this._amount;
   }
 
   add(other: Money): Money {
-    return new Money(this.amount + other.amount);
+    return new Money(this._amount + other._amount);
   }
 
   subtract(other: Money): Money {
-    return new Money(this.amount - other.amount);
+    return new Money(this._amount - other._amount);
   }
 
   multiply(factor: number): Money {
-    return new Money(this.amount * factor);
+    return new Money(this._amount * factor);
   }
 
   equals(other: Money): boolean {
-    return this.amount === other.amount;
+    return this._amount === other._amount;
   }
 
   isZero(): boolean {
-    return this.amount === 0;
+    return this._amount === 0;
   }
 
   isGreaterThan(other: Money): boolean {
-    return this.amount > other.amount;
+    return this._amount > other._amount;
   }
 
   toString(): string {
-    return this.amount.toFixed(2);
+    return this._amount.toFixed(2);
   }
 }

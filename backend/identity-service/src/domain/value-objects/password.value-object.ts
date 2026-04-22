@@ -36,4 +36,8 @@ export class Password {
   get value(): string {
     return this._value;
   }
+
+  equals(other: Password): boolean {
+    return this._value === other._value;
+  }
 }

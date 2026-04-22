@@ -1,32 +1,24 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+import { DomainException } from '../exceptions/domain.exception';
 
-@Entity('conversations')
 export class Conversation {
-  @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  /**
-   * Stored as comma-separated UUIDs by TypeORM simple-array.
-   * Example: "uuid-a,uuid-b"
-   */
-  @Column('simple-array')
   participantIds: string[];
-
-  @Column({ nullable: true })
   lastMessage: string;
-
-  @Column({ nullable: true, type: 'timestamptz' })
   lastMessageAt: Date;
-
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
+
+  // ── Behavior Methods ──────────────────────────────────────────────
+
+  hasParticipant(userId: string): boolean {
+    return this.participantIds && this.participantIds.includes(userId);
+  }
+
+  updateLastMessage(message: string): void {
+    if (!message || message.trim().length === 0) {
+      throw new DomainException('Mensagem não pode ser vazia');
+    }
+    this.lastMessage = message.trim();
+    this.lastMessageAt = new Date();
+  }
 }

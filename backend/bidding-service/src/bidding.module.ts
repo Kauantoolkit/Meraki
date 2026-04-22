@@ -41,10 +41,10 @@ import { BidController } from './interfaces/controllers/bid.controller';
     // Repositories
     BidRepository,
     BidMessageRepository,
-    // Factories
-    BidFactory,
-    // Domain Services
-    BidSelectionDomainService,
+    // Domain Factories (instanciadas sem @Injectable — domain puro)
+    { provide: BidFactory, useFactory: () => new BidFactory() },
+    // Domain Services (instanciados sem @Injectable — domain puro)
+    { provide: BidSelectionDomainService, useFactory: () => new BidSelectionDomainService() },
     // Use Cases
     SubmitBidUseCase,
     AcceptBidUseCase,

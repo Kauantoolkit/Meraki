@@ -3,7 +3,7 @@ import {
   Body, Param, Req, UseGuards, HttpCode, HttpStatus, NotFoundException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
+import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { Request } from 'express';
 import { GetPortfolioUseCase } from '../../application/use-cases/get-portfolio.use-case';
 import { AddCertificationUseCase } from '../../application/use-cases/add-certification.use-case';
@@ -20,7 +20,7 @@ import {
   UpdateMyProfileDto,
   AddSkillDto,
   AddMyCertificationDto,
-} from '../dtos/portfolio.dto';
+} from '../../application/dtos/portfolio.dto';
 
 interface AuthUser {
   sub: string;
@@ -32,7 +32,7 @@ interface AuthUser {
 @ApiTags('Portfolio')
 @Controller('api/portfolio')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class PortfolioController {
   constructor(private readonly getPortfolioUseCase: GetPortfolioUseCase) {}
 
@@ -71,7 +71,7 @@ export class PortfolioController {
 @ApiTags('Certifications')
 @Controller('api/certifications')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class CertificationController {
   constructor(private readonly addCertificationUseCase: AddCertificationUseCase) {}
 
@@ -103,7 +103,7 @@ export class CertificationController {
 @ApiTags('Reviews')
 @Controller('api/reviews')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class ReviewController {
   constructor(private readonly addReviewUseCase: AddReviewUseCase) {}
 
@@ -125,7 +125,7 @@ export class ReviewController {
 @ApiTags('Public Profiles')
 @Controller('api/profiles')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class PublicProfileController {
   constructor(
     private readonly getPublicProfileUseCase: GetPublicProfileUseCase,
@@ -162,7 +162,7 @@ export class PublicProfileController {
 @ApiTags('My Portfolio')
 @Controller('api/portfolio/me')
 @ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(JwtAuthGuard)
 export class MyPortfolioController {
   constructor(
     private readonly getMyPortfolioUseCase: GetMyPortfolioUseCase,

@@ -3,6 +3,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './interfaces/filters/http-exception.filter';
+import { DomainExceptionFilter } from './interfaces/filters/domain-exception.filter';
 
 function requireEnv(keys: string[]): void {
   const missing = keys.filter((k) => !process.env[k]);
@@ -15,7 +16,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  app.useGlobalFilters(new HttpExceptionFilter());
+  app.useGlobalFilters(new HttpExceptionFilter(), new DomainExceptionFilter());
 
   const config = new DocumentBuilder()
     .setTitle('MERAKI — Bidding Service')

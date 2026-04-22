@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Delivery, DeliveryStatus } from '../entities/delivery.entity';
 import { DomainException } from '../exceptions/domain.exception';
 
@@ -10,7 +9,6 @@ export interface CreateDeliveryData {
   deliveredFiles?: string[];
 }
 
-@Injectable()
 export class DeliveryFactory {
   create(data: CreateDeliveryData): Delivery {
     if (!data.milestoneId) throw new DomainException('milestoneId é obrigatório');

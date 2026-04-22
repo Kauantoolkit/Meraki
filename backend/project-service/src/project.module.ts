@@ -43,9 +43,9 @@ import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.cons
   providers: [
     // Auth
     JwtStrategy,
-    // Factories
-    ProjectFactory,
-    MilestoneFactory,
+    // Domain Factories (instanciadas sem @Injectable — domain puro)
+    { provide: ProjectFactory, useFactory: () => new ProjectFactory() },
+    { provide: MilestoneFactory, useFactory: () => new MilestoneFactory() },
     // Repositories
     ProjectRepository,
     MilestoneRepository,

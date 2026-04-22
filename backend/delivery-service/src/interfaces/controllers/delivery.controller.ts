@@ -10,7 +10,7 @@ import { GetKanbanBoardUseCase } from '../../application/use-cases/get-kanban-bo
 import { GetProjectHistoryUseCase } from '../../application/use-cases/get-project-history.use-case';
 import { AddMilestoneCommentUseCase } from '../../application/use-cases/add-milestone-comment.use-case';
 import { GetMilestoneCommentsUseCase } from '../../application/use-cases/get-milestone-comments.use-case';
-import { SubmitDeliveryDto } from '../dtos/submit-delivery.dto';
+import { SubmitDeliveryDto } from '../../application/dtos/submit-delivery.dto';
 
 @ApiTags('Deliveries')
 @Controller('api/deliveries')

@@ -1,7 +1,3 @@
-import {
-  Entity, PrimaryGeneratedColumn, Column,
-  CreateDateColumn, UpdateDateColumn,
-} from 'typeorm';
 import { PaymentNotInEscrowError } from '../exceptions/payment-not-in-escrow.error';
 
 export enum PaymentStatus {
@@ -10,45 +6,19 @@ export enum PaymentStatus {
   REFUNDED = 'REFUNDED',
 }
 
-@Entity('payments')
 export class Payment {
-  @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column()
   projectId: string;
-
-  @Column()
   milestoneId: string;
-
-  @Column()
   specialistId: string;
-
-  @Column('decimal', { precision: 10, scale: 2 })
   amount: number;
-
-  @Column('decimal', { precision: 10, scale: 2, nullable: true })
   specialistAmount: number;
-
-  @Column('decimal', { precision: 10, scale: 2, nullable: true })
   platformFee: number;
-
-  @Column({ type: 'enum', enum: PaymentStatus, default: PaymentStatus.ESCROW_HELD })
   status: PaymentStatus;
-
-  @Column({ nullable: true })
   escrowTransactionId: string;
-
-  @Column({ nullable: true })
   releaseTransactionId: string;
-
-  @Column({ nullable: true })
   releasedAt: Date;
-
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
 
   // ─── Domain behavior — RN06 ───────────────────────────────────────────────

@@ -1,53 +1,28 @@
-import {
-  Entity, PrimaryGeneratedColumn, Column,
-  CreateDateColumn, UpdateDateColumn, OneToMany,
-} from 'typeorm';
 import { ProjectStatus } from '../enums/project-status.enum';
 import { Milestone } from './milestone.entity';
 import { DomainException } from '../exceptions/domain.exception';
 
-@Entity('projects')
 export class Project {
-  @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column()
   title: string;
-
-  @Column('text')
   description: string;
-
-  @Column('simple-array')
   requirements: string[];
-
-  @Column('decimal', { precision: 10, scale: 2 })
   budget: number;
-
-  @Column()
   deadline: Date;
-
-  @Column({ type: 'enum', enum: ProjectStatus, default: ProjectStatus.OPEN })
   status: ProjectStatus;
 
   /** FK para Identity Context — referência externa */
-  @Column()
   companyId: string;
 
   /** FK para Identity Context — preenchido após bid.accepted */
-  @Column({ nullable: true })
   specialistId: string;
 
   /** FK para Bidding Context — referência externa */
-  @Column({ nullable: true })
   bidId: string;
 
-  @OneToMany(() => Milestone, (m) => m.project, { cascade: true })
   milestones: Milestone[];
 
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
 
   // ─── Domain behavior ───────────────────────────────────────────────────────

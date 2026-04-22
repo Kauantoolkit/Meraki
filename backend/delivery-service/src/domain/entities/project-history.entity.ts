@@ -1,33 +1,16 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
 import { DomainException } from '../exceptions/domain.exception';
 
 /** Aggregate Root — RN07: histórico automático de atividades do projeto */
-@Entity('project_histories')
 export class ProjectHistory {
-  @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column()
   projectId: string;
-
-  @Column({ nullable: true })
   specialistId: string;
-
-  @Column()
   action: string;
-
-  @Column('text', { nullable: true })
   description: string;
-
-  @CreateDateColumn()
   createdAt: Date;
 
   // ── Factory Method ────────────────────────────────────────────────
 
-  /**
-   * Cria uma nova entrada de histórico com validação.
-   * RN07 — O histórico de entregas é registrado automaticamente pelo sistema.
-   */
   static createEntry(
     projectId: string,
     action: string,

@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { User } from '../entities/user.entity';
 import { CompanyProfile } from '../entities/company-profile.entity';
 import { SpecialistProfile } from '../entities/specialist-profile.entity';
@@ -22,7 +21,6 @@ export interface UserCreationResult {
   specialistProfile?: SpecialistProfile;
 }
 
-@Injectable()
 export class UserFactory {
   /**
    * Cria um User (Aggregate Root) com validação de invariantes.

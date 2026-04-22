@@ -3,10 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
-// Entities
-import { User } from './domain/entities/user.entity';
-import { SpecialistProfile } from './domain/entities/specialist-profile.entity';
-import { CompanyProfile } from './domain/entities/company-profile.entity';
+// Schemas
+import { UserSchema } from './infrastructure/database/schemas/user.schema';
+import { SpecialistProfileSchema } from './infrastructure/database/schemas/specialist-profile.schema';
+import { CompanyProfileSchema } from './infrastructure/database/schemas/company-profile.schema';
 
 // Infrastructure
 import { UserRepository } from './infrastructure/repositories/user.repository';
@@ -29,14 +29,14 @@ import { UserController } from './interfaces/controllers/user.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, SpecialistProfile, CompanyProfile]),
+    TypeOrmModule.forFeature([UserSchema, SpecialistProfileSchema, CompanyProfileSchema]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
       signOptions: {
-  expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as any
-},
+        expiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
+      },
     }),
     RabbitMQModule,
   ],
@@ -55,8 +55,8 @@ import { UserController } from './interfaces/controllers/user.controller';
     // Events
     EventPublisherService,
 
-    // Domain Factories
-    UserFactory,
+    // Domain Factories (registradas sem @Injectable — domain puro)
+    { provide: UserFactory, useFactory: () => new UserFactory() },
 
     // Use Cases
     RegisterUserUseCase,

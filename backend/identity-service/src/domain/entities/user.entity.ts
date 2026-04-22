@@ -1,10 +1,3 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
 import { UserType } from '../enums/user-type.enum';
 import {
   DomainException,
@@ -13,36 +6,16 @@ import {
   InvalidUserNameException,
 } from '../exceptions/domain.exception';
 
-@Entity('users')
 export class User {
-  @PrimaryGeneratedColumn('uuid')
   id: string;
-
-  @Column({ unique: true })
   email: string;
-
-  @Column()
   passwordHash: string;
-
-  @Column()
   name: string;
-
-  @Column({ type: 'enum', enum: UserType })
   userType: UserType;
-
-  @Column({ nullable: true })
   specialistId: string;
-
-  @Column({ nullable: true })
   companyId: string;
-
-  @Column({ default: true })
   isActive: boolean;
-
-  @CreateDateColumn()
   createdAt: Date;
-
-  @UpdateDateColumn()
   updatedAt: Date;
 
   // ─── Domain behavior ───────────────────────────────────────────────────────

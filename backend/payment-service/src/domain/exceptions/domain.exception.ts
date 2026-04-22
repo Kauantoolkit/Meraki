@@ -1,5 +1,6 @@
-import { BadRequestException } from '@nestjs/common';
-
-export class DomainException extends BadRequestException {
-  constructor(message: string) { super(message); }
+export class DomainException extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'DomainException';
+  }
 }

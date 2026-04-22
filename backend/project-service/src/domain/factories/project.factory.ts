@@ -1,4 +1,3 @@
-import { Injectable } from '@nestjs/common';
 import { Project } from '../entities/project.entity';
 import { ProjectStatus } from '../enums/project-status.enum';
 import { InvalidProjectScopeError } from '../exceptions/invalid-project-scope.error';
@@ -14,7 +13,6 @@ export interface CreateProjectData {
   companyId: string;
 }
 
-@Injectable()
 export class ProjectFactory {
   /**
    * RN01: Projeto deve ter título (≥10 chars), budget > 0,
