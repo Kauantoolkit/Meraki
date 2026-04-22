@@ -1,0 +1,33 @@
+# ─── MERAKI — Infraestrutura Compartilhada ─────────────────────────────────
+# Responsabilidade: RabbitMQ central, acessível por todos os servidores.
+#
+# Use este compose num servidor dedicado de infra (ou no mesmo servidor do
+# api-gateway). Todos os microserviços apontam RABBITMQ_URL para o IP/hostname
+# deste servidor.
+#
+# Uso:
+#   cp .env.infra.example .env
+#   docker compose -f docker-compose.infra.yml up -d
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: meraki-rabbitmq
+    ports:
+      - '5672:5672'       # AMQP — todos os serviços conectam aqui
+      - '15672:15672'     # Management UI — proteja com firewall em produção
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-meraki-erlang-cookie}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:

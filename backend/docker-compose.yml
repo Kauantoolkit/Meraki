@@ -1,0 +1,271 @@
+services:
+  # ─── IDENTITY SERVICE DB ───────────────────────────────────────────────────
+  identity-db:
+    image: postgres:15-alpine
+    container_name: meraki-identity-db
+    environment:
+      POSTGRES_DB: ${IDENTITY_DB_NAME:-identity_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+    volumes:
+      - identity-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── PROJECT SERVICE DB ────────────────────────────────────────────────────
+  project-db:
+    image: postgres:15-alpine
+    container_name: meraki-project-db
+    environment:
+      POSTGRES_DB: ${PROJECT_DB_NAME:-project_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+    volumes:
+      - project-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── BIDDING SERVICE DB ────────────────────────────────────────────────────
+  bidding-db:
+    image: postgres:15-alpine
+    container_name: meraki-bidding-db
+    environment:
+      POSTGRES_DB: ${BIDDING_DB_NAME:-bidding_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+    volumes:
+      - bidding-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── DELIVERY SERVICE DB ───────────────────────────────────────────────────
+  delivery-db:
+    image: postgres:15-alpine
+    container_name: meraki-delivery-db
+    environment:
+      POSTGRES_DB: ${DELIVERY_DB_NAME:-delivery_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+    volumes:
+      - delivery-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── PAYMENT SERVICE DB ────────────────────────────────────────────────────
+  payment-db:
+    image: postgres:15-alpine
+    container_name: meraki-payment-db
+    environment:
+      POSTGRES_DB: ${PAYMENT_DB_NAME:-payment_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+    volumes:
+      - payment-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── PORTFOLIO SERVICE DB ──────────────────────────────────────────────────
+  portfolio-db:
+    image: postgres:15-alpine
+    container_name: meraki-portfolio-db
+    environment:
+      POSTGRES_DB: ${PORTFOLIO_DB_NAME:-portfolio_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+    volumes:
+      - portfolio-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── RABBITMQ ──────────────────────────────────────────────────────────────
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: meraki-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-meraki}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-meraki}
+      RABBITMQ_ERLANG_COOKIE: ${RABBITMQ_ERLANG_COOKIE:-meraki-erlang-cookie}
+    ports:
+      - '15672:15672'
+    volumes:
+      - rabbitmq:/var/lib/rabbitmq
+    healthcheck:
+      test: ['CMD', 'rabbitmq-diagnostics', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── SERVIÇOS ──────────────────────────────────────────────────────────────
+
+  identity-service:
+    build: ./identity-service
+    container_name: meraki-identity-service
+    ports:
+      - '3001:3001'
+    environment:
+      NODE_ENV: development
+      PORT: 3001
+      DB_HOST: identity-db
+      DB_PORT: 5432
+      DB_NAME: ${IDENTITY_DB_NAME:-identity_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+    depends_on:
+      identity-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: meraki-api-gateway
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
+      IDENTITY_SERVICE_URL: http://identity-service:3001
+      PROJECT_SERVICE_URL: http://project-service:3002
+      BIDDING_SERVICE_URL: http://bidding-service:3003
+      DELIVERY_SERVICE_URL: http://delivery-service:3004
+      PAYMENT_SERVICE_URL: http://payment-service:3005
+      PORTFOLIO_SERVICE_URL: http://portfolio-service:3006
+    depends_on:
+      - identity-service
+
+  project-service:
+    build: ./project-service
+    container_name: meraki-project-service
+    ports:
+      - '3002:3002'
+    environment:
+      NODE_ENV: development
+      PORT: 3002
+      DB_HOST: project-db
+      DB_PORT: 5432
+      DB_NAME: ${PROJECT_DB_NAME:-project_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+    depends_on:
+      project-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  bidding-service:
+    build: ./bidding-service
+    container_name: meraki-bidding-service
+    ports:
+      - '3003:3003'
+    environment:
+      NODE_ENV: development
+      PORT: 3003
+      DB_HOST: bidding-db
+      DB_PORT: 5432
+      DB_NAME: ${BIDDING_DB_NAME:-bidding_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+    depends_on:
+      bidding-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  delivery-service:
+    build: ./delivery-service
+    container_name: meraki-delivery-service
+    ports:
+      - '3004:3004'
+    environment:
+      NODE_ENV: development
+      PORT: 3004
+      DB_HOST: delivery-db
+      DB_PORT: 5432
+      DB_NAME: ${DELIVERY_DB_NAME:-delivery_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+    depends_on:
+      delivery-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  payment-service:
+    build: ./payment-service
+    container_name: meraki-payment-service
+    ports:
+      - '3005:3005'
+    environment:
+      NODE_ENV: development
+      PORT: 3005
+      DB_HOST: payment-db
+      DB_PORT: 5432
+      DB_NAME: ${PAYMENT_DB_NAME:-payment_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+      PLATFORM_FEE_RATE: ${PLATFORM_FEE_RATE:-0.10}
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  portfolio-service:
+    build: ./portfolio-service
+    container_name: meraki-portfolio-service
+    ports:
+      - '3006:3006'
+    environment:
+      NODE_ENV: development
+      PORT: 3006
+      DB_HOST: portfolio-db
+      DB_PORT: 5432
+      DB_NAME: ${PORTFOLIO_DB_NAME:-portfolio_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+    depends_on:
+      portfolio-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  identity-db:
+  project-db:
+  bidding-db:
+  delivery-db:
+  payment-db:
+  portfolio-db:
+  rabbitmq:
