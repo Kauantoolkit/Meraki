@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Workspace // Deploy Project</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Mock DB Simulator -->
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', // Verde Principal
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    // zinc-950
+                            card: '#18181b',  // zinc-900
+                            border: '#27272a',// zinc-800
+                            input: '#121214', // zinc-950/80
+                            hover: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Background Tech Grid */
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        /* Scrollbar customizada Sharp */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b; 
+            border: 1px solid #27272a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #55CA7C; 
+        }
+
+        /* Efeito de Glitch/Sharp */
+        .btn-sharp:active {
+            transform: translate(2px, 2px);
+            box-shadow: none !important;
+        }
+
+        /* Editor de Texto */
+        .editor-textarea {
+            background-image: linear-gradient(transparent, transparent 23px, #27272a 23px, #27272a 24px);
+            background-size: 100% 24px;
+            line-height: 24px;
+            resize: vertical;
+        }
+
+        /* Step Transitions */
+        .step-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container" data-back-url="dashboard-empresa.html" data-project-title="SYS.PROJECT // DEPLOY_WIZARD"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="flex flex-col lg:flex-row gap-8 items-start">
+            
+            <!-- LEFT SIDEBAR: WIZARD STEPS -->
+            <aside class="w-full lg:w-64 shrink-0 lg:sticky lg:top-24">
+                <h2 class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-6 border-b border-dark-border pb-2">Sequência de Deploy</h2>
+                
+                <ul class="space-y-1 relative before:absolute before:inset-y-0 before:left-[11px] before:w-px before:bg-dark-border">
+                    <!-- Step 1 -->
+                    <li class="relative flex items-center gap-4 p-2 group cursor-pointer" onclick="goToStep(1)">
+                        <div id="ind-1" class="w-6 h-6 rounded-none bg-brand-500 border border-brand-500 flex items-center justify-center relative z-10 text-dark-bg transition-colors">
+                            <span class="font-mono text-[10px] font-bold">1</span>
+                        </div>
+                        <span id="text-1" class="font-mono text-xs font-bold text-white transition-colors">Configuração Base</span>
+                    </li>
+                    <!-- Step 2 -->
+                    <li class="relative flex items-center gap-4 p-2 group cursor-pointer" onclick="goToStep(2)">
+                        <div id="ind-2" class="w-6 h-6 rounded-none bg-dark-input border border-dark-border flex items-center justify-center relative z-10 text-zinc-500 group-hover:border-zinc-500 transition-colors">
+                            <span class="font-mono text-[10px] font-bold">2</span>
+                        </div>
+                        <span id="text-2" class="font-mono text-xs text-zinc-500 group-hover:text-zinc-300 transition-colors">Stack & Requisitos</span>
+                    </li>
+                    <!-- Step 3 -->
+                    <li class="relative flex items-center gap-4 p-2 group cursor-pointer" onclick="goToStep(3)">
+                        <div id="ind-3" class="w-6 h-6 rounded-none bg-dark-input border border-dark-border flex items-center justify-center relative z-10 text-zinc-500 group-hover:border-zinc-500 transition-colors">
+                            <span class="font-mono text-[10px] font-bold">3</span>
+                        </div>
+                        <span id="text-3" class="font-mono text-xs text-zinc-500 group-hover:text-zinc-300 transition-colors">Orçamento & Prazos</span>
+                    </li>
+                    <!-- Step 4 -->
+                    <li class="relative flex items-center gap-4 p-2 group cursor-pointer" onclick="goToStep(4)">
+                        <div id="ind-4" class="w-6 h-6 rounded-none bg-dark-input border border-dark-border flex items-center justify-center relative z-10 text-zinc-500 group-hover:border-zinc-500 transition-colors">
+                            <span class="font-mono text-[10px] font-bold">4</span>
+                        </div>
+                        <span id="text-4" class="font-mono text-xs text-zinc-500 group-hover:text-zinc-300 transition-colors">Milestones (RN04)</span>
+                    </li>
+                </ul>
+
+                <div class="mt-8 bg-dark-input border border-dark-border p-4">
+                    <div class="flex items-start gap-2 text-zinc-400">
+                        <i data-lucide="info" class="w-4 h-4 text-blue-400 shrink-0 mt-0.5"></i>
+                        <p class="text-[10px] font-mono leading-relaxed">
+                            O projeto entrará no estado <span class="text-brand-500">OPEN</span> imediatamente após o deploy, permitindo a receção de *Bids* através do Bidding Service.
+                        </p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- RIGHT MAIN: FORMS -->
+            <section class="flex-1 w-full bg-dark-card border border-dark-border p-6 shadow-2xl relative">
+                <!-- Sharp Corners -->
+                <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500"></div>
+                <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500"></div>
+
+                <form id="deployForm" onsubmit="handleDeploy(event)">
+                    
+                    <!-- STEP 1: CONFIGURAÇÃO BASE -->
+                    <div id="step-1" class="step-content active">
+                        <div class="mb-6 border-b border-dark-border pb-4">
+                            <h2 class="text-xl font-bold text-white uppercase tracking-tight">Configuração Base</h2>
+                            <p class="font-mono text-xs text-zinc-500 mt-1">Defina os metadados principais do projeto.</p>
+                        </div>
+
+                        <div class="space-y-5">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Título do Projeto</label>
+                                <input type="text" id="projectTitle" required placeholder="Ex: Refatoração de API Gateway para NestJS" 
+                                    class="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none">
+                            </div>
+
+                            <div class="space-y-2 relative">
+                                <label class="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Descrição Técnica (Markdown Suportado)</label>
+                                
+                                <div class="absolute left-0 top-7 bottom-0 w-8 border-r border-dark-border bg-dark-input flex flex-col items-center py-2 select-none z-10 pointer-events-none">
+                                    <span class="text-[10px] font-mono text-zinc-700">1</span>
+                                    <span class="text-[10px] font-mono text-zinc-700">2</span>
+                                    <span class="text-[10px] font-mono text-zinc-700">3</span>
+                                    <span class="text-[10px] font-mono text-zinc-700">4</span>
+                                    <span class="text-[10px] font-mono text-zinc-700">5</span>
+                                </div>
+
+                                <textarea id="projectDesc" required placeholder="Detalhe o problema, a arquitetura atual e o resultado esperado..." 
+                                    class="editor-textarea w-full pl-10 pr-4 py-2 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none h-48"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex justify-end">
+                            <button type="button" onclick="goToStep(2)" class="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
+                                AVANÇAR_PASSO() <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: STACK & REQUISITOS -->
+                    <div id="step-2" class="step-content">
+                        <div class="mb-6 border-b border-dark-border pb-4">
+                            <h2 class="text-xl font-bold text-white uppercase tracking-tight">Stack & Requisitos Técnicos</h2>
+                            <p class="font-mono text-xs text-zinc-500 mt-1">Conforme a regra RN01, o projeto tem de ter pelo menos um requisito.</p>
+                        </div>
+
+                        <div class="space-y-5">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Adicionar Tecnologia / Competência</label>
+                                <div class="flex gap-2">
+                                    <input type="text" id="skillInput" placeholder="Ex: NestJS, RabbitMQ, Flutter..." 
+                                        class="flex-1 px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none">
+                                    <button type="button" onclick="addSkill()" class="bg-dark-input text-white font-mono text-xs px-6 py-3 border border-dark-border hover:border-brand-500 transition-colors flex items-center justify-center">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="bg-[#000] border border-dark-border p-4 min-h-[120px]">
+                                <p class="font-mono text-[10px] text-zinc-600 mb-3 uppercase tracking-widest border-b border-dark-border/50 pb-2">Array de Requisitos []</p>
+                                <div id="skillsContainer" class="flex flex-wrap gap-2">
+                                    <!-- Default Skills added for demonstration -->
+                                    <span class="skill-tag group flex items-center gap-1 text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1 hover:border-red-500 transition-colors cursor-pointer" onclick="this.remove()">
+                                        NestJS <i data-lucide="x" class="w-3 h-3 text-zinc-600 group-hover:text-red-500"></i>
+                                    </span>
+                                    <span class="skill-tag group flex items-center gap-1 text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1 hover:border-red-500 transition-colors cursor-pointer" onclick="this.remove()">
+                                        Microservices <i data-lucide="x" class="w-3 h-3 text-zinc-600 group-hover:text-red-500"></i>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="goToStep(1)" class="btn-sharp bg-dark-input text-zinc-400 font-bold font-mono text-xs px-6 py-3 border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i> VOLTAR
+                            </button>
+                            <button type="button" onclick="goToStep(3)" class="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
+                                AVANÇAR_PASSO() <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: ORÇAMENTO & PRAZOS -->
+                    <div id="step-3" class="step-content">
+                        <div class="mb-6 border-b border-dark-border pb-4">
+                            <h2 class="text-xl font-bold text-white uppercase tracking-tight">Financiamento e Prazos</h2>
+                            <p class="font-mono text-xs text-zinc-500 mt-1">Defina o limite orçamental (Escrow) e o prazo limite de entrega.</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Orçamento Máximo (BRL)</label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span class="font-mono text-zinc-500 group-focus-within:text-brand-500">R$</span>
+                                    </div>
+                                    <input type="number" id="projectBudget" required min="1" placeholder="0.00" 
+                                        class="w-full pl-10 pr-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none">
+                                </div>
+                                <p class="text-[9px] font-mono text-zinc-500 text-right mt-1">Este valor será retido no Payment Service aquando da adjudicação.</p>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Deadline do Projeto</label>
+                                <div class="relative group">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i data-lucide="calendar" class="w-4 h-4 text-zinc-500 group-focus-within:text-brand-500"></i>
+                                    </div>
+                                    <!-- Usando text para estilizar mais facilmente e forçar formatação de terminal, mas na realidade seria 'date' -->
+                                    <input type="date" id="projectDeadline" required
+                                        class="w-full pl-10 pr-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none dark-date-input">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex justify-between">
+                            <button type="button" onclick="goToStep(2)" class="btn-sharp bg-dark-input text-zinc-400 font-bold font-mono text-xs px-6 py-3 border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i> VOLTAR
+                            </button>
+                            <button type="button" onclick="goToStep(4)" class="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
+                                AVANÇAR_PASSO() <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: MILESTONES -->
+                    <div id="step-4" class="step-content">
+                        <div class="mb-6 border-b border-dark-border pb-4 flex justify-between items-end">
+                            <div>
+                                <h2 class="text-xl font-bold text-white uppercase tracking-tight">Milestones (Entregáveis)</h2>
+                                <p class="font-mono text-xs text-zinc-500 mt-1">Regra RN04: Divida o projeto em entregas lógicas e pagáveis.</p>
+                            </div>
+                            <button type="button" onclick="addMilestone()" class="bg-dark-input hover:bg-dark-hover text-brand-500 font-mono text-xs px-4 py-2 border border-brand-500/50 hover:border-brand-500 transition-colors flex items-center gap-2">
+                                <i data-lucide="plus" class="w-3 h-3"></i> NOVO MILESTONE
+                            </button>
+                        </div>
+
+                        <!-- Lista de Milestones -->
+                        <div id="milestonesContainer" class="space-y-4 mb-6">
+                            
+                            <!-- Milestone Template -->
+                            <div class="milestone-card bg-[#000] border border-dark-border p-4 relative group">
+                                <button type="button" class="absolute top-2 right-2 text-zinc-600 hover:text-red-500" onclick="this.closest('.milestone-card').remove()">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                                
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="font-mono text-[10px] text-zinc-400 bg-dark-input px-2 py-0.5 border border-dark-border milestone-index">M1</span>
+                                    <input type="text" placeholder="Nome do Entregável (ex: Setup Inicial)" class="m-title bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 w-2/3 pb-1">
+                                    <input type="number" placeholder="Valor (R$)" class="m-amount w-1/3 bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 pb-1">
+                                </div>
+                                <textarea placeholder="O que se espera desta entrega?" class="w-full bg-dark-input border border-dark-border p-2 text-xs font-mono text-zinc-400 focus:outline-none focus:border-brand-500 resize-none h-16"></textarea>
+                            </div>
+
+                            <div class="milestone-card bg-[#000] border border-dark-border p-4 relative group">
+                                <button type="button" class="absolute top-2 right-2 text-zinc-600 hover:text-red-500" onclick="this.closest('.milestone-card').remove()">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                </button>
+                                
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="font-mono text-[10px] text-zinc-400 bg-dark-input px-2 py-0.5 border border-dark-border milestone-index">M2</span>
+                                    <input type="text" placeholder="Nome do Entregável (ex: Entrega Final)" class="m-title bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 w-2/3 pb-1">
+                                    <input type="number" placeholder="Valor (R$)" class="m-amount w-1/3 bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 pb-1">
+                                </div>
+                                <textarea placeholder="O que se espera desta entrega?" class="w-full bg-dark-input border border-dark-border p-2 text-xs font-mono text-zinc-400 focus:outline-none focus:border-brand-500 resize-none h-16"></textarea>
+                            </div>
+
+                        </div>
+
+                        <div class="mt-8 flex justify-between items-center border-t border-dark-border pt-6">
+                            <button type="button" onclick="goToStep(3)" class="btn-sharp bg-dark-input text-zinc-400 font-bold font-mono text-xs px-6 py-3 border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i> VOLTAR
+                            </button>
+                            
+                            <button type="submit" id="deployBtn" class="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-sm px-8 py-4 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2 shadow-[4px_4px_0px_rgba(85,202,124,0.3)]">
+                                <i data-lucide="rocket" class="w-5 h-5"></i>
+                                <span id="deployBtnText">EXECUTAR_DEPLOY()</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </form>
+
+                <!-- TERMINAL OVERLAY (Deploy Sequence) -->
+                <div id="terminal-overlay" class="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-50 hidden flex-col p-8 border border-brand-500">
+                    <div class="flex items-center gap-2 mb-6 border-b border-dark-border pb-4">
+                        <i data-lucide="terminal" class="w-5 h-5 text-brand-500"></i>
+                        <span class="font-mono text-sm font-bold text-white uppercase tracking-widest">DEPLOY_SEQUENCE</span>
+                    </div>
+
+                    <div id="terminal-logs" class="font-mono text-xs leading-relaxed space-y-2 flex-1 overflow-y-auto terminal-scroll">
+                        <!-- Logs injectados via JS -->
+                    </div>
+
+                    <div id="terminal-success" class="hidden mt-6 pt-6 border-t border-dark-border">
+                        <p class="font-mono text-brand-500 font-bold mb-4">> [201 CREATED] PROJETO PUBLICADO COM SUCESSO.</p>
+                        <button onclick="window.location.href='dashboard-empresa.html'" class="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-brand-500 hover:text-brand-500 transition-colors">
+                            < Retornar ao Workspace
+                        </button>
+                    </div>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Inicializar Lucide Icons
+        lucide.createIcons();
+
+        // Lógica do Wizard
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        function updateIndicators() {
+            for (let i = 1; i <= totalSteps; i++) {
+                const ind = document.getElementById(`ind-${i}`);
+                const txt = document.getElementById(`text-${i}`);
+                
+                if (i === currentStep) {
+                    ind.className = "w-6 h-6 rounded-none bg-brand-500 border border-brand-500 flex items-center justify-center relative z-10 text-dark-bg transition-colors";
+                    txt.className = "font-mono text-xs font-bold text-white transition-colors";
+                } else if (i < currentStep) {
+                    ind.className = "w-6 h-6 rounded-none bg-dark-card border border-brand-500 flex items-center justify-center relative z-10 text-brand-500 transition-colors";
+                    ind.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                    txt.className = "font-mono text-xs text-brand-500 transition-colors";
+                } else {
+                    ind.className = "w-6 h-6 rounded-none bg-dark-input border border-dark-border flex items-center justify-center relative z-10 text-zinc-500 transition-colors";
+                    ind.innerHTML = `<span class="font-mono text-[10px] font-bold">${i}</span>`;
+                    txt.className = "font-mono text-xs text-zinc-500 transition-colors";
+                }
+            }
+        }
+
+        function goToStep(step) {
+            // Validação simples visual (sem bloquear)
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step-${step}`).classList.add('active');
+            currentStep = step;
+            updateIndicators();
+        }
+
+        // Lógica de Skills
+        function addSkill() {
+            const input = document.getElementById('skillInput');
+            const val = input.value.trim();
+            if (val) {
+                const container = document.getElementById('skillsContainer');
+                const span = document.createElement('span');
+                span.className = "skill-tag group flex items-center gap-1 text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1 hover:border-red-500 transition-colors cursor-pointer";
+                span.innerHTML = `${val} <i data-lucide="x" class="w-3 h-3 text-zinc-600 group-hover:text-red-500"></i>`;
+                span.onclick = function() { this.remove(); };
+                container.appendChild(span);
+                input.value = '';
+                lucide.createIcons();
+            }
+        }
+
+        document.getElementById('skillInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addSkill();
+            }
+        });
+
+        // Lógica de Milestones
+        let milestoneCount = 2;
+        function addMilestone() {
+            milestoneCount++;
+            const container = document.getElementById('milestonesContainer');
+            const html = `
+                <div class="milestone-card bg-[#000] border border-dark-border p-4 relative group">
+                    <button type="button" class="absolute top-2 right-2 text-zinc-600 hover:text-red-500" onclick="this.closest('.milestone-card').remove(); updateMilestoneIndexes();">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="font-mono text-[10px] text-zinc-400 bg-dark-input px-2 py-0.5 border border-dark-border milestone-index">M${milestoneCount}</span>
+                        <input type="text" placeholder="Nome do Entregável" class="m-title bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 w-2/3 pb-1">
+                        <input type="number" placeholder="Valor (R$)" class="m-amount w-1/3 bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 pb-1">
+                    </div>
+                    <textarea placeholder="O que se espera desta entrega?" class="w-full bg-dark-input border border-dark-border p-2 text-xs font-mono text-zinc-400 focus:outline-none focus:border-brand-500 resize-none h-16"></textarea>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+            lucide.createIcons();
+            updateMilestoneIndexes();
+        }
+
+        function updateMilestoneIndexes() {
+            const indexes = document.querySelectorAll('.milestone-index');
+            indexes.forEach((el, idx) => {
+                el.textContent = `M${idx + 1}`;
+            });
+            milestoneCount = indexes.length;
+        }
+
+        // Lógica do Submit (Simulação de Terminal API Gateway)
+        async function handleDeploy(e) {
+            e.preventDefault();
+            const overlay = document.getElementById('terminal-overlay');
+            const logsContainer = document.getElementById('terminal-logs');
+            const successDiv = document.getElementById('terminal-success');
+            
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+            logsContainer.innerHTML = ''; // Clear past logs
+
+            const logs = [
+                { text: "> Iniciar ligação via API Gateway...", delay: 500, color: "text-zinc-400" },
+                { text: "> Autenticar utilizador (Identity Service) -> [OK]", delay: 800, color: "text-zinc-400" },
+                { text: "> Validar Payload (RN01: Requisitos presentes) -> [OK]", delay: 1200, color: "text-zinc-400" },
+                { text: "> Validar Payload (RN04: Milestones definidos) -> [OK]", delay: 1600, color: "text-zinc-400" },
+                { text: "> Invocar POST /api/projects", delay: 2000, color: "text-brand-500" },
+                { text: "> Project Service: A gerar Project Aggregate Root...", delay: 2500, color: "text-zinc-400" },
+                { text: "> Project Service: A guardar na base de dados PostgreSQL... [MOCK]", delay: 3000, color: "text-zinc-400" },
+                { text: "> RabbitMQ: Publicar evento 'project.created'", delay: 3500, color: "text-blue-400" },
+                { text: "> Bidding Service: Evento recebido. A preparar listening de Bids.", delay: 4000, color: "text-orange-400" },
+            ];
+
+            // Coletar Dados para Mock
+            const pTitle = document.getElementById('projectTitle').value;
+            const pDesc = document.getElementById('projectDesc').value;
+            const pBudget = document.getElementById('projectBudget').value;
+            const pDeadline = document.getElementById('projectDeadline').value;
+            
+            const milestonesData = [];
+            document.querySelectorAll('.milestone-card').forEach(card => {
+                const title = card.querySelector('.m-title')?.value || 'Milestone';
+                const amount = card.querySelector('.m-amount')?.value || 0;
+                milestonesData.push({ title, amount: Number(amount) });
+            });
+
+            // Salvar no localstorage MockDB ao longo do delay
+            setTimeout(() => {
+                window.mockAPI.createProject({
+                    title: pTitle,
+                    description: pDesc,
+                    budget: Number(pBudget),
+                    deadline: pDeadline
+                }, milestonesData);
+            }, 3000);
+
+            let totalDelay = 0;
+            for (const log of logs) {
+                totalDelay = log.delay;
+                setTimeout(() => {
+                    const p = document.createElement('p');
+                    p.className = log.color;
+                    p.textContent = log.text;
+                    logsContainer.appendChild(p);
+                    logsContainer.scrollTop = logsContainer.scrollHeight;
+                }, log.delay);
+            }
+
+            setTimeout(() => {
+                successDiv.classList.remove('hidden');
+            }, totalDelay + 500);
+        }
+    </script>
+</body>
+</html>

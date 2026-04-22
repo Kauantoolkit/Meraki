@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Workspace // Projects</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Mock DB Simulator -->
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', // Verde Principal
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    // zinc-950
+                            card: '#18181b',  // zinc-900
+                            border: '#27272a',// zinc-800
+                            input: '#121214', // zinc-950/80
+                            hover: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Background Tech Grid */
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        /* Scanline sutil */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(85,202,124,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: fixed;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        /* Scrollbar customizada Sharp */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b; 
+            border-left: 1px solid #27272a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #55CA7C; 
+        }
+
+        /* Botão Glitch/Sharp */
+        .btn-sharp {
+            position: relative;
+        }
+        .btn-sharp:active {
+            transform: translate(2px, 2px);
+            box-shadow: none !important;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden">
+
+    <div class="scanline"></div>
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Header Section -->
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+            <div>
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-2 h-2 bg-brand-500 animate-pulse"></div>
+                    <span class="font-mono text-[10px] tracking-widest text-brand-500 uppercase">Status: Online</span>
+                </div>
+                <h1 class="text-3xl font-bold text-white uppercase tracking-tight">Meus Projetos</h1>
+                <p class="text-sm text-zinc-400 font-mono mt-2">Gerencie licitações, acompanhe milestones e aprove entregas.</p>
+            </div>
+            
+            <button onclick="window.location.href='deploy.html'" class="btn-sharp bg-brand-500 text-dark-bg font-bold uppercase tracking-widest text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]">
+                <i data-lucide="plus-square" class="w-4 h-4"></i>
+                Deploy Projeto
+            </button>
+        </div>
+
+        <!-- Estatísticas Rápidas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <!-- Stat 1 -->
+            <div class="bg-dark-card border border-dark-border p-5 relative overflow-hidden group">
+                <div class="absolute top-0 right-0 w-16 h-16 bg-brand-500/5 rounded-full blur-xl transform translate-x-1/2 -translate-y-1/2"></div>
+                <div class="flex justify-between items-start mb-4">
+                    <span class="font-mono text-xs text-zinc-500 uppercase">Projetos Ativos</span>
+                    <i data-lucide="activity" class="w-4 h-4 text-brand-500"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-bold text-white font-mono" id="stat-in-progress">0</span>
+                    <span class="text-xs text-brand-500 font-mono">/ IN_PROGRESS</span>
+                </div>
+            </div>
+            
+            <!-- Stat 2 -->
+            <div class="bg-dark-card border border-dark-border p-5 relative overflow-hidden group">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="font-mono text-xs text-zinc-500 uppercase">Aguardando Propostas</span>
+                    <i data-lucide="inbox" class="w-4 h-4 text-blue-400"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-3xl font-bold text-white font-mono" id="stat-open">0</span>
+                    <span class="text-xs text-blue-400 font-mono">/ OPEN</span>
+                </div>
+            </div>
+
+            <!-- Stat 3 -->
+            <div class="bg-dark-card border border-dark-border p-5 relative overflow-hidden group">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="font-mono text-xs text-zinc-500 uppercase">Orçamento Comprometido</span>
+                    <i data-lucide="wallet" class="w-4 h-4 text-purple-400"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-2xl font-bold text-white font-mono" id="stat-escrow">R$ 0</span>
+                    <span class="text-xs text-purple-400 font-mono">/ ESCROW</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros e Busca -->
+        <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 bg-dark-card border border-dark-border p-2">
+            
+            <!-- Tabs de Status -->
+            <div class="flex overflow-x-auto w-full md:w-auto hide-scrollbar gap-1">
+                <button class="px-4 py-2 text-xs font-mono font-bold text-dark-bg bg-brand-500 border border-brand-500 whitespace-nowrap">
+                    [ TODOS ]
+                </button>
+                <button class="px-4 py-2 text-xs font-mono text-zinc-400 hover:text-white hover:bg-dark-input border border-transparent hover:border-dark-border transition-colors whitespace-nowrap">
+                    OPEN (2)
+                </button>
+                <button class="px-4 py-2 text-xs font-mono text-zinc-400 hover:text-white hover:bg-dark-input border border-transparent hover:border-dark-border transition-colors whitespace-nowrap">
+                    IN_PROGRESS (3)
+                </button>
+                <button class="px-4 py-2 text-xs font-mono text-zinc-400 hover:text-white hover:bg-dark-input border border-transparent hover:border-dark-border transition-colors whitespace-nowrap">
+                    COMPLETED (12)
+                </button>
+            </div>
+
+            <!-- Search -->
+            <div class="relative w-full md:w-64">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="h-4 w-4 text-zinc-500"></i>
+                </div>
+                <input type="text" placeholder="BUSCAR PROJETO..." 
+                    class="w-full pl-9 pr-3 py-2 bg-dark-input border border-dark-border text-xs font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none">
+            </div>
+        </div>
+
+        <!-- Project Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="projects-grid">
+            <!-- Renderizado via JS -->
+        </div>
+
+    </main>
+
+    <script>
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = window.mockAPI.getCurrentUser();
+            if(!user || user.type !== 'company') {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('user-name').textContent = user.name;
+            document.getElementById('user-id').textContent = 'ID: ' + user.id;
+
+            loadDashboard();
+        });
+
+        function formatCurrency(val) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+        }
+
+        function loadDashboard() {
+            const user = window.mockAPI.getCurrentUser();
+            const projects = window.mockAPI.getProjectsByCompany(user.id);
+            
+            const openProjects = projects.filter(p => p.status === 'OPEN');
+            const inProgressProjects = projects.filter(p => p.status === 'IN_PROGRESS');
+
+            document.getElementById('stat-open').textContent = openProjects.length.toString().padStart(2, '0');
+            document.getElementById('stat-in-progress').textContent = inProgressProjects.length.toString().padStart(2, '0');
+            document.getElementById('stat-escrow').textContent = formatCurrency(window.mockAPI.getEscrowBalance());
+
+            const grid = document.getElementById('projects-grid');
+            grid.innerHTML = '';
+
+            if(projects.length === 0) {
+                grid.innerHTML = `<div class="col-span-1 lg:col-span-2 text-center py-12 border border-zinc-800 border-dashed text-zinc-500 font-mono text-sm">
+                    Nenhum projeto encontrado. Clique em "Deploy Projeto" para começar.
+                </div>`;
+            }
+
+            projects.forEach(p => {
+                grid.innerHTML += createProjectCard(p);
+            });
+
+            lucide.createIcons();
+        }
+
+        function createProjectCard(p) {
+            const isOp = p.status === 'OPEN';
+            const statusColor = isOp ? 'text-blue-400 border-blue-400/30 bg-blue-400/10' : 'text-brand-500 border-brand-500/30 bg-brand-500/10';
+            
+            let extraInfo = '';
+            if (isOp) {
+                const bids = window.mockAPI.getBidsForProject(p.id);
+                extraInfo = `
+                <div class="flex items-center justify-between border-t border-dark-border pt-4 mt-6">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="users" class="w-4 h-4 ${bids.length>0 ? 'text-brand-500' : 'text-zinc-600'}"></i>
+                        <span class="font-mono text-xs font-bold text-white">${bids.length.toString().padStart(2, '0')}</span>
+                        <span class="font-mono text-[10px] text-zinc-500">Propostas</span>
+                    </div>
+                    <button onclick="acceptMockBid('${p.id}')" class="btn-sharp ${bids.length>0 ? 'bg-brand-500 text-dark-bg hover:bg-brand-400' : 'bg-dark-input text-zinc-500 hover:bg-dark-hover'} font-mono text-xs px-4 py-2 border border-${bids.length>0 ? 'brand-500' : 'dark-border'} transition-colors">
+                        ACEITAR_BID()
+                    </button>
+                </div>`;
+            } else {
+                extraInfo = `
+                <div class="grid grid-cols-2 gap-4 mb-6 bg-dark-input p-4 border border-dark-border mt-3">
+                    <div class="col-span-2 flex items-center justify-between border-b border-dark-border pb-3 mb-1">
+                        <div>
+                            <p class="font-mono text-[10px] text-zinc-500 uppercase">Especialista Atribuído</p>
+                            <p class="font-mono text-sm text-white">${p.specialistId || 'N/A'}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between border-t border-dark-border pt-4 mt-auto">
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-[10px] text-zinc-500">Milestones e Kanban</span>
+                    </div>
+                    <button onclick="openKanban('${p.id}')" class="btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs px-4 py-2 border border-brand-500 transition-colors">
+                        OPEN_KANBAN()
+                    </button>
+                </div>`;
+            }
+
+            return `
+            <div class="bg-dark-card border border-dark-border p-6 hover:border-brand-500/50 transition-colors relative group flex flex-col h-full shadow-[inset_0px_0px_20px_rgba(85,202,124,0.02)]">
+                <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="${isOp ? 'folder-code' : 'folder-git-2'}" class="w-4 h-4 ${isOp ? 'text-zinc-500' : 'text-brand-500'}"></i>
+                        <span class="font-mono text-xs ${isOp ? 'text-zinc-500' : 'text-brand-500'}">${p.id}</span>
+                    </div>
+                    <span class="font-mono text-[10px] ${statusColor} px-2 py-1 tracking-widest flex items-center gap-1.5">
+                        ${!isOp ? '<span class="w-1.5 h-1.5 bg-brand-500 rounded-none animate-pulse"></span>' : ''}
+                        STATUS: ${p.status}
+                    </span>
+                </div>
+
+                <h3 class="text-xl font-bold text-white mb-2 line-clamp-1">${p.title}</h3>
+                <p class="text-sm text-zinc-400 mb-6 line-clamp-2">${p.description || 'Descrição do projeto não fornecida.'}</p>
+                
+                <div class="flex-grow"></div>
+
+                <div class="grid grid-cols-2 gap-4 bg-dark-input p-4 border border-dark-border mt-3 mb-2">
+                    <div>
+                        <p class="font-mono text-[10px] text-zinc-500 uppercase mb-1">Orçamento ${isOp? '(Max)' : 'Acordado'}</p>
+                        <p class="font-mono font-bold text-white">${formatCurrency(p.budget)}</p>
+                    </div>
+                    <div>
+                        <p class="font-mono text-[10px] text-zinc-500 uppercase mb-1">Deadline</p>
+                        <p class="font-mono text-white">${p.deadline || 'N/A'}</p>
+                    </div>
+                </div>
+
+                ${extraInfo}
+            </div>
+            `;
+        }
+
+        function acceptMockBid(projectId) {
+            const bids = window.mockAPI.getBidsForProject(projectId);
+            if(bids.length > 0) {
+                const bidToAccept = bids[0]; // accepts the first one for the prototype
+                window.mockAPI.acceptBid(bidToAccept.id);
+                alert(`Bid de ${bidToAccept.specialistId} aceite! Projeto movido para IN_PROGRESS.`);
+                loadDashboard(); // reload UI
+            } else {
+                alert('Ainda não existem Bids (Propostas) para este projeto.');
+            }
+        }
+
+        function openKanban(projectId) {
+            localStorage.setItem('meraki_active_kanban_project', projectId);
+            window.location.href = 'kanban.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Secure Inbox</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', 
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    
+                            card: '#18181b',  
+                            border: '#27272a',
+                            input: '#121214', 
+                            hover: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #27272a; }
+        ::-webkit-scrollbar-thumb:hover { background: #55CA7C; }
+
+        .btn-sharp:active { transform: translate(2px, 2px); box-shadow: none !important; }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-hidden flex flex-col">
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container"></div>
+
+    <!-- CONTENT -->
+    <main class="flex-1 flex overflow-hidden max-w-7xl mx-auto w-full border-x border-dark-border bg-dark-bg">
+        
+        <!-- SIDEBAR THREADS -->
+        <aside class="w-80 border-r border-dark-border bg-dark-card flex flex-col shrink-0">
+            <div class="p-4 border-b border-dark-border">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i data-lucide="search" class="w-4 h-4 text-zinc-500 group-focus-within:text-brand-500 transition-colors"></i>
+                    </div>
+                    <input type="text" placeholder="Procurar Contacto..." class="w-full pl-9 pr-4 py-2 bg-[#000] border border-dark-border text-xs font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 transition-colors">
+                </div>
+            </div>
+
+            <!-- List of Chats -->
+            <div class="flex-1 overflow-y-auto">
+                <!-- Thread Ativa -->
+                <div class="p-4 border-b border-zinc-800 bg-[#000] border-l-2 border-l-brand-500 cursor-pointer flex gap-3 hover:bg-dark-hover transition-colors">
+                    <div class="w-10 h-10 shrink-0 border border-brand-500 bg-dark-input p-0.5 relative">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=TechCorp" class="w-full h-full grayscale">
+                        <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-brand-500 border border-[#000]"></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 class="font-bold text-white text-sm truncate" id="thread-name-1">TechCorp Inc.</h3>
+                            <span class="text-[9px] font-mono text-zinc-500">Agora</span>
+                        </div>
+                        <p class="text-[10px] font-mono text-zinc-400 truncate">Pode explicar um pouco melhor a arquitetura DB?</p>
+                    </div>
+                </div>
+
+                <!-- Outra Thread -->
+                <div class="p-4 border-b border-zinc-900 bg-dark-card border-l-2 border-l-transparent cursor-pointer flex gap-3 hover:bg-dark-hover transition-colors opacity-70">
+                    <div class="w-10 h-10 shrink-0 border border-dark-border bg-dark-input p-0.5">
+                        <i data-lucide="bot" class="w-full h-full p-2 text-zinc-500"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex justify-between items-center mb-1">
+                            <h3 class="font-bold text-zinc-300 text-sm truncate">Meraki System</h3>
+                            <span class="text-[9px] font-mono text-zinc-600">Ontem</span>
+                        </div>
+                        <p class="text-[10px] font-mono text-zinc-500 truncate">O projeto PRJ-1X7Y foi encerrado.</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- CHAT AREA -->
+        <section class="flex-1 flex flex-col bg-[#000]">
+            <!-- Chat Header -->
+            <div class="h-16 px-6 border-b border-dark-border bg-dark-card flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <div>
+                        <h2 class="font-bold text-white" id="chat-title">TechCorp Inc.</h2>
+                        <div class="flex items-center gap-1 mt-0.5">
+                            <span class="w-1.5 h-1.5 bg-brand-500 rounded-full animate-pulse"></span>
+                            <span class="text-[10px] font-mono text-brand-500 uppercase">Online</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button class="w-8 h-8 flex items-center justify-center bg-dark-input border border-dark-border text-zinc-400 hover:text-white transition-colors">
+                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center bg-dark-input border border-dark-border text-zinc-400 hover:text-white transition-colors">
+                        <i data-lucide="more-vertical" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Messages Stream -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col" id="chat-messages">
+                
+                <!-- System Message -->
+                <div class="text-center my-2">
+                    <span class="bg-dark-input border border-dark-border text-[9px] font-mono px-3 py-1 text-zinc-500">CONEXÃO SECURE_SOCKET ESTABELECIDA</span>
+                </div>
+
+                <!-- Recipient Msg -->
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 shrink-0 border border-dark-border bg-dark-input p-0.5 mt-1">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=TechCorp" class="w-full h-full grayscale">
+                    </div>
+                    <div class="max-w-[70%]">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold text-xs text-white" id="msg-name-1">TechCorp Inc.</span>
+                            <span class="text-[9px] font-mono text-zinc-600">08:24</span>
+                        </div>
+                        <div class="bg-dark-card border border-dark-border p-3 text-sm text-zinc-300 font-sans shadow-md">
+                            <p>Olá! Analisámos a sua proposta para o desenvolvimento em NestJS.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recipient Msg 2 -->
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 shrink-0 border border-transparent p-0.5 mt-1"></div>
+                    <div class="max-w-[70%]">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-[9px] font-mono text-zinc-600">08:26</span>
+                        </div>
+                        <div class="bg-dark-card border border-dark-border p-3 text-sm text-zinc-300 font-sans shadow-md">
+                            <p>Gostaríamos de saber um pouco mais sobre a sua abordagem à arquitetura da Database. Tencionamos usar Prisma para agilizar o ORM.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sender Msg -->
+                <div class="flex gap-4 flex-row-reverse">
+                    <div class="w-8 h-8 shrink-0 border border-brand-500 bg-dark-input p-0.5 mt-1">
+                        <i data-lucide="user" class="w-full h-full text-brand-500"></i>
+                    </div>
+                    <div class="max-w-[70%] text-right">
+                        <div class="flex items-center justify-end gap-2 mb-1">
+                            <span class="text-[9px] font-mono text-brand-500">08:31</span>
+                            <span class="font-bold text-xs text-brand-500" id="msg-name-you">Você</span>
+                        </div>
+                        <div class="bg-[#0b1710] border border-brand-500/30 p-3 text-sm text-brand-50 font-sans text-left shadow-[0_0_15px_rgba(85,202,124,0.05)]">
+                            <p>Sem dúvida. O Prisma é uma excelente escolha, especialmente pela geração de tipos estáticos (Type-safe). Proponho usar PostgreSQL para lidarmos com as relações de forma robusta e otimizada.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <form class="p-4 border-t border-dark-border bg-dark-card shrink-0 flex gap-3" onsubmit="sendMessage(event)">
+                <button type="button" class="w-10 h-10 shrink-0 bg-dark-input border border-dark-border flex items-center justify-center text-zinc-400 hover:text-white hover:border-zinc-500 transition-colors">
+                    <i data-lucide="paperclip" class="w-4 h-4"></i>
+                </button>
+                <div class="flex-1 relative">
+                    <input type="text" id="chat-input" placeholder="Transmita a sua mensagem... [ENTER para enviar]" class="w-full h-10 bg-[#000] border border-dark-border px-4 font-mono text-xs text-white placeholder-zinc-600 focus:border-brand-500 focus:outline-none transition-colors">
+                </div>
+                <button type="submit" class="btn-sharp px-6 bg-brand-500 text-dark-bg font-bold font-mono text-xs border border-brand-500 hover:bg-brand-400 transition-colors">
+                    SEND()
+                </button>
+            </form>
+
+        </section>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+        let currentUser = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            currentUser = window.mockAPI.getCurrentUser();
+            if(!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('nav-user-name').textContent = currentUser.name;
+            document.getElementById('msg-name-you').textContent = currentUser.name;
+
+            // Mock invertido se a compania estiver visualizando
+            if(currentUser.type === 'company') {
+                document.getElementById('thread-name-1').textContent = 'Kauan Silva';
+                document.getElementById('chat-title').textContent = 'Kauan Silva';
+                document.getElementById('msg-name-1').textContent = 'Kauan Silva';
+            }
+        });
+
+        function goBack() {
+            if (currentUser && currentUser.type === 'company') {
+                window.location.href = 'dashboard-empresa.html';
+            } else {
+                window.location.href = 'dashboard-especialista.html';
+            }
+        }
+
+        function sendMessage(e) {
+            e.preventDefault();
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim();
+            if(!txt) return;
+
+            const chat = document.getElementById('chat-messages');
+
+            // Add Sender Msg
+            chat.innerHTML += `
+                <div class="flex gap-4 flex-row-reverse mt-6">
+                    <div class="w-8 h-8 shrink-0 border border-transparent p-0.5 mt-1"></div>
+                    <div class="max-w-[70%] text-right animate-[pulse_0.5s_ease-out]">
+                        <div class="flex items-center justify-end gap-2 mb-1">
+                            <span class="text-[9px] font-mono text-brand-500">Agora</span>
+                        </div>
+                        <div class="bg-[#0b1710] border border-brand-500/30 p-3 text-sm text-brand-50 font-sans text-left shadow-[0_0_15px_rgba(85,202,124,0.05)]">
+                            <p>${txt.replace(/</g, "&lt;")}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            input.value = '';
+            chat.scrollTop = chat.scrollHeight;
+        }
+    </script>
+</body>
+</html>

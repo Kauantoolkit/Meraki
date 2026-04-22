@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Workspace // Talent Explorer</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Mock DB Simulator -->
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', // Verde Principal
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    // zinc-950
+                            card: '#18181b',  // zinc-900
+                            border: '#27272a',// zinc-800
+                            input: '#121214', // zinc-950/80
+                            hover: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Background Tech Grid */
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        /* Scanline sutil */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(85,202,124,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: fixed;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        /* Scrollbar customizada Sharp */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b; 
+            border: 1px solid #27272a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #55CA7C; 
+        }
+
+        /* Efeito de Glitch/Sharp */
+        .btn-sharp:active {
+            transform: translate(2px, 2px);
+            box-shadow: none !important;
+        }
+
+        /* Custom Checkbox */
+        .cyber-checkbox {
+            appearance: none;
+            background-color: transparent;
+            margin: 0;
+            font: inherit;
+            color: currentColor;
+            width: 1.15em;
+            height: 1.15em;
+            border: 1px solid #27272a;
+            display: grid;
+            place-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .cyber-checkbox::before {
+            content: "";
+            width: 0.65em;
+            height: 0.65em;
+            transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #55CA7C;
+            transform-origin: center;
+        }
+        .cyber-checkbox:checked {
+            border-color: #55CA7C;
+        }
+        .cyber-checkbox:checked::before {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <div class="scanline"></div>
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container"></div>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- HEADER & BIG SEARCH -->
+        <div class="mb-8">
+            <h1 class="text-2xl sm:text-3xl font-bold text-white uppercase tracking-tight mb-4">Diretório de Especialistas</h1>
+            
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-lucide="terminal" class="w-5 h-5 text-zinc-500 group-focus-within:text-brand-500 transition-colors"></i>
+                </div>
+                <input type="text" placeholder="QUERY: Procurar por nome, ID ou skill técnica (ex: NestJS, Flutter)..." 
+                    class="w-full pl-12 pr-4 py-4 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none shadow-2xl">
+                <div class="absolute inset-y-0 right-0 pr-2 flex items-center">
+                    <button class="bg-brand-500 hover:bg-brand-400 text-dark-bg font-mono text-xs font-bold px-4 py-2 transition-colors flex items-center gap-2">
+                        EXECUTAR
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+            
+            <!-- LEFT SIDEBAR: FILTERS -->
+            <aside class="w-full lg:col-span-1 bg-dark-card border border-dark-border p-5 sticky top-20">
+                <div class="flex items-center gap-2 mb-6 border-b border-dark-border pb-3">
+                    <i data-lucide="filter" class="w-4 h-4 text-brand-500"></i>
+                    <h2 class="font-mono text-xs text-white uppercase tracking-widest font-bold">SYS.FILTERS</h2>
+                </div>
+
+                <div class="space-y-6">
+                    
+                    <!-- Filter: Stack -->
+                    <div>
+                        <h3 class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-3">Tecnologias Core</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox" checked>
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">NestJS</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox">
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Flutter</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox" checked>
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">RabbitMQ</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox">
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">React</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox">
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Python</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox">
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">AWS</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Filter: Valor/Hora -->
+                    <div class="border-t border-dark-border pt-4">
+                        <h3 class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-3">Valor / Hora (BRL)</h3>
+                        <div class="flex items-center gap-2">
+                            <input type="number" placeholder="Min" class="w-full bg-dark-input border border-dark-border p-2 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+                            <span class="text-zinc-600">-</span>
+                            <input type="number" placeholder="Max" class="w-full bg-dark-input border border-dark-border p-2 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+                        </div>
+                    </div>
+
+                    <!-- Filter: Experiência -->
+                    <div class="border-t border-dark-border pt-4">
+                        <h3 class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest mb-3">Nível Técnico</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox">
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Júnior (1-3 anos)</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox" checked>
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Pleno (3-5 anos)</span>
+                            </label>
+                            <label class="flex items-center gap-3 cursor-pointer group">
+                                <input type="checkbox" class="cyber-checkbox" checked>
+                                <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Sénior (5+ anos)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Filter: Status -->
+                    <div class="border-t border-dark-border pt-4">
+                        <label class="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" class="cyber-checkbox" checked>
+                            <span class="text-xs font-mono text-zinc-400 group-hover:text-white transition-colors">Apenas Disponíveis (OPEN_TO_WORK)</span>
+                        </label>
+                    </div>
+
+                </div>
+            </aside>
+
+            <!-- RIGHT MAIN: TALENT GRID -->
+            <section class="lg:col-span-3">
+                
+                <!-- Resultados Meta -->
+                <div class="flex items-center justify-between mb-4 border-b border-dark-border pb-2">
+                    <p class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">> 42 Registos Encontrados</p>
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-[10px] text-zinc-500 uppercase">Ordenar por:</span>
+                        <select class="bg-dark-input border border-dark-border text-xs font-mono text-zinc-300 p-1 focus:outline-none focus:border-brand-500 cursor-pointer">
+                            <option>Relevância</option>
+                            <option>Maior Rating</option>
+                            <option>Menor Valor/H</option>
+                            <option>Projetos Concluídos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Grid de Especialistas -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    
+                    <!-- Talent Card 1 (Match Ideal) -->
+                    <div class="bg-[#000] border border-brand-500/50 p-5 relative hover:-translate-y-1 transition-transform shadow-[0_0_20px_rgba(85,202,124,0.05)] group">
+                        <div class="absolute top-0 right-0 bg-brand-500 text-dark-bg text-[9px] font-mono font-bold px-2 py-0.5 uppercase tracking-widest">
+                            BEST MATCH
+                        </div>
+
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="relative shrink-0">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Kauan&backgroundColor=18181b" alt="Avatar" class="w-14 h-14 border border-brand-500 bg-dark-bg p-0.5">
+                                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-brand-500 rounded-full border-2 border-[#000]"></div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-lg leading-tight group-hover:text-brand-500 transition-colors cursor-pointer">Kauan Silva</h3>
+                                <p class="font-mono text-[10px] text-zinc-500 uppercase mb-1">Senior Backend Engineer</p>
+                                <div class="flex items-center gap-1">
+                                    <i data-lucide="star" class="w-3 h-3 text-brand-500 fill-brand-500"></i>
+                                    <span class="font-mono text-xs font-bold text-white">4.9</span>
+                                    <span class="font-mono text-[9px] text-zinc-600">(12 reviews)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-5">
+                            <div class="flex justify-between items-center border-b border-dark-border pb-2">
+                                <span class="font-mono text-[10px] text-zinc-500 uppercase">Valor Base</span>
+                                <span class="font-mono text-xs font-bold text-white">R$ 80 / h</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-dark-border pb-2">
+                                <span class="font-mono text-[10px] text-zinc-500 uppercase">Taxa de Sucesso</span>
+                                <span class="font-mono text-xs font-bold text-brand-500">100%</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5 mb-6">
+                            <span class="text-[9px] font-mono border border-brand-500/30 bg-brand-500/10 text-brand-500 px-1.5 py-0.5">NestJS</span>
+                            <span class="text-[9px] font-mono border border-brand-500/30 bg-brand-500/10 text-brand-500 px-1.5 py-0.5">RabbitMQ</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">Node.js</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">Docker</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">AWS</span>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button class="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-3 py-2 border border-dark-border hover:border-zinc-500 hover:text-white transition-colors">
+                                VER_PERFIL()
+                            </button>
+                            <button onclick="handleInvite()" class="flex-1 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-3 py-2 hover:bg-brand-400 border border-brand-500 transition-colors shadow-[2px_2px_0px_rgba(85,202,124,0.2)]">
+                                CONVIDAR()
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Talent Card 2 -->
+                    <div class="bg-dark-card border border-dark-border p-5 relative hover:border-zinc-600 transition-colors group">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="relative shrink-0">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Maria&backgroundColor=18181b" alt="Avatar" class="w-14 h-14 border border-dark-border bg-dark-bg p-0.5 grayscale group-hover:grayscale-0 transition-all">
+                                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-brand-500 rounded-full border-2 border-dark-card"></div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-lg leading-tight group-hover:text-brand-500 transition-colors cursor-pointer">Maria Santos</h3>
+                                <p class="font-mono text-[10px] text-zinc-500 uppercase mb-1">Fullstack Mobile Dev</p>
+                                <div class="flex items-center gap-1">
+                                    <i data-lucide="star" class="w-3 h-3 text-brand-500 fill-brand-500"></i>
+                                    <span class="font-mono text-xs font-bold text-white">5.0</span>
+                                    <span class="font-mono text-[9px] text-zinc-600">(8 reviews)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-5">
+                            <div class="flex justify-between items-center border-b border-dark-border pb-2">
+                                <span class="font-mono text-[10px] text-zinc-500 uppercase">Valor Base</span>
+                                <span class="font-mono text-xs font-bold text-white">R$ 95 / h</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-dark-border pb-2">
+                                <span class="font-mono text-[10px] text-zinc-500 uppercase">Taxa de Sucesso</span>
+                                <span class="font-mono text-xs font-bold text-white">98%</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5 mb-6">
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">Flutter</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">NestJS</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">Dart</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">Firebase</span>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button class="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-3 py-2 border border-dark-border hover:border-zinc-500 hover:text-white transition-colors">
+                                VER_PERFIL()
+                            </button>
+                            <button class="flex-1 btn-sharp bg-transparent text-brand-500 font-bold font-mono text-xs px-3 py-2 hover:bg-brand-500/10 border border-brand-500 transition-colors">
+                                CONVIDAR()
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Talent Card 3 -->
+                    <div class="bg-dark-card border border-dark-border p-5 relative hover:border-zinc-600 transition-colors group">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="relative shrink-0">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Joao&backgroundColor=18181b" alt="Avatar" class="w-14 h-14 border border-dark-border bg-dark-bg p-0.5 grayscale group-hover:grayscale-0 transition-all">
+                                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-brand-500 rounded-full border-2 border-dark-card"></div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-white text-lg leading-tight group-hover:text-brand-500 transition-colors cursor-pointer">João Pedro</h3>
+                                <p class="font-mono text-[10px] text-zinc-500 uppercase mb-1">Backend Developer Pleno</p>
+                                <div class="flex items-center gap-1">
+                                    <i data-lucide="star" class="w-3 h-3 text-brand-500 fill-brand-500"></i>
+                                    <span class="font-mono text-xs font-bold text-white">4.7</span>
+                                    <span class="font-mono text-[9px] text-zinc-600">(24 reviews)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-5">
+                            <div class="flex justify-between items-center border-b border-dark-border pb-2">
+                                <span class="font-mono text-[10px] text-zinc-500 uppercase">Valor Base</span>
+                                <span class="font-mono text-xs font-bold text-white">R$ 60 / h</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-dark-border pb-2">
+                                <span class="font-mono text-[10px] text-zinc-500 uppercase">Taxa de Sucesso</span>
+                                <span class="font-mono text-xs font-bold text-white">92%</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5 mb-6">
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">Node.js</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">Express</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">MongoDB</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5">RabbitMQ</span>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button class="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-3 py-2 border border-dark-border hover:border-zinc-500 hover:text-white transition-colors">
+                                VER_PERFIL()
+                            </button>
+                            <button class="flex-1 btn-sharp bg-transparent text-brand-500 font-bold font-mono text-xs px-3 py-2 hover:bg-brand-500/10 border border-brand-500 transition-colors">
+                                CONVIDAR()
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Talent Card 4 (Ocupado) -->
+                    <div class="bg-dark-card border border-dark-border p-5 relative opacity-60 hover:opacity-100 transition-opacity group">
+                        <div class="absolute top-0 right-0 bg-dark-border text-zinc-400 text-[9px] font-mono font-bold px-2 py-0.5 uppercase tracking-widest">
+                            BUSY
+                        </div>
+
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="relative shrink-0">
+                                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ana&backgroundColor=18181b" alt="Avatar" class="w-14 h-14 border border-dark-border bg-dark-bg p-0.5 grayscale">
+                                <div class="absolute -bottom-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-dark-card"></div>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-zinc-400 text-lg leading-tight group-hover:text-white transition-colors cursor-pointer">Ana Costa</h3>
+                                <p class="font-mono text-[10px] text-zinc-500 uppercase mb-1">Cloud/DevOps Engineer</p>
+                                <div class="flex items-center gap-1">
+                                    <i data-lucide="star" class="w-3 h-3 text-zinc-500 fill-zinc-500 group-hover:text-brand-500 group-hover:fill-brand-500 transition-colors"></i>
+                                    <span class="font-mono text-xs font-bold text-zinc-400 group-hover:text-white transition-colors">4.8</span>
+                                    <span class="font-mono text-[9px] text-zinc-600">(19 reviews)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3 mb-5">
+                            <div class="flex justify-between items-center border-b border-dark-border pb-2">
+                                <span class="font-mono text-[10px] text-zinc-500 uppercase">Valor Base</span>
+                                <span class="font-mono text-xs font-bold text-zinc-400">R$ 110 / h</span>
+                            </div>
+                            <div class="flex justify-between items-center border-b border-dark-border pb-2">
+                                <span class="font-mono text-[10px] text-zinc-500 uppercase">Taxa de Sucesso</span>
+                                <span class="font-mono text-xs font-bold text-zinc-400">100%</span>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap gap-1.5 mb-6">
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-500 px-1.5 py-0.5">AWS</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-500 px-1.5 py-0.5">Kubernetes</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-500 px-1.5 py-0.5">Terraform</span>
+                            <span class="text-[9px] font-mono border border-zinc-700 bg-dark-input text-zinc-500 px-1.5 py-0.5">CI/CD</span>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <button class="flex-1 btn-sharp bg-dark-input text-zinc-500 font-mono text-xs px-3 py-2 border border-dark-border hover:border-zinc-500 hover:text-white transition-colors">
+                                VER_PERFIL()
+                            </button>
+                            <button class="flex-1 btn-sharp bg-transparent text-zinc-500 font-bold font-mono text-xs px-3 py-2 border border-dark-border cursor-not-allowed">
+                                INDISPONÍVEL
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Paginação -->
+                <div class="mt-8 flex justify-center items-center gap-2">
+                    <button class="w-8 h-8 flex items-center justify-center bg-dark-input border border-dark-border hover:border-brand-500 text-zinc-500 hover:text-brand-500 transition-colors">
+                        <i data-lucide="chevron-left" class="w-4 h-4"></i>
+                    </button>
+                    <button class="w-8 h-8 flex items-center justify-center bg-brand-500 text-dark-bg font-mono font-bold text-xs border border-brand-500">1</button>
+                    <button class="w-8 h-8 flex items-center justify-center bg-dark-input border border-dark-border hover:border-brand-500 text-zinc-400 font-mono text-xs transition-colors">2</button>
+                    <button class="w-8 h-8 flex items-center justify-center bg-dark-input border border-dark-border hover:border-brand-500 text-zinc-400 font-mono text-xs transition-colors">3</button>
+                    <span class="text-zinc-600 font-mono text-xs mx-1">...</span>
+                    <button class="w-8 h-8 flex items-center justify-center bg-dark-input border border-dark-border hover:border-brand-500 text-zinc-400 font-mono text-xs transition-colors">11</button>
+                    <button class="w-8 h-8 flex items-center justify-center bg-dark-input border border-dark-border hover:border-brand-500 text-zinc-500 hover:text-brand-500 transition-colors">
+                        <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+            </section>
+        </div>
+    </main>
+
+    <!-- INVITE MODAL -->
+    <div id="invite-modal" class="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-dark-card border border-brand-500 w-full max-w-md p-6 shadow-[0_0_30px_rgba(85,202,124,0.15)] transform scale-95 opacity-0 transition-all duration-200" id="invite-modal-content">
+            <h2 class="text-lg font-bold text-white uppercase tracking-tight mb-2 flex items-center gap-2">
+                <i data-lucide="send" class="w-5 h-5 text-brand-500"></i> Enviar Convite
+            </h2>
+            <p class="text-xs font-mono text-zinc-400 mb-6">Selecione o projeto para o qual deseja convidar o especialista <span class="text-white font-bold">Kauan Silva</span>. Este evento será roteado pelo EventBus.</p>
+            
+            <div class="space-y-4 mb-6">
+                <div>
+                    <label class="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Projeto Destino</label>
+                    <select class="w-full bg-[#000] border border-dark-border p-3 text-xs font-mono text-white focus:outline-none focus:border-brand-500">
+                        <option>PRJ-8C3X: Refactoring Core Bank</option>
+                        <option>PRJ-A12B: API de Pagamentos PIX</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Mensagem (Opcional)</label>
+                    <textarea class="w-full bg-[#000] border border-dark-border p-3 text-xs font-sans text-white focus:outline-none focus:border-brand-500 resize-none h-20" placeholder="Olá Kauan, creio que o teu perfil encaixa..."></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closeInviteModal()" class="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 hover:text-white transition-colors">
+                    CANCELAR
+                </button>
+                <button onclick="confirmInvite()" class="flex-1 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-brand-500 hover:bg-brand-400 transition-colors shadow-[2px_2px_0px_rgba(85,202,124,0.2)]">
+                    CONFIRMAR()
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Inicializar Lucide Icons
+        lucide.createIcons();
+
+        function handleInvite() {
+            const modal = document.getElementById('invite-modal');
+            const content = document.getElementById('invite-modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+            }, 10);
+        }
+
+        function closeInviteModal() {
+            const modal = document.getElementById('invite-modal');
+            const content = document.getElementById('invite-modal-content');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 200);
+        }
+
+        function confirmInvite() {
+            window.location.href = 'login.html';
+        }
+    </script>
+</body>
+</html>

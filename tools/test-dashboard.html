@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Meraki · Test Dashboard</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0d0f18;
+  --panel:    #13161f;
+  --card:     #181c28;
+  --border:   #252a3a;
+  --border2:  #2e3450;
+  --purple:   #7c6ff7;
+  --purple-d: #5a54c4;
+  --green:    #23d18b;
+  --red:      #f4524d;
+  --yellow:   #f5a524;
+  --blue:     #38bdf8;
+  --text:     #dde3f0;
+  --muted:    #5a6380;
+  --mono:     'Consolas', 'Cascadia Code', 'Fira Code', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ─── TOPBAR ─────────────────────────────────────── */
+.topbar {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.topbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--purple);
+  letter-spacing: -.3px;
+}
+.topbar-logo span { color: var(--muted); font-weight: 400; font-size: 12px; }
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.url-label { font-size: 11px; color: var(--muted); }
+.url-input {
+  background: var(--card);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-size: 12px;
+  width: 220px;
+  font-family: var(--mono);
+  outline: none;
+}
+.url-input:focus { border-color: var(--purple); }
+
+/* ─── BUTTONS ─────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: none; border-radius: 6px;
+  padding: 6px 14px; font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: opacity .15s, transform .1s;
+  white-space: nowrap;
+}
+.btn:hover { opacity: .87; }
+.btn:active { transform: scale(.97); }
+.btn:disabled { opacity: .38; cursor: not-allowed; pointer-events: none; }
+.btn-primary   { background: var(--purple); color: #fff; }
+.btn-ghost     { background: var(--card); color: var(--text); border: 1px solid var(--border2); }
+.btn-danger    { background: #3d1a1a; color: var(--red); border: 1px solid #5a2020; }
+.btn-success   { background: #122b1e; color: var(--green); border: 1px solid #1e4a32; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* ─── LAYOUT ─────────────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ─── SIDEBAR ─────────────────────────────────────── */
+.sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-scroll { overflow-y: auto; flex: 1; padding: 16px; }
+
+.s-section { margin-bottom: 24px; }
+.s-label {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--muted);
+  margin-bottom: 10px; display: block;
+}
+
+/* service rows */
+.svc-list { display: flex; flex-direction: column; gap: 5px; }
+.svc-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  transition: border-color .2s;
+}
+.svc-row.up   { border-color: rgba(35,209,139,.35); }
+.svc-row.down { border-color: rgba(244,82,77,.35); }
+
+.dot {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+  background: var(--muted);
+  transition: background .25s, box-shadow .25s;
+}
+.dot.checking { background: var(--yellow); animation: blink .7s ease-in-out infinite; }
+.dot.up       { background: var(--green); box-shadow: 0 0 8px rgba(35,209,139,.6); }
+.dot.down     { background: var(--red);   box-shadow: 0 0 8px rgba(244,82,77,.5); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+.svc-name { font-size: 12px; flex: 1; }
+.svc-port { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.svc-ms   { font-size: 10px; color: var(--muted); margin-left: 2px; }
+
+/* ps blocks */
+.ps-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: #a5d6a7;
+  position: relative;
+  margin-bottom: 8px;
+  line-height: 1.8;
+}
+.ps-block .p { color: var(--purple); }
+.ps-copy {
+  position: absolute; top: 7px; right: 7px;
+  background: var(--card); color: var(--muted);
+  border: 1px solid var(--border2); border-radius: 4px;
+  padding: 2px 8px; font-size: 10px; cursor: pointer;
+  transition: color .15s;
+}
+.ps-copy:hover { color: var(--text); }
+
+/* ctx block */
+.ctx-box {
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 6px; padding: 10px;
+  font-family: var(--mono); font-size: 11px; line-height: 1.9;
+  max-height: 180px; overflow-y: auto;
+}
+.ctx-k { color: var(--purple); }
+.ctx-v { color: var(--green); }
+.ctx-null { color: var(--muted); }
+
+/* ─── MAIN ─────────────────────────────────────── */
+.main { overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+
+/* run bar */
+.run-bar {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px 16px;
+  flex-shrink: 0;
+}
+.prog-wrap { flex: 1; height: 5px; background: var(--card); border-radius: 3px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--purple); width: 0; transition: width .4s; }
+.run-stats { font-size: 11px; color: var(--muted); }
+
+/* step card */
+.step {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color .2s;
+}
+.step.s-running { border-color: var(--yellow); }
+.step.s-done    { border-color: rgba(35,209,139,.5); }
+.step.s-failed  { border-color: rgba(244,82,77,.5); }
+
+.step-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; cursor: pointer;
+}
+.step-head:hover { background: rgba(255,255,255,.02); }
+
+.step-badge-num {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  background: var(--card); color: var(--muted); border: 1px solid var(--border2);
+  transition: all .2s;
+}
+.step.s-running .step-badge-num { background: var(--yellow); color: #000; border-color: var(--yellow); animation: blink .7s infinite; }
+.step.s-done    .step-badge-num { background: var(--green);  color: #000; border-color: var(--green); }
+.step.s-failed  .step-badge-num { background: var(--red);    color: #fff; border-color: var(--red); }
+
+.step-info { flex: 1; min-width: 0; }
+.step-title    { font-size: 13px; font-weight: 600; }
+.step-subtitle { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+.method-tag {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+}
+.m-GET    { background: #0f2d4a; color: var(--blue); }
+.m-POST   { background: #0f2e1a; color: var(--green); }
+.m-PATCH  { background: #2e1f0a; color: var(--yellow); }
+.m-DELETE { background: #2e0f0f; color: var(--red); }
+
+.step-state { font-size: 11px; color: var(--muted); width: 70px; text-align: right; flex-shrink: 0; }
+
+/* step body */
+.step-body { border-top: 1px solid var(--border); display: none; }
+.step-body.open { display: block; }
+
+.step-tabs { display: flex; border-bottom: 1px solid var(--border); background: var(--card); }
+.step-tab {
+  padding: 8px 16px; font-size: 12px; color: var(--muted);
+  cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s;
+}
+.step-tab.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+.tab-pane { display: none; padding: 14px 16px; }
+.tab-pane.active { display: block; }
+
+.code {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  padding: 12px; font-family: var(--mono); font-size: 11px;
+  white-space: pre-wrap; word-break: break-all; line-height: 1.7;
+  max-height: 280px; overflow-y: auto; color: var(--text);
+}
+.code .ck { color: var(--purple); }
+.code .cs { color: #a5d6a7; }
+.code .cn { color: #ffb74d; }
+.code .cb { color: var(--blue); }
+.code .cm { color: var(--muted); }
+
+.step-foot {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; border-top: 1px solid var(--border);
+  background: var(--card);
+}
+.step-timing { font-size: 11px; color: var(--muted); margin-left: auto; }
+
+/* toast */
+#toast {
+  position: fixed; bottom: 20px; right: 20px;
+  background: var(--card); border: 1px solid var(--border2);
+  border-radius: 8px; padding: 10px 16px; font-size: 13px;
+  z-index: 9999; opacity: 0; transition: opacity .25s;
+  pointer-events: none;
+}
+#toast.on { opacity: 1; }
+#toast.ok { border-color: var(--green); color: var(--green); }
+#toast.er { border-color: var(--red);   color: var(--red); }
+
+/* links */
+a { color: var(--purple); text-decoration: none; font-size: 12px; }
+a:hover { text-decoration: underline; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<!-- ─── TOPBAR ─────────────────────────────────────── -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Meraki <span>/ Test Dashboard</span>
+  </div>
+  <div class="topbar-right">
+    <span class="url-label">Gateway URL</span>
+    <input class="url-input" id="baseUrl" type="text" value="http://localhost:3000" />
+    <button class="btn btn-ghost" id="checkBtn" onclick="checkAll()">⬤ Verificar Serviços</button>
+    <button class="btn btn-danger btn-sm" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<!-- ─── BODY ─────────────────────────────────────── -->
+<div class="layout">
+
+  <!-- sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-scroll">
+
+      <div class="s-section">
+        <span class="s-label">Serviços</span>
+        <div class="svc-list" id="svcList"></div>
+      </div>
+
+      <div class="s-section">
+        <span class="s-label">Contexto</span>
+        <div class="ctx-box" id="ctxBox">
+          <span class="ctx-null">— execute um step —</span>
+        </div>
+        <div style="margin-top:8px;">
+          <button class="btn btn-ghost btn-sm" style="width:100%" onclick="copyCtx()">Copiar JSON</button>
+        </div>
+      </div>
+
+      <div class="s-section">
+        <span class="s-label">Subir infra (Docker)</span>
+        <div class="ps-block">
+          <span class="p">PS&gt; </span>cd backend<br>
+          <span class="p">PS&gt; </span>docker-compose up -d
+          <span class="ps-copy" onclick="cp('cd backend\ndocker-compose up -d', this)">copiar</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">Aguarde ~20s para DBs e RabbitMQ.</div>
+      </div>
+
+      <div class="s-section">
+        <span class="s-label">Subir em dev (por serviço)</span>
+        <div class="ps-block" style="font-size:10.5px">
+          <span class="p">PS&gt; </span>cd backend/identity-service &amp;&amp; npm run start:dev<br>
+          <span class="p">PS&gt; </span>cd backend/project-service &amp;&amp; npm run start:dev<br>
+          <span class="p">PS&gt; </span>cd backend/bidding-service &amp;&amp; npm run start:dev<br>
+          <span class="p">PS&gt; </span>cd backend/delivery-service &amp;&amp; npm run start:dev<br>
+          <span class="p">PS&gt; </span>cd backend/payment-service &amp;&amp; npm run start:dev<br>
+          <span class="p">PS&gt; </span>cd backend/portfolio-service &amp;&amp; npm run start:dev
+        </div>
+      </div>
+
+      <div class="s-section">
+        <span class="s-label">Links úteis</span>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <a href="http://localhost:15672" target="_blank">🐇 RabbitMQ UI (meraki / meraki)</a>
+          <a href="http://localhost:3000/api" target="_blank">📄 Swagger (via gateway)</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- main -->
+  <div class="main">
+
+    <div class="run-bar">
+      <button class="btn btn-success" id="runAllBtn" onclick="runAll()">▶ Executar Tudo</button>
+      <button class="btn btn-ghost btn-sm" onclick="runAll(true)">Passo a Passo</button>
+      <div class="prog-wrap"><div class="prog-fill" id="progFill"></div></div>
+      <span class="run-stats" id="runStats">0 / 0</span>
+    </div>
+
+    <div id="steps"></div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════
+// ESTADO (em memória — sempre execute "Executar Tudo" do início)
+// ═══════════════════════════════════════════
+const ctx = {
+  companyId: null, specialistId: null,
+  tokenEmpresa: null, tokenSpecialist: null,
+  projectId: null, milestoneId: null, milestoneAmount: null,
+  bidId: null, deliveryId: null, paymentId: null,
+};
+
+function saveCtx() {} // no-op intencional
+
+// ═══════════════════════════════════════════
+// SERVIÇOS
+// ═══════════════════════════════════════════
+const SVCS = [
+  { name: 'api-gateway',       port: 3000 },
+  { name: 'identity-service',  port: 3001 },
+  { name: 'project-service',   port: 3002 },
+  { name: 'bidding-service',   port: 3003 },
+  { name: 'delivery-service',  port: 3004 },
+  { name: 'payment-service',   port: 3005 },
+  { name: 'portfolio-service', port: 3006 },
+];
+
+function buildSvcList() {
+  document.getElementById('svcList').innerHTML = SVCS.map((s, i) => `
+    <div class="svc-row" id="srow-${i}">
+      <div class="dot" id="dot-${i}"></div>
+      <span class="svc-name">${s.name}</span>
+      <span class="svc-port">:${s.port}</span>
+      <span class="svc-ms" id="sms-${i}"></span>
+    </div>`).join('');
+}
+
+async function checkSvc(i) {
+  const dot  = document.getElementById(`dot-${i}`);
+  const row  = document.getElementById(`srow-${i}`);
+  const ms   = document.getElementById(`sms-${i}`);
+  dot.className = 'dot checking';
+  row.className = 'svc-row';
+  ms.textContent = '';
+
+  // mínimo visual de 600ms para o piscar ser visível
+  const start = Date.now();
+  let ok = false, elapsed = 0;
+  try {
+    const ac = new AbortController();
+    const t  = setTimeout(() => ac.abort(), 4000);
+    await fetch(`http://localhost:${SVCS[i].port}/`, { signal: ac.signal });
+    clearTimeout(t);
+    ok = true;
+  } catch { ok = false; }
+
+  elapsed = Date.now() - start;
+  const wait = Math.max(0, 600 - elapsed);
+  await new Promise(r => setTimeout(r, wait));
+
+  dot.className = ok ? 'dot up' : 'dot down';
+  row.className = `svc-row ${ok ? 'up' : 'down'}`;
+  ms.textContent = ok ? `${elapsed}ms` : 'offline';
+}
+
+async function checkAll() {
+  const btn = document.getElementById('checkBtn');
+  btn.disabled = true;
+  btn.textContent = '⬤ Verificando...';
+  await Promise.all(SVCS.map((_, i) => checkSvc(i)));
+  const upCount = SVCS.filter((_, i) => document.getElementById(`dot-${i}`).classList.contains('up')).length;
+  btn.disabled = false;
+  btn.textContent = `⬤ ${upCount}/${SVCS.length} online`;
+  setTimeout(() => { btn.textContent = '⬤ Verificar Serviços'; }, 3000);
+}
+
+// ═══════════════════════════════════════════
+// STEPS
+// ═══════════════════════════════════════════
+function getBase() { return document.getElementById('baseUrl').value.replace(/\/$/, ''); }
+
+function getSteps() {
+  return [
+    {
+      id:'register-company', title:'Registrar Empresa', method:'POST',
+      acceptCodes:[409],
+      sub:'Cria conta da empresa contratante (409 = já existe, continua)',
+      url: () => `${getBase()}/api/auth/register`,
+      headers: () => ({'Content-Type':'application/json'}),
+      body: () => ({name:'Empresa Teste',email:'empresa@meraki.test',password:'senha123',userType:'COMPANY',companyName:'Empresa Teste Ltda'}),
+      extract(r) { ctx.companyId = r.id || r.user?.id; },
+    },
+    {
+      id:'register-specialist', title:'Registrar Especialista', method:'POST',
+      acceptCodes:[409],
+      sub:'Cria conta do especialista → dispara user.registered → portfolio-service (409 = já existe)',
+      url: () => `${getBase()}/api/auth/register`,
+      headers: () => ({'Content-Type':'application/json'}),
+      body: () => ({name:'João Especialista',email:'joao@meraki.test',password:'senha123',userType:'SPECIALIST'}),
+      extract(r) { ctx.specialistId = r.id || r.user?.id; },
+    },
+    {
+      id:'login-company', title:'Login da Empresa', method:'POST',
+      sub:'Obtém JWT da empresa',
+      url: () => `${getBase()}/api/auth/login`,
+      headers: () => ({'Content-Type':'application/json'}),
+      body: () => ({email:'empresa@meraki.test',password:'senha123'}),
+      extract(r) { ctx.tokenEmpresa = r.token || r.access_token || r.accessToken; },
+    },
+    {
+      id:'login-specialist', title:'Login do Especialista', method:'POST',
+      sub:'Obtém JWT do especialista',
+      url: () => `${getBase()}/api/auth/login`,
+      headers: () => ({'Content-Type':'application/json'}),
+      body: () => ({email:'joao@meraki.test',password:'senha123'}),
+      extract(r) {
+        ctx.tokenSpecialist = r.token || r.access_token || r.accessToken;
+        if (!ctx.specialistId) ctx.specialistId = r.user?.id || r.id;
+      },
+    },
+    {
+      id:'create-project', title:'Criar Projeto', method:'POST',
+      sub:'Empresa cria projeto com milestones → dispara milestone.created',
+      url: () => `${getBase()}/api/projects`,
+      headers: () => ({'Content-Type':'application/json','Authorization':`Bearer ${ctx.tokenEmpresa}`}),
+      body: () => ({
+        title:'App Mobile Flutter TCC',
+        description:'Desenvolver app mobile usando Flutter e NestJS com arquitetura DDD',
+        budget:10000, deadline:'2026-12-31',
+        requirements:['Flutter','NestJS','DDD'],
+      }),
+      extract(r) { ctx.projectId = r.id; },
+    },
+    {
+      id:'create-milestone', title:'Criar Milestone', method:'POST',
+      sub:'Cria o 1º milestone do projeto e extrai o milestoneId',
+      url: () => `${getBase()}/api/projects/${ctx.projectId}/milestones`,
+      headers: () => ({'Content-Type':'application/json','Authorization':`Bearer ${ctx.tokenEmpresa}`}),
+      body: () => ({
+        title:'MVP — Telas Iniciais',
+        description:'Login, cadastro e listagem de projetos funcionando',
+        amount:5000,
+        dueDate:'2026-09-30',
+      }),
+      extract(r) { ctx.milestoneId = r.id; ctx.milestoneAmount = r.amount; },
+    },
+    {
+      id:'submit-bid', title:'Enviar Proposta', method:'POST',
+      sub:'Especialista submete proposta (RN02: única proposta ativa por projeto)',
+      url: () => `${getBase()}/api/bids/project/${ctx.projectId}`,
+      headers: () => ({'Content-Type':'application/json','Authorization':`Bearer ${ctx.tokenSpecialist}`}),
+      body: () => ({
+        proposal:'Tenho 5 anos de experiência com Flutter e NestJS. Entregarei no prazo com qualidade.',
+        proposedBudget:9000,
+        estimatedDuration:90,
+      }),
+      extract(r) { ctx.bidId = r.id; },
+    },
+    {
+      id:'accept-bid', title:'Aceitar Proposta', method:'PUT',
+      sub:'Empresa aceita proposta (RN03) → dispara bid.accepted → delivery-service inicia kanban',
+      url: () => `${getBase()}/api/bids/${ctx.bidId}/accept`,
+      headers: () => ({'Authorization':`Bearer ${ctx.tokenEmpresa}`}),
+      body: null,
+      extract() {},
+    },
+    {
+      id:'get-kanban', title:'Ver Kanban Board', method:'GET',
+      sub:'Confirma que delivery-service criou o kanban após bid.accepted (RF08)',
+      url: () => `${getBase()}/api/projects/${ctx.projectId}/kanban`,
+      headers: () => ({'Authorization':`Bearer ${ctx.tokenSpecialist}`}),
+      body: null,
+      extract() {},
+    },
+    {
+      id:'submit-delivery', title:'Enviar Entrega', method:'POST',
+      sub:'Especialista submete entrega do 1º milestone para revisão',
+      url: () => `${getBase()}/api/milestones/${ctx.milestoneId}/submit`,
+      headers: () => ({'Content-Type':'application/json','Authorization':`Bearer ${ctx.tokenSpecialist}`}),
+      body: () => ({
+        projectId: ctx.projectId,
+        deliveryNotes:'MVP concluído: telas de login, cadastro e listagem funcionando.',
+        deliveredFiles:[],
+      }),
+      extract(r) { ctx.deliveryId = r.id; },
+    },
+    {
+      id:'review-delivery', title:'Aprovar Entrega', method:'PUT',
+      sub:'Empresa aprova milestone → dispara milestone.validated → payment-service libera pagamento (RN06)',
+      url: () => `${getBase()}/api/milestones/${ctx.milestoneId}/approve`,
+      headers: () => ({'Content-Type':'application/json','Authorization':`Bearer ${ctx.tokenEmpresa}`}),
+      body: () => ({}),
+      extract() {},
+    },
+    {
+      id:'get-payments', title:'Verificar Pagamentos', method:'GET',
+      sub:'Confirma que payment-service criou pagamento com taxa de 10% (RN06)',
+      url: () => `${getBase()}/api/payments/project/${ctx.projectId}`,
+      headers: () => ({'Authorization':`Bearer ${ctx.tokenSpecialist}`}),
+      body: null,
+      extract(r) {
+        const arr = Array.isArray(r) ? r : r.payments || [];
+        if (arr.length) ctx.paymentId = arr[0].id;
+      },
+    },
+    {
+      id:'get-profile', title:'Perfil do Especialista (RF13)', method:'GET',
+      sub:'portfolio-service: perfil público com histórico de trabalhos (porta 3006 direto)',
+      url: () => `http://localhost:3006/api/profiles/specialist/${ctx.specialistId}`,
+      headers: () => ({'Authorization':`Bearer ${ctx.tokenEmpresa}`}),
+      body: null,
+      extract() {},
+    },
+    {
+      id:'get-company-profile', title:'Perfil da Empresa (RF13)', method:'GET',
+      sub:'portfolio-service: perfil público da empresa (porta 3006 direto)',
+      url: () => `http://localhost:3006/api/profiles/company/${ctx.companyId}`,
+      headers: () => ({'Authorization':`Bearer ${ctx.tokenSpecialist}`}),
+      body: null,
+      extract() {},
+    },
+  ];
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function render() {
+  const steps = getSteps();
+  document.getElementById('steps').innerHTML = steps.map((s, i) => `
+    <div class="step" id="card-${s.id}">
+      <div class="step-head" onclick="toggle('${s.id}')">
+        <div class="step-badge-num" id="num-${s.id}">${i+1}</div>
+        <div class="step-info">
+          <div class="step-title">${s.title}</div>
+          <div class="step-subtitle">${s.sub}</div>
+        </div>
+        <span class="method-tag m-${s.method}">${s.method}</span>
+        <span class="step-state" id="st-${s.id}">—</span>
+      </div>
+      <div class="step-body" id="body-${s.id}">
+        <div class="step-tabs">
+          <div class="step-tab active" onclick="tab('${s.id}','req',this)">Request</div>
+          <div class="step-tab"       onclick="tab('${s.id}','res',this)">Response</div>
+        </div>
+        <div class="tab-pane active" id="req-${s.id}">
+          <div class="code" id="reqc-${s.id}"><span style="color:var(--muted)">Execute o step para ver o request.</span></div>
+        </div>
+        <div class="tab-pane" id="res-${s.id}">
+          <div class="code" id="resc-${s.id}"><span style="color:var(--muted)">Execute o step para ver a resposta.</span></div>
+        </div>
+        <div class="step-foot">
+          <button class="btn btn-primary btn-sm" onclick="runStep('${s.id}')">▶ Executar</button>
+          <button class="btn btn-ghost btn-sm" onclick="copyPs('${s.id}')">Copiar PS1</button>
+          <span class="step-timing" id="tim-${s.id}"></span>
+        </div>
+      </div>
+    </div>`).join('');
+  document.getElementById('runStats').textContent = `0 / ${steps.length}`;
+}
+
+function toggle(id) {
+  document.getElementById(`body-${id}`).classList.toggle('open');
+}
+function tab(id, name, el) {
+  document.querySelectorAll(`#body-${id} .step-tab`).forEach(t => t.classList.remove('active'));
+  document.querySelectorAll(`#body-${id} .tab-pane`).forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(`${name}-${id}`).classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+// EXECUTE
+// ═══════════════════════════════════════════
+async function runStep(id) {
+  const s = getSteps().find(x => x.id === id);
+  if (!s) return;
+
+  const card = document.getElementById(`card-${id}`);
+  const st   = document.getElementById(`st-${id}`);
+  const tim  = document.getElementById(`tim-${id}`);
+  const reqc = document.getElementById(`reqc-${id}`);
+  const resc = document.getElementById(`resc-${id}`);
+
+  document.getElementById(`body-${id}`).classList.add('open');
+  card.className = 'step s-running';
+  st.textContent = 'rodando…';
+  st.style.color = 'var(--yellow)';
+
+  const url     = s.url();
+  const headers = s.headers();
+  const body    = s.body ? s.body() : null;
+
+  reqc.innerHTML = hl({method: s.method, url, headers, ...(body ? {body} : {})});
+
+  const t0 = Date.now();
+  let data, status;
+  try {
+    const res = await fetch(url, {
+      method: s.method,
+      headers,
+      ...(body ? {body: JSON.stringify(body)} : {}),
+    });
+    status = res.status;
+    const txt = await res.text();
+    try { data = JSON.parse(txt); } catch { data = txt; }
+    const ms = Date.now() - t0;
+    tim.textContent = `${ms}ms · HTTP ${status}`;
+
+    // 409 em register = usuário já existe, trata como ok para continuar o fluxo
+    const acceptedCodes = s.acceptCodes || [];
+    const ok = res.ok || acceptedCodes.includes(status);
+
+    if (ok) {
+      card.className = 'step s-done';
+      st.textContent = res.ok ? `✓ ${status}` : `✓ ${status} (já existe)`;
+      st.style.color = 'var(--green)';
+      document.getElementById(`num-${id}`).textContent = '✓';
+      if (res.ok) s.extract(data);
+      saveCtx();
+      updateCtx();
+      updateProgress();
+      toast(res.ok ? `"${s.title}" concluído!` : `"${s.title}": já cadastrado, continuando`, 'ok');
+    } else {
+      card.className = 'step s-failed';
+      st.textContent = `✗ ${status}`;
+      st.style.color = 'var(--red)';
+      toast(`Erro ${status} em "${s.title}"`, 'er');
+    }
+    resc.innerHTML = hl(data);
+    tab(id, 'res', document.querySelector(`#body-${id} .step-tab:last-child`));
+  } catch (e) {
+    card.className = 'step s-failed';
+    st.textContent = '✗ rede';
+    st.style.color = 'var(--red)';
+    resc.innerHTML = `<span style="color:var(--red)">${e.message}\n\nVerifique se os serviços estão rodando.</span>`;
+    tim.textContent = `${Date.now()-t0}ms`;
+    toast(`Falha de rede em "${s.title}"`, 'er');
+  }
+}
+
+let running = false;
+async function runAll(stepByStep = false) {
+  if (running) return;
+  running = true;
+  const btn = document.getElementById('runAllBtn');
+  btn.disabled = true; btn.textContent = '⏳ Executando...';
+  for (const s of getSteps()) {
+    await runStep(s.id);
+    if (stepByStep && !document.getElementById(`card-${s.id}`).classList.contains('s-done')) break;
+    await new Promise(r => setTimeout(r, 300));
+  }
+  running = false;
+  btn.disabled = false; btn.textContent = '▶ Executar Tudo';
+}
+
+function updateProgress() {
+  const steps = getSteps();
+  const done = steps.filter(s => document.getElementById(`card-${s.id}`)?.classList.contains('s-done')).length;
+  document.getElementById('progFill').style.width = `${(done/steps.length)*100}%`;
+  document.getElementById('runStats').textContent = `${done} / ${steps.length}`;
+}
+
+// ═══════════════════════════════════════════
+// CONTEXT
+// ═══════════════════════════════════════════
+function updateCtx() {
+  const entries = Object.entries(ctx).filter(([,v]) => v);
+  const box = document.getElementById('ctxBox');
+  if (!entries.length) {
+    box.innerHTML = '<span class="ctx-null">— execute um step —</span>';
+    return;
+  }
+  box.innerHTML = entries.map(([k,v]) => {
+    const d = typeof v === 'string' && v.length > 36 ? v.slice(0,18)+'…'+v.slice(-8) : v;
+    return `<span class="ctx-k">${k}</span>: <span class="ctx-v">${d}</span>\n`;
+  }).join('');
+}
+function copyCtx() {
+  navigator.clipboard.writeText(JSON.stringify(ctx, null, 2));
+  toast('Contexto copiado!', 'ok');
+}
+
+// ═══════════════════════════════════════════
+// POWERSHELL COPY
+// ═══════════════════════════════════════════
+function copyPs(id) {
+  const s = getSteps().find(x => x.id === id);
+  if (!s) return;
+  const url = s.url(), headers = s.headers(), body = s.body ? s.body() : null;
+  let ps = `$h = @{\n${Object.entries(headers).map(([k,v])=>`  "${k}" = "${v}"`).join('\n')}\n}\n\n`;
+  if (body) ps += `$b = '${JSON.stringify(body)}'\n\nInvoke-RestMethod -Uri "${url}" -Method ${s.method} -Headers $h -Body $b -ContentType 'application/json'\n`;
+  else      ps += `Invoke-RestMethod -Uri "${url}" -Method ${s.method} -Headers $h\n`;
+  navigator.clipboard.writeText(ps);
+  toast('Comando PowerShell copiado!', 'ok');
+}
+
+// ═══════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════
+function resetAll() {
+  Object.keys(ctx).forEach(k => ctx[k] = null);
+  updateCtx(); render(); updateProgress();
+  toast('Estado resetado', 'ok');
+}
+
+// ═══════════════════════════════════════════
+// SYNTAX HIGHLIGHT
+// ═══════════════════════════════════════════
+function hl(obj) {
+  const j = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+  return j.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+    const cls = /^"/.test(m) ? (/:$/.test(m) ? 'ck' : 'cs') : /true|false/.test(m) ? 'cb' : /null/.test(m) ? 'cm' : 'cn';
+    return `<span class="${cls}">${m}</span>`;
+  });
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let toastT;
+function toast(msg, cls) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.className = `on ${cls}`;
+  clearTimeout(toastT);
+  toastT = setTimeout(() => el.className = '', 2800);
+}
+
+// ═══════════════════════════════════════════
+// COPY HELPER
+// ═══════════════════════════════════════════
+function cp(text, btn) {
+  navigator.clipboard.writeText(text);
+  const orig = btn.textContent;
+  btn.textContent = '✓';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+buildSvcList();
+render();
+updateCtx();
+checkAll();
+</script>
+</body>
+</html>

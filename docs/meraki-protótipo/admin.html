@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Admin Dashboard</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: { 400: '#73d491', 500: '#55CA7C' },
+                        sys: { red: '#ef4444', blue: '#3b82f6', yellow: '#eab308' },
+                        dark: { bg: '#09090b', card: '#18181b', border: '#27272a', input: '#121214' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .bg-grid { background-size: 32px 32px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px); }
+        .btn-sharp:active { transform: translate(2px, 2px); box-shadow: none !important; }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <div id="navbar-container" data-project-title="MERAKI_GOD_MODE"></div>
+
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            <!-- KPIs -->
+            <div class="bg-[#000] border border-dark-border p-4 shadow-xl">
+                <p class="text-[10px] font-mono text-zinc-500 uppercase mb-1">Users (Active)</p>
+                <div class="font-bold text-2xl text-white font-mono">1,024</div>
+            </div>
+            <div class="bg-[#000] border border-dark-border p-4 shadow-xl">
+                <p class="text-[10px] font-mono text-zinc-500 uppercase mb-1">Projects (Live)</p>
+                <div class="font-bold text-2xl text-white font-mono">142</div>
+            </div>
+            <div class="bg-[#000] border border-brand-500/30 p-4 shadow-xl shadow-[inset_2px_0_0_#55CA7C]">
+                <p class="text-[10px] font-mono text-brand-500 uppercase mb-1">Escrow T.V.L.</p>
+                <div class="font-bold text-2xl text-brand-500 font-mono">R$ 1.5M</div>
+            </div>
+            <div class="bg-[#000] border border-sys-blue/30 p-4 shadow-xl shadow-[inset_2px_0_0_#3b82f6]">
+                <p class="text-[10px] font-mono text-sys-blue uppercase mb-1">Platform Fees (24h)</p>
+                <div class="font-bold text-2xl text-sys-blue font-mono">R$ 12.450</div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Tabela Global -->
+            <div class="lg:col-span-2">
+                <div class="bg-dark-card border border-dark-border flex flex-col h-full">
+                    <div class="p-4 border-b border-dark-border flex justify-between items-center bg-[#000]">
+                        <h2 class="font-mono text-xs font-bold text-white uppercase tracking-widest"><i data-lucide="activity" class="w-4 h-4 inline text-sys-yellow mr-2"></i>Global Activity Steam</h2>
+                    </div>
+                    <div class="p-0 overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-dark-input border-b border-dark-border text-[10px] font-mono uppercase text-zinc-500 tracking-wider">
+                                    <th class="p-3 font-normal">Timestamp</th>
+                                    <th class="p-3 font-normal">Event.Type</th>
+                                    <th class="p-3 font-normal">Actor</th>
+                                    <th class="p-3 font-normal">Value/Status</th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-xs text-zinc-300 font-mono divide-y divide-dark-border">
+                                <tr class="hover:bg-dark-input/50 transition-colors">
+                                    <td class="p-3 text-zinc-500">21:40:02</td>
+                                    <td class="p-3 text-brand-500">PAYMENT.ESCROW_RELEASE</td>
+                                    <td class="p-3">TechCorp -> K. Silva</td>
+                                    <td class="p-3 text-brand-500">SUCCESS: R$2.500</td>
+                                </tr>
+                                <tr class="hover:bg-dark-input/50 transition-colors">
+                                    <td class="p-3 text-zinc-500">21:35:10</td>
+                                    <td class="p-3 text-sys-blue">MILSTONE.SUBMIT</td>
+                                    <td class="p-3">K. Silva</td>
+                                    <td class="p-3 text-sys-blue">PENDING_REVIEW</td>
+                                </tr>
+                                <tr class="hover:bg-dark-input/50 transition-colors">
+                                    <td class="p-3 text-zinc-500">21:10:05</td>
+                                    <td class="p-3 text-white">USER.LOGIN</td>
+                                    <td class="p-3">TechCorp M1</td>
+                                    <td class="p-3 text-zinc-400">AUTH_OK</td>
+                                </tr>
+                                <tr class="hover:bg-dark-input/50 transition-colors">
+                                    <td class="p-3 text-zinc-500">20:22:11</td>
+                                    <td class="p-3 text-sys-red">SYS.ERROR</td>
+                                    <td class="p-3">SYSTEM_CORE</td>
+                                    <td class="p-3 text-sys-red">API_TIMEOUT</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Managment Actions -->
+            <div class="bg-[#000] border border-dark-border p-6 shadow-xl">
+                <h2 class="font-mono text-xs font-bold text-white uppercase tracking-widest mb-6"><i data-lucide="cpu" class="w-4 h-4 inline text-zinc-500 mr-2"></i>Node Management</h2>
+                
+                <div class="space-y-3">
+                    <button onclick="alert('Iniciando freeze na wallet... Operação simulada.')" class="w-full btn-sharp bg-dark-input text-sys-red font-bold font-mono text-[10px] py-3 border border-sys-red/50 hover:bg-sys-red/10 transition-colors text-left px-4 flex justify-between">
+                        <span>FREEZE_WALLET(USER_ID)</span>
+                        <i data-lucide="lock" class="w-3 h-3"></i>
+                    </button>
+                    <button onclick="alert('Trigger rabbitmq broadcast.')" class="w-full btn-sharp bg-dark-input text-brand-500 font-bold font-mono text-[10px] py-3 border border-dark-border hover:border-brand-500 transition-colors text-left px-4 flex justify-between">
+                        <span>RESTART_MESSAGE_BROKER()</span>
+                        <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                    </button>
+                    <button onclick="alert('Exportando CSV de taxas.')" class="w-full btn-sharp bg-dark-input text-zinc-300 font-bold font-mono text-[10px] py-3 border border-dark-border hover:border-zinc-500 transition-colors text-left px-4 flex justify-between">
+                        <span>EXPORT_FEE_DATA()</span>
+                        <i data-lucide="download" class="w-3 h-3"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script> lucide.createIcons(); </script>
+</body>
+</html>

@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Workspace // Portfolio</title>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Mock DB Simulator -->
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', // Verde Principal
+                            600: '#42a764', 
+                        },
+                        dark: {
+                            bg: '#09090b',    // zinc-950
+                            card: '#18181b',  // zinc-900
+                            border: '#27272a',// zinc-800
+                            input: '#121214', // zinc-950/80
+                            hover: '#1f1f22',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Background Tech Grid */
+        .bg-grid {
+            background-size: 32px 32px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+        }
+
+        /* Scanline sutil */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(85,202,124,0.05) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: fixed;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+            z-index: 50;
+        }
+
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100px; }
+        }
+
+        /* Scrollbar customizada Sharp */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09090b; 
+            border: 1px solid #27272a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #27272a; 
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #55CA7C; 
+        }
+
+        /* Efeito de Glitch/Sharp */
+        .btn-sharp:active {
+            transform: translate(2px, 2px);
+            box-shadow: none !important;
+        }
+
+        .rating-star {
+            fill: #55CA7C;
+            color: #55CA7C;
+        }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <div class="scanline"></div>
+
+    <!-- NAVBAR TOP -->
+    <div id="navbar-container" data-back-url="dashboard-especialista.html"></div>
+
+    <!-- MAIN GRID -->
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            <!-- LEFT COLUMN: IDENTIDADE E ESTATÍSTICAS (Profile Bounded Context) -->
+            <aside class="lg:col-span-4 flex flex-col gap-6 sticky top-20">
+                
+                <!-- Identidade Principal -->
+                <div class="bg-dark-card border border-dark-border p-6 relative shadow-2xl">
+                    <div class="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500"></div>
+                    <div class="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500"></div>
+
+                    <!-- Header/Avatar -->
+                    <div class="flex flex-col items-center text-center mb-6">
+                        <div class="relative mb-4 group">
+                            <div class="absolute -inset-1 bg-brand-500/20 blur-md group-hover:bg-brand-500/40 transition-all"></div>
+                            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Kauan&backgroundColor=18181b" alt="Kauan Silva" class="relative w-24 h-24 border-2 border-brand-500 bg-dark-bg p-1">
+                            
+                            <!-- Verificado Badge -->
+                            <div class="absolute -bottom-2 -right-2 bg-dark-bg border border-dark-border px-2 py-0.5 flex items-center gap-1 shadow-lg">
+                                <i data-lucide="shield-check" class="w-3 h-3 text-brand-500"></i>
+                                <span class="font-mono text-[9px] text-brand-500 uppercase tracking-widest">Verificado</span>
+                            </div>
+                        </div>
+                        
+                        <h1 class="text-2xl font-bold text-white uppercase tracking-tight">Kauan Silva</h1>
+                        <p class="font-mono text-xs text-brand-500 mt-1">Senior Backend Engineer</p>
+                        <p class="font-mono text-[10px] text-zinc-500 mt-1">ID: DEV-99X1-BR</p>
+                    </div>
+
+                    <!-- Bio -->
+                    <div class="border-t border-b border-dark-border py-4 mb-6">
+                        <p class="text-sm text-zinc-400 font-sans leading-relaxed text-justify">
+                            Especialista em arquitetura de microsserviços e sistemas distribuídos. Experiência robusta com Node.js, NestJS e mensageria assíncrona. Focado em escalabilidade e entregas de alta qualidade.
+                        </p>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 gap-px bg-dark-border mb-6">
+                        <div class="bg-dark-input p-3 text-center">
+                            <div class="flex justify-center items-center gap-1 mb-1">
+                                <i data-lucide="star" class="w-3 h-3 rating-star"></i>
+                                <span class="font-mono font-bold text-white text-lg">4.9</span>
+                            </div>
+                            <p class="font-mono text-[9px] text-zinc-500 uppercase tracking-wider">Avaliação</p>
+                        </div>
+                        <div class="bg-dark-input p-3 text-center">
+                            <p class="font-mono font-bold text-white text-lg mb-1">12</p>
+                            <p class="font-mono text-[9px] text-zinc-500 uppercase tracking-wider">Projetos Concluídos</p>
+                        </div>
+                        <div class="bg-dark-input p-3 text-center">
+                            <p class="font-mono font-bold text-white text-lg mb-1">100%</p>
+                            <p class="font-mono text-[9px] text-zinc-500 uppercase tracking-wider">Taxa de Sucesso</p>
+                        </div>
+                        <div class="bg-dark-input p-3 text-center">
+                            <p class="font-mono font-bold text-brand-500 text-lg mb-1">R$ 80</p>
+                            <p class="font-mono text-[9px] text-zinc-500 uppercase tracking-wider">Valor / Hora</p>
+                        </div>
+                    </div>
+
+                    <!-- Call to Action -->
+                    <button class="btn-sharp w-full bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 hover:bg-brand-400 border border-brand-500 transition-colors shadow-[4px_4px_0px_rgba(85,202,124,0.2)] flex items-center justify-center gap-2">
+                        <i data-lucide="message-square-plus" class="w-4 h-4"></i>
+                        <span>CONVIDAR PARA PROJETO</span>
+                    </button>
+                </div>
+
+                <!-- Hard Skills & Tecnologias -->
+                <div class="bg-[#000] border border-dark-border p-5 relative">
+                    <div class="flex items-center gap-2 mb-4 border-b border-dark-border pb-2">
+                        <i data-lucide="cpu" class="w-4 h-4 text-brand-500"></i>
+                        <h3 class="font-mono text-xs font-bold text-white uppercase">Stack Tecnológica</h3>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        <span class="text-[10px] font-mono border border-brand-500/30 bg-brand-500/5 text-brand-500 px-2 py-1">NestJS</span>
+                        <span class="text-[10px] font-mono border border-brand-500/30 bg-brand-500/5 text-brand-500 px-2 py-1">Node.js</span>
+                        <span class="text-[10px] font-mono border border-brand-500/30 bg-brand-500/5 text-brand-500 px-2 py-1">TypeScript</span>
+                        <span class="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">RabbitMQ</span>
+                        <span class="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">PostgreSQL</span>
+                        <span class="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">Docker</span>
+                        <span class="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">AWS</span>
+                        <span class="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">Microservices</span>
+                    </div>
+                </div>
+
+                <!-- Certificações -->
+                <div class="bg-dark-card border border-dark-border p-5">
+                    <div class="flex items-center gap-2 mb-4 border-b border-dark-border pb-2">
+                        <i data-lucide="award" class="w-4 h-4 text-blue-400"></i>
+                        <h3 class="font-mono text-xs font-bold text-white uppercase">Credenciais</h3>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-dark-input border border-dark-border flex items-center justify-center shrink-0">
+                                <i data-lucide="cloud" class="w-4 h-4 text-orange-400"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-bold text-white">AWS Certified Solutions Architect</p>
+                                <p class="text-[10px] font-mono text-zinc-500">Emissor: Amazon Web Services</p>
+                                <a href="#" class="text-[10px] font-mono text-blue-400 hover:underline">Verificar Credencial ↗</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </aside>
+
+            <!-- RIGHT COLUMN: HISTÓRICO DE PROJETOS E REVIEWS -->
+            <section class="lg:col-span-8 flex flex-col gap-6">
+                
+                <!-- Terminal-style Tab Navigation -->
+                <div class="bg-dark-input border border-dark-border flex">
+                    <button class="px-6 py-3 font-mono text-xs font-bold text-dark-bg bg-brand-500 border-r border-dark-border relative overflow-hidden">
+                        <span class="relative z-10">[ HISTÓRICO DE PROJETOS ]</span>
+                        <div class="absolute bottom-0 left-0 w-full h-1 bg-white/20"></div>
+                    </button>
+                    <button class="px-6 py-3 font-mono text-xs text-zinc-500 hover:text-white hover:bg-dark-hover border-r border-dark-border transition-colors">
+                        [ REPOSITÓRIOS PÚBLICOS ]
+                    </button>
+                </div>
+
+                <!-- Histórico de Projetos (Logs de Portfólio) -->
+                <div class="space-y-4">
+                    
+                    <!-- PROJETO CONCLUÍDO 1 -->
+                    <div class="bg-dark-card border border-dark-border p-6 hover:border-zinc-600 transition-colors relative group">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-brand-500 opacity-50"></div>
+                        
+                        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 uppercase tracking-widest">
+                                        COMPLETED
+                                    </span>
+                                    <span class="font-mono text-[10px] text-zinc-500">FEV 2026</span>
+                                </div>
+                                <h2 class="text-lg font-bold text-white leading-tight mb-1">Migração Monolito para Microsserviços</h2>
+                                <p class="text-xs font-mono text-zinc-400">Para: <span class="text-white">FintechX Solutions</span></p>
+                            </div>
+
+                            <!-- Rating do Projeto -->
+                            <div class="bg-dark-input border border-dark-border p-3 shrink-0 min-w-[140px]">
+                                <p class="font-mono text-[9px] text-zinc-500 uppercase mb-1">Avaliação do Cliente</p>
+                                <div class="flex items-center gap-1 mb-1">
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <span class="font-mono font-bold text-white text-xs ml-1">5.0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descrição do Trabalho Realizado -->
+                        <p class="text-sm text-zinc-300 font-sans leading-relaxed mb-4">
+                            Separação de um sistema financeiro legado em Node.js para 5 microsserviços independentes utilizando NestJS e comunicação via gRPC e RabbitMQ. Implantação de filas resilientes e tratamento de dead-letter exchanges para garantir zero perda de transações.
+                        </p>
+
+                        <!-- Review / Comentário do Cliente -->
+                        <div class="bg-[#000] border-l-2 border-brand-500 p-4 mb-4">
+                            <i data-lucide="quote" class="w-4 h-4 text-zinc-600 mb-2"></i>
+                            <p class="text-xs font-mono text-zinc-400 italic">
+                                "O Kauan não só entregou o código com uma qualidade absurda, como também nos ajudou a redesenhar a arquitetura para suportar o triplo da carga. O sistema nunca esteve tão estável. Profissional excecional."
+                            </p>
+                            <p class="text-[10px] font-mono text-brand-500 mt-2">— CTO, FintechX</p>
+                        </div>
+
+                        <!-- Meta Info Inferior -->
+                        <div class="flex flex-wrap items-center justify-between border-t border-dark-border pt-4 mt-4 gap-4">
+                            <div class="flex gap-2">
+                                <span class="text-[9px] font-mono text-zinc-500 border border-dark-border px-1.5 py-0.5">NestJS</span>
+                                <span class="text-[9px] font-mono text-zinc-500 border border-dark-border px-1.5 py-0.5">RabbitMQ</span>
+                                <span class="text-[9px] font-mono text-zinc-500 border border-dark-border px-1.5 py-0.5">Docker</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                                    <i data-lucide="calendar" class="w-3 h-3"></i> Duração: 45 dias
+                                </span>
+                                <span class="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                                    <i data-lucide="credit-card" class="w-3 h-3 text-purple-400"></i> Orçamento: R$ 22.000
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PROJETO CONCLUÍDO 2 -->
+                    <div class="bg-dark-card border border-dark-border p-6 hover:border-zinc-600 transition-colors relative group">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-brand-500 opacity-50"></div>
+                        
+                        <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 uppercase tracking-widest">
+                                        COMPLETED
+                                    </span>
+                                    <span class="font-mono text-[10px] text-zinc-500">NOV 2025</span>
+                                </div>
+                                <h2 class="text-lg font-bold text-white leading-tight mb-1">API de Integração Logística</h2>
+                                <p class="text-xs font-mono text-zinc-400">Para: <span class="text-white">LogiMove Ltda</span></p>
+                            </div>
+
+                            <!-- Rating do Projeto -->
+                            <div class="bg-dark-input border border-dark-border p-3 shrink-0 min-w-[140px]">
+                                <p class="font-mono text-[9px] text-zinc-500 uppercase mb-1">Avaliação do Cliente</p>
+                                <div class="flex items-center gap-1 mb-1">
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <i data-lucide="star" class="w-3.5 h-3.5 rating-star"></i>
+                                    <i data-lucide="star-half" class="w-3.5 h-3.5 rating-star"></i>
+                                    <span class="font-mono font-bold text-white text-xs ml-1">4.8</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descrição -->
+                        <p class="text-sm text-zinc-300 font-sans leading-relaxed mb-4">
+                            Desenvolvimento de API RESTful em Express/TypeScript para integração entre o ERP interno da transportadora e sistemas de tracking de veículos via satélite. Foco extremo na performance da base de dados PostgreSQL.
+                        </p>
+
+                        <!-- Review / Comentário do Cliente -->
+                        <div class="bg-[#000] border-l-2 border-brand-500 p-4 mb-4">
+                            <i data-lucide="quote" class="w-4 h-4 text-zinc-600 mb-2"></i>
+                            <p class="text-xs font-mono text-zinc-400 italic">
+                                "Entrega dentro do prazo estipulado. O código estava bem documentado com Swagger o que facilitou a vida da nossa equipa de front-end. Comunicação muito assertiva durante os milestones."
+                            </p>
+                            <p class="text-[10px] font-mono text-brand-500 mt-2">— Gestor de Projeto, LogiMove</p>
+                        </div>
+
+                        <!-- Meta Info Inferior -->
+                        <div class="flex flex-wrap items-center justify-between border-t border-dark-border pt-4 mt-4 gap-4">
+                            <div class="flex gap-2">
+                                <span class="text-[9px] font-mono text-zinc-500 border border-dark-border px-1.5 py-0.5">Node.js</span>
+                                <span class="text-[9px] font-mono text-zinc-500 border border-dark-border px-1.5 py-0.5">PostgreSQL</span>
+                                <span class="text-[9px] font-mono text-zinc-500 border border-dark-border px-1.5 py-0.5">Swagger</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                                    <i data-lucide="calendar" class="w-3 h-3"></i> Duração: 21 dias
+                                </span>
+                                <span class="text-[10px] font-mono text-zinc-500 flex items-center gap-1">
+                                    <i data-lucide="credit-card" class="w-3 h-3 text-purple-400"></i> Orçamento: R$ 8.500
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Paginação estilo Terminal -->
+                    <div class="flex items-center justify-center gap-4 mt-8 pt-4">
+                        <span class="text-[10px] font-mono text-zinc-500">Exibindo 2 de 12 registos</span>
+                        <div class="flex gap-1">
+                            <button class="w-6 h-6 bg-dark-input border border-dark-border text-zinc-500 hover:text-brand-500 hover:border-brand-500 flex items-center justify-center disabled:opacity-50" disabled>
+                                <i data-lucide="chevron-left" class="w-3 h-3"></i>
+                            </button>
+                            <button class="w-6 h-6 bg-brand-500 text-dark-bg font-mono text-xs font-bold border border-brand-500 flex items-center justify-center">
+                                1
+                            </button>
+                            <button class="w-6 h-6 bg-dark-input border border-dark-border text-zinc-400 hover:text-brand-500 hover:border-brand-500 font-mono text-xs flex items-center justify-center">
+                                2
+                            </button>
+                            <button class="w-6 h-6 bg-dark-input border border-dark-border text-zinc-500 hover:text-brand-500 hover:border-brand-500 flex items-center justify-center">
+                                <i data-lucide="chevron-right" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Inicializar Lucide Icons
+        lucide.createIcons();
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = window.mockAPI.getCurrentUser();
+            if(user) {
+                document.getElementById('viewer-name').textContent = user.name;
+            } else {
+                document.getElementById('viewer-name').textContent = 'VISITANTE';
+            }
+        });
+    </script>
+</body>
+</html>

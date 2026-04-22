@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meraki - Ganhos & Extrato</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="mock-db.js"></script>
+    <script src="components.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        brand: {
+                            400: '#73d491',
+                            500: '#55CA7C', 
+                        },
+                        dark: {
+                            bg: '#09090b',    
+                            card: '#18181b',  
+                            border: '#27272a',
+                            input: '#121214', 
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .bg-grid { background-size: 32px 32px; background-image: linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px); }
+        .btn-sharp:active { transform: translate(2px, 2px); box-shadow: none !important; }
+    </style>
+</head>
+<body class="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden flex flex-col">
+
+    <div id="navbar-container"></div>
+
+    <main class="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+        
+        <div class="mb-8 border-b border-dark-border pb-4 flex justify-between items-end">
+            <div>
+                <h1 class="text-2xl font-bold text-white tracking-tight uppercase">Dashboard de Ganhos</h1>
+                <p class="text-xs font-mono text-zinc-500 mt-2">Visão analítica de fluxo de caixa e saldos disponíveis.</p>
+            </div>
+            <button onclick="alert('Mock: Flow de Saque (Saque via PIX/Stripe Connect) iniciado.')" class="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors shadow-[2px_2px_0_rgba(85,202,124,0.2)]">
+                SOLICITAR SAQUE
+            </button>
+        </div>
+
+        <!-- KPIs Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <!-- Disponível -->
+            <div class="bg-dark-card border border-brand-500/50 p-6 shadow-[inset_2px_0_0_#55CA7C]">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-mono text-zinc-400 uppercase">Saldo Disponível</span>
+                    <i data-lucide="check-circle-2" class="w-4 h-4 text-brand-500"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-sm font-bold text-zinc-500">R$</span>
+                    <span class="text-3xl font-bold text-white" id="val-disponivel">4.500,00</span>
+                </div>
+                <p class="text-[10px] font-mono text-brand-500 mt-2">+ Último release hoje</p>
+            </div>
+
+            <!-- Escrow/Pendente -->
+            <div class="bg-dark-card border border-dark-border p-6 shadow-xl">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-mono text-zinc-400 uppercase">Em Escrow (Seguro)</span>
+                    <i data-lucide="lock" class="w-4 h-4 text-zinc-500"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-sm font-bold text-zinc-500">R$</span>
+                    <span class="text-3xl font-bold text-white">8.000,00</span>
+                </div>
+                <p class="text-[10px] font-mono text-zinc-500 mt-2">A aguardar entrega (Milestones)</p>
+            </div>
+
+            <!-- Ganhos Totais -->
+            <div class="bg-dark-card border border-dark-border p-6 shadow-xl opacity-75">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-mono text-zinc-400 uppercase">Ganhos Totais (Ano)</span>
+                    <i data-lucide="bar-chart-2" class="w-4 h-4 text-zinc-500"></i>
+                </div>
+                <div class="flex items-baseline gap-2">
+                    <span class="text-sm font-bold text-zinc-500">R$</span>
+                    <span class="text-3xl font-bold text-white">12.500,00</span>
+                </div>
+                <p class="text-[10px] font-mono text-zinc-500 mt-2">Inclui taxas deduzidas</p>
+            </div>
+        </div>
+
+        <!-- Extract (Transaction History) -->
+        <div>
+            <h2 class="font-mono text-xs font-bold text-white mb-4 uppercase tracking-widest flex items-center gap-2">
+                <i data-lucide="list" class="w-4 h-4 text-brand-500"></i> Extrato Detalhado
+            </h2>
+            
+            <div class="w-full bg-dark-card border border-dark-border overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-dark-input border-b border-dark-border text-[10px] font-mono uppercase text-zinc-500 tracking-wider">
+                            <th class="p-4 font-normal">Data/Hora</th>
+                            <th class="p-4 font-normal">Transação ID</th>
+                            <th class="p-4 font-normal">Descrição</th>
+                            <th class="p-4 font-normal text-right">Valor Líquido</th>
+                            <th class="p-4 font-normal text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-xs text-zinc-300 font-sans divide-y divide-dark-border">
+                        <!-- Linha 1 -->
+                        <tr class="hover:bg-dark-input/50 transition-colors">
+                            <td class="p-4 text-[10px] font-mono text-zinc-500">24/10/2026 14:30</td>
+                            <td class="p-4 font-mono text-zinc-500">TX-9021A</td>
+                            <td class="p-4">
+                                <p class="font-bold text-white">Liberação Escrow (Milestone 1)</p>
+                                <p class="text-[10px] text-zinc-500 font-mono mt-0.5">Ref: TechCorp Inc. (PRJ-8C3X)</p>
+                            </td>
+                            <td class="p-4 font-mono text-brand-500 font-bold text-right">+ R$ 2.500,00</td>
+                            <td class="p-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-brand-500/10 text-brand-500 border border-brand-500/20 text-[9px] font-mono uppercase">LiquidadO</span>
+                            </td>
+                        </tr>
+                        <!-- Linha 2 -->
+                        <tr class="hover:bg-dark-input/50 transition-colors">
+                            <td class="p-4 text-[10px] font-mono text-zinc-500">20/10/2026 09:15</td>
+                            <td class="p-4 font-mono text-zinc-500">TX-Withdraw-8</td>
+                            <td class="p-4">
+                                <p class="font-bold text-white">Saque Efetuado (PIX)</p>
+                                <p class="text-[10px] text-zinc-500 font-mono mt-0.5">Destino: Banco ***.1235</p>
+                            </td>
+                            <td class="p-4 font-mono text-red-400 font-bold text-right">- R$ 1.500,00</td>
+                            <td class="p-4 text-center">
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm bg-blue-500/10 text-blue-400 border border-blue-500/20 text-[9px] font-mono uppercase">Processado</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        lucide.createIcons();
+        function goBack() { window.location.href = 'dashboard-especialista.html'; }
+    </script>
+</body>
+</html>
