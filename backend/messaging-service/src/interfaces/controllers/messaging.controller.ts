@@ -15,7 +15,7 @@ import { GetOrCreateConversationUseCase } from '../../application/use-cases/get-
 import { GetMessagesUseCase } from '../../application/use-cases/get-messages.use-case';
 
 @ApiTags('Messaging')
-@Controller('api/conversations')
+@Controller('api/v1/conversations')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class MessagingController {

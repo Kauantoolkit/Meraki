@@ -16,7 +16,7 @@ import { SendBidMessageUseCase } from '../../application/use-cases/send-bid-mess
 import { GetBidMessagesUseCase } from '../../application/use-cases/get-bid-messages.use-case';
 
 @ApiTags('Bids')
-@Controller('api/bids')
+@Controller('api/v1/bids')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class BidController {

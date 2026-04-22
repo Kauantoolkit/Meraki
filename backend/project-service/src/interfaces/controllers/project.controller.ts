@@ -17,7 +17,7 @@ import { ProjectStatus } from '../../domain/enums/project-status.enum';
 import { FindProjectsFilter } from '../../domain/repositories/project.repository.interface';
 
 @ApiTags('Projects')
-@Controller('api/projects')
+@Controller('api/v1/projects')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class ProjectController {

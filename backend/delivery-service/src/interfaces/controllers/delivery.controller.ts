@@ -13,7 +13,7 @@ import { GetMilestoneCommentsUseCase } from '../../application/use-cases/get-mil
 import { SubmitDeliveryDto } from '../../application/dtos/submit-delivery.dto';
 
 @ApiTags('Deliveries')
-@Controller('api/deliveries')
+@Controller('api/v1/deliveries')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class DeliveryController {
@@ -44,7 +44,7 @@ export class DeliveryController {
 }
 
 @ApiTags('Kanban')
-@Controller('api/kanban')
+@Controller('api/v1/kanban')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class KanbanController {
@@ -61,7 +61,7 @@ export class KanbanController {
 }
 
 @ApiTags('History')
-@Controller('api/history')
+@Controller('api/v1/history')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class HistoryController {
@@ -75,7 +75,7 @@ export class HistoryController {
 }
 
 @ApiTags('Milestones')
-@Controller('api/deliveries')
+@Controller('api/v1/deliveries')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class CommentController {

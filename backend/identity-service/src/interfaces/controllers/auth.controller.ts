@@ -14,6 +14,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
+  @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Registrar novo usuário (company ou specialist)' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos ou companyName ausente' })

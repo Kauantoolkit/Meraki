@@ -5,7 +5,7 @@ import { Request } from 'express';
 import { GetPaymentsUseCase } from '../../application/use-cases/get-payments.use-case';
 
 @ApiTags('Payments')
-@Controller('api/payments')
+@Controller('api/v1/payments')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class PaymentController {

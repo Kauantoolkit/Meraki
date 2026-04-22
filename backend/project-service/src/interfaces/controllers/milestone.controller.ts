@@ -8,7 +8,7 @@ import { GetMilestonesByProjectUseCase } from '../../application/use-cases/get-m
 import { UpdateMilestoneStatusUseCase } from '../../application/use-cases/update-milestone-status.use-case';
 
 @ApiTags('Milestones')
-@Controller('api/projects')
+@Controller('api/v1/projects')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class MilestoneController {

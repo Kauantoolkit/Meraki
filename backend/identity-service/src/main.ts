@@ -18,7 +18,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Prefixo global de rotas
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1');
 
   // Validação automática dos DTOs via class-validator
   app.useGlobalPipes(
