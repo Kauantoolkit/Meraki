@@ -28,6 +28,13 @@ mobile/macos/
 mobile/windows/
 mobile/web/
 
+# Artefatos de build e ferramentas geradas
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/**/*.g.dart
+
 # ─── IDEs ─────────────────────────────────────────────────────────────────────
 .idea/
 *.iml
@@ -48,6 +55,12 @@ backend/traefik/letsencrypt/
 
 # Backups dos bancos (ficam no volume Docker, não no repo)
 backend/backups/
+
+# ─── Documentos grandes (Office, ZIP, imagens de design) ──────────────────────
+docs/**/*.zip
+docs/**/*.docx
+docs/**/*.xlsx
+docs/**/*.png
 
 # ─── Claude Code ──────────────────────────────────────────────────────────────
 .claude/settings.local.json
