@@ -2,7 +2,10 @@ import {
   Controller, Get, Post, Put, Delete,
   Body, Param, Query, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags, ApiOperation, ApiBearerAuth, ApiQuery,
+  ApiParam, ApiResponse,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { CreateProjectDto } from '../../application/dto/create-project.dto';
@@ -32,6 +35,9 @@ export class ProjectController {
 
   @Post()
   @ApiOperation({ summary: 'Criar projeto (empresa)' })
+  @ApiResponse({ status: 201, description: 'Projeto criado com sucesso.' })
+  @ApiResponse({ status: 400, description: 'Escopo inválido (RN01) ou dados incorretos.' })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
   create(@Body() dto: CreateProjectDto, @CurrentUser('companyId') companyId: string) {
     return this.createProject.execute(dto, companyId);
   }
@@ -39,8 +45,10 @@ export class ProjectController {
   @Get()
   @ApiOperation({ summary: 'Listar projetos' })
   @ApiQuery({ name: 'status', enum: ProjectStatus, required: false })
-  @ApiQuery({ name: 'page', required: false })
-  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiResponse({ status: 200, description: 'Lista paginada de projetos.' })
+  @ApiResponse({ status: 401, description: 'Não autenticado.' })
   findAll(
     @Query('status') status?: ProjectStatus,
     @Query('page') page?: number,
@@ -57,12 +65,19 @@ export class ProjectController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Detalhes do projeto' })
+  @ApiParam({ name: 'id', description: 'UUID do projeto' })
+  @ApiResponse({ status: 200, description: 'Dados do projeto encontrado.' })
+  @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
   findOne(@Param('id') id: string) {
     return this.getProjectById.execute(id);
   }
 
   @Put(':id')
   @ApiOperation({ summary: 'Atualizar projeto (empresa dona)' })
+  @ApiParam({ name: 'id', description: 'UUID do projeto' })
+  @ApiResponse({ status: 200, description: 'Projeto atualizado.' })
+  @ApiResponse({ status: 403, description: 'Sem permissão para editar este projeto.' })
+  @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
   update(
     @Param('id') id: string,
     @Body() dto: UpdateProjectDto,
@@ -74,13 +89,26 @@ export class ProjectController {
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Cancelar projeto (empresa dona)' })
+  @ApiParam({ name: 'id', description: 'UUID do projeto' })
+  @ApiResponse({ status: 204, description: 'Projeto cancelado.' })
+  @ApiResponse({ status: 400, description: 'Projeto já concluído não pode ser cancelado.' })
+  @ApiResponse({ status: 403, description: 'Sem permissão.' })
+  @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
   cancel(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
     return this.cancelProject.execute(id, companyId);
   }
 
   @Put(':id/complete')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Concluir projeto — valida que todas as milestones estão APPROVED' })
+  @ApiOperation({
+    summary: 'Concluir projeto',
+    description: 'Valida que todas as milestones estão com status APPROVED antes de concluir.',
+  })
+  @ApiParam({ name: 'id', description: 'UUID do projeto' })
+  @ApiResponse({ status: 204, description: 'Projeto concluído.' })
+  @ApiResponse({ status: 400, description: 'Milestones pendentes impedem a conclusão.' })
+  @ApiResponse({ status: 403, description: 'Sem permissão.' })
+  @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
   complete(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
     return this.completeProject.execute(id, companyId);
   }

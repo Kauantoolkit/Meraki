@@ -1,7 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { User } from '../../domain/entities/user.entity';
-import { SpecialistProfile } from '../../domain/entities/specialist-profile.entity';
-import { CompanyProfile } from '../../domain/entities/company-profile.entity';
+import { UserSchema } from '../database/schemas/user.schema';
+import { SpecialistProfileSchema } from '../database/schemas/specialist-profile.schema';
+import { CompanyProfileSchema } from '../database/schemas/company-profile.schema';
 
 export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -10,8 +10,7 @@ export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
   database: process.env.DB_NAME || 'identity_db',
-  entities: [User, SpecialistProfile, CompanyProfile],
-  // synchronize: true apenas em desenvolvimento — cria/atualiza tabelas automaticamente
-  synchronize: process.env.NODE_ENV !== 'production',
+  entities: [UserSchema, SpecialistProfileSchema, CompanyProfileSchema],
+  synchronize: true,
   logging: process.env.NODE_ENV === 'development',
 });
