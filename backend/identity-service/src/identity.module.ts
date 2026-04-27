@@ -35,7 +35,7 @@ import { UserController } from './interfaces/controllers/user.controller';
       global: true,
       secret: process.env.JWT_SECRET,
       signOptions: {
-        expiresIn: process.env.JWT_EXPIRES_IN ?? '7d',
+       expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as any,
       },
     }),
     RabbitMQModule,

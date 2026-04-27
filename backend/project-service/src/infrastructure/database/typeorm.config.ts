@@ -1,6 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Project } from '../../domain/entities/project.entity';
-import { Milestone } from '../../domain/entities/milestone.entity';
+import { ProjectSchema } from './schemas/project.schema';
+import { MilestoneSchema } from './schemas/milestone.schema';
+import { ProjectHistorySchema } from './schemas/project-history.schema';
 
 export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -9,7 +10,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   database: process.env.DB_NAME || 'project_db',
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
-  entities: [Project, Milestone],
-  synchronize: process.env.NODE_ENV !== 'production',
+  entities: [ProjectSchema, MilestoneSchema, ProjectHistorySchema],
+  synchronize: true,
   logging: process.env.NODE_ENV === 'development',
 });

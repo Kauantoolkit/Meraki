@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { MilestoneUpdatedEvent } from '../../domain/events/milestone-updated.event';
@@ -10,6 +11,7 @@ export class UpdateMilestoneStatusUseCase {
   constructor(
     private readonly milestoneRepo: MilestoneRepository,
     private readonly events: EventPublisherService,
+    private readonly emitter: EventEmitter2,
   ) {}
 
   async execute(milestoneId: string, action: MilestoneAction) {
@@ -18,7 +20,7 @@ export class UpdateMilestoneStatusUseCase {
 
     if (action === 'start') {
       const allMilestones = await this.milestoneRepo.findByProject(milestone.projectId);
-      milestone.start(allMilestones); // RN04 enforced here
+      milestone.start(allMilestones);
     } else if (action === 'submit') {
       milestone.submit();
     } else if (action === 'approve') {
@@ -29,13 +31,14 @@ export class UpdateMilestoneStatusUseCase {
 
     const saved = await this.milestoneRepo.save(milestone);
 
-    await this.events.publishMilestoneUpdated(
-      new MilestoneUpdatedEvent({
-        milestoneId: saved.id,
-        projectId: saved.projectId,
-        status: saved.status,
-      }),
-    );
+    const event = new MilestoneUpdatedEvent({
+      milestoneId: saved.id,
+      projectId: saved.projectId,
+      status: saved.status,
+    });
+
+    await this.events.publishMilestoneUpdated(event);
+    this.emitter.emit('milestone.updated', event);
 
     return saved;
   }
