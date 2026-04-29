@@ -1,0 +1,69 @@
+services:
+  # PostgreSQL para Payment Service
+  payment-db:
+    image: postgres:15-alpine
+    container_name: meraki-payment-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: meraki_payment
+    ports:
+      - "5434:5432"
+    volumes:
+      - payment_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # RabbitMQ para mensagens entre serviços
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: meraki-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meraki-payment-service
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: payment-db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: meraki_payment
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      NODE_ENV: production
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+volumes:
+  payment_db_data:
+  rabbitmq_data:
+
+networks:
+  default:
+    name: meraki-network
+    driver: bridge
