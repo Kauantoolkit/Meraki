@@ -4,6 +4,9 @@ import { Payment } from './domain/entities/payment.entity';
 import { Withdrawal } from './domain/entities/withdrawal.entity';
 import { SpecialistBalance } from './domain/entities/specialist-balance.entity';
 
+// Services
+import { PaymentService } from './payment.service';
+
 // Repositories
 import { PaymentRepository } from './infrastructure/repositories/payment.repository';
 import { WithdrawalRepository } from './infrastructure/repositories/withdrawal.repository';
@@ -26,12 +29,18 @@ import { IPaymentRepository } from './domain/repositories/payment.repository.int
 import { IWithdrawalRepository } from './domain/repositories/withdrawal.repository.interface';
 import { ISpecialistBalanceRepository } from './domain/repositories/specialist-balance.repository.interface';
 
+// RabbitMQ
+import { PaymentEventPublisher } from './infrastructure/rabbitmq/payment-event.publisher';
+import { DeliveryEventConsumer } from './infrastructure/rabbitmq/delivery-event.consumer';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Payment, Withdrawal, SpecialistBalance]),
   ],
   controllers: [PaymentHiringController, WithdrawalController],
   providers: [
+    // Services
+    PaymentService,
     // Repositories
     {
       provide: 'IPaymentRepository',
@@ -52,8 +61,12 @@ import { ISpecialistBalanceRepository } from './domain/repositories/specialist-b
     ApproveWithdrawalUseCase,
     ProcessWithdrawalUseCase,
     GetSpecialistBalanceUseCase,
+    // RabbitMQ
+    PaymentEventPublisher,
+    DeliveryEventConsumer,
   ],
   exports: [
+    PaymentService,
     'IPaymentRepository',
     'IWithdrawalRepository',
     'ISpecialistBalanceRepository',
@@ -63,6 +76,7 @@ import { ISpecialistBalanceRepository } from './domain/repositories/specialist-b
     ApproveWithdrawalUseCase,
     ProcessWithdrawalUseCase,
     GetSpecialistBalanceUseCase,
+    PaymentEventPublisher,
   ],
 })
 export class PaymentModule {}

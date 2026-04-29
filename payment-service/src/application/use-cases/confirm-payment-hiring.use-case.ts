@@ -3,6 +3,7 @@ import { IPaymentRepository } from '../../domain/repositories/payment.repository
 import { ISpecialistBalanceRepository } from '../../domain/repositories/specialist-balance.repository.interface';
 import { PaymentStatus } from '../../domain/enums/payment-status.enum';
 import { SpecialistBalance } from '../../domain/entities/specialist-balance.entity';
+import { PaymentEventPublisher } from '../../infrastructure/rabbitmq/payment-event.publisher';
 
 @Injectable()
 export class ConfirmPaymentHiringUseCase {
@@ -11,6 +12,7 @@ export class ConfirmPaymentHiringUseCase {
     private readonly paymentRepository: IPaymentRepository,
     @Inject('ISpecialistBalanceRepository')
     private readonly balanceRepository: ISpecialistBalanceRepository,
+    private readonly eventPublisher: PaymentEventPublisher,
   ) {}
 
   async execute(paymentId: string): Promise<any> {
@@ -34,6 +36,15 @@ export class ConfirmPaymentHiringUseCase {
     if (!updatedPayment) {
       throw new BadRequestException('Failed to update payment');
     }
+
+    // Publicar evento de pagamento confirmado
+    await this.eventPublisher.publishPaymentConfirmed(
+      paymentId,
+      payment.specialistId,
+      payment.amount,
+      payment.companyId,
+      payment.projectId,
+    );
 
     // Incrementar saldo do especialista
     let balance = await this.balanceRepository.findBySpecialistId(

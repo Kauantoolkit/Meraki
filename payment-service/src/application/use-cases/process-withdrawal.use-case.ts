@@ -3,6 +3,7 @@ import { WithdrawalResponseDto } from '../dto/withdrawal-response.dto';
 import { IWithdrawalRepository } from '../../domain/repositories/withdrawal.repository.interface';
 import { ISpecialistBalanceRepository } from '../../domain/repositories/specialist-balance.repository.interface';
 import { WithdrawalStatus } from '../../domain/enums/withdrawal-status.enum';
+import { PaymentEventPublisher } from '../../infrastructure/rabbitmq/payment-event.publisher';
 
 @Injectable()
 export class ProcessWithdrawalUseCase {
@@ -11,6 +12,7 @@ export class ProcessWithdrawalUseCase {
     private readonly withdrawalRepository: IWithdrawalRepository,
     @Inject('ISpecialistBalanceRepository')
     private readonly balanceRepository: ISpecialistBalanceRepository,
+    private readonly eventPublisher: PaymentEventPublisher,
   ) {}
 
   async execute(withdrawalId: string): Promise<WithdrawalResponseDto> {
@@ -31,37 +33,41 @@ export class ProcessWithdrawalUseCase {
       await this.processPayment(withdrawal);
 
       // Atualizar status para PROCESSING
-      const processingWithdrawal = await this.withdrawalRepository.update(
-        withdrawalId,
-        {
-          status: WithdrawalStatus.PROCESSING,
-        },
+      await this.withdrawalRepository.update(withdrawalId, {
+        status: WithdrawalStatus.PROCESSING,
+      });
+
+      // Buscar saldo do especialista
+      const balance = await this.balanceRepository.findBySpecialistId(
+        withdrawal.specialistId,
       );
 
-      // Simular processamento bem-sucedido
-      setTimeout(async () => {
-        const balance = await this.balanceRepository.findBySpecialistId(
-          withdrawal.specialistId,
-        );
-
-        if (balance) {
-          await this.balanceRepository.update(withdrawal.specialistId, {
-            availableBalance:
-              parseFloat(balance.availableBalance.toString()) -
-              parseFloat(withdrawal.amount.toString()),
-            totalWithdrawn:
-              parseFloat(balance.totalWithdrawn.toString()) +
-              parseFloat(withdrawal.amount.toString()),
-          });
-        }
-
-        await this.withdrawalRepository.update(withdrawalId, {
-          status: WithdrawalStatus.COMPLETED,
-          processedAt: new Date(),
+      if (balance) {
+        // Decrementar saldo disponível e incrementar total sacado
+        await this.balanceRepository.update(withdrawal.specialistId, {
+          availableBalance:
+            parseFloat(balance.availableBalance.toString()) -
+            parseFloat(withdrawal.amount.toString()),
+          totalWithdrawn:
+            parseFloat(balance.totalWithdrawn.toString()) +
+            parseFloat(withdrawal.amount.toString()),
         });
-      }, 2000);
+      }
 
-      return this.mapToDto(processingWithdrawal);
+      // Atualizar para COMPLETED após processamento
+      const completedWithdrawal = await this.withdrawalRepository.update(withdrawalId, {
+        status: WithdrawalStatus.COMPLETED,
+        processedAt: new Date(),
+      });
+
+      // Publicar evento de saque completado
+      await this.eventPublisher.publishWithdrawalCompleted(
+        withdrawalId,
+        withdrawal.specialistId,
+        parseFloat(withdrawal.amount.toString()),
+      );
+
+      return this.mapToDto(completedWithdrawal);
     } catch (err: any) {
       // Marcar como FAILED se houver erro
       await this.withdrawalRepository.update(withdrawalId, {

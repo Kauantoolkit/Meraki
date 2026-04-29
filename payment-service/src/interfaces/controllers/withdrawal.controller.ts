@@ -7,7 +7,7 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  BadRequestException,
+  NotFoundException,
   Inject,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
@@ -77,7 +77,7 @@ export class WithdrawalController {
   async getWithdrawal(@Param('id') withdrawalId: string): Promise<any> {
     const withdrawal = await this.withdrawalRepository.findById(withdrawalId);
     if (!withdrawal) {
-      throw new BadRequestException('Withdrawal not found');
+      throw new NotFoundException('Withdrawal not found');
     }
     return withdrawal;
   }

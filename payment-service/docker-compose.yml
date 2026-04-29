@@ -35,29 +35,29 @@ services:
       timeout: 5s
       retries: 5
 
-  # Payment Service (será executado localmente com npm start:dev)
-  # Descomente quando estiver pronto para dockerizar
-
-  # payment-service:
-  #   build:
-  #     context: ./payment-service
-  #     dockerfile: Dockerfile
-  #   container_name: meraki-payment-service
-  #   ports:
-  #     - "3002:3002"
-  #   environment:
-  #     DB_HOST: payment-db
-  #     DB_PORT: 5432
-  #     DB_USERNAME: postgres
-  #     DB_PASSWORD: postgres
-  #     DB_NAME: meraki_payment
-  #     RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
-  #     NODE_ENV: production
-  #   depends_on:
-  #     payment-db:
-  #       condition: service_healthy
-  #     rabbitmq:
-  #       condition: service_healthy
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meraki-payment-service
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env.docker
+    environment:
+      DB_HOST: payment-db
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: meraki_payment
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      NODE_ENV: production
+    depends_on:
+      payment-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   payment_db_data:
