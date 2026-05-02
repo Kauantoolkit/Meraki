@@ -5,6 +5,10 @@
 !**/.env.example
 !**/.env.*.example
 
+# ─── Raiz (não deve ter package.json/node_modules soltos) ─────────────────────
+/package.json
+/package-lock.json
+
 # ─── Node.js ──────────────────────────────────────────────────────────────────
 **/node_modules/
 **/dist/
