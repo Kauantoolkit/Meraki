@@ -19,6 +19,6 @@ export class SendBidMessageUseCase {
       throw new ForbiddenException('Não é possível enviar mensagens em propostas encerradas');
     }
 
-    await this.messageRepo.save({ bidId, senderId, message: dto.message });
+    await this.messageRepo.save({ bidId, senderId, content: dto.message });
   }
 }

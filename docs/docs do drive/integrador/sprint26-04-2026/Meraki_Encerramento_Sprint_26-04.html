@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Meraki — Encerramento de Sprint · 14/04–26/04/2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0f14;
+      --surface: #13161e;
+      --surface2: #1a1e28;
+      --border: #252a38;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --accent: #6366f1;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --gray: #475569;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-size: 14px;
+      line-height: 1.6;
+      padding: 40px 24px;
+    }
+
+    .page { max-width: 900px; margin: 0 auto; }
+
+    /* Header */
+    .header { margin-bottom: 36px; }
+    .header-top { display: flex; align-items: baseline; gap: 14px; margin-bottom: 6px; }
+    .header h1 { font-family: Consolas, 'Courier New', monospace; font-size: 20px; font-weight: 700; }
+    .header .tag { font-family: Consolas, 'Courier New', monospace; font-size: 11px; color: var(--accent); border: 1px solid var(--accent); padding: 2px 8px; border-radius: 4px; }
+    .header .meta { color: var(--muted); font-size: 13px; }
+    .header .team { margin-top: 4px; color: var(--muted); font-size: 13px; }
+    .header .team span { color: var(--text); font-weight: 500; }
+
+    /* Section */
+    .section { margin-bottom: 36px; }
+    .section-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--muted);
+      margin-bottom: 14px; padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Info grid */
+    .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .info-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; }
+    .info-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+    .info-value { font-family: Consolas, 'Courier New', monospace; font-size: 15px; font-weight: 600; }
+
+    /* Task table */
+    .task-table { width: 100%; border-collapse: collapse; }
+    .task-table th {
+      text-align: left; font-size: 11px; font-weight: 600;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      color: var(--muted); padding: 0 14px 10px;
+    }
+    .task-table td {
+      padding: 12px 14px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      vertical-align: top;
+    }
+    .task-table tr:first-child td { border-top: none; }
+    .task-table tbody tr { background: var(--surface); }
+    .task-table tbody tr:hover { background: var(--surface2); }
+
+    .task-id { font-family: Consolas, 'Courier New', monospace; font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; }
+    .task-name { font-weight: 500; }
+    .task-desc { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .person-resp { background: rgba(99,102,241,0.15); color: var(--accent); padding: 1px 7px; border-radius: 3px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+    .person-apoio { background: var(--surface2); color: var(--muted); padding: 1px 7px; border-radius: 3px; font-size: 11px; white-space: nowrap; }
+    .people { display: flex; gap: 5px; flex-wrap: wrap; }
+
+    .badge { padding: 3px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; white-space: nowrap; display: inline-block; }
+    .badge-green  { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .badge-yellow { background: rgba(245,158,11,0.12); color: var(--yellow); }
+    .badge-gray   { background: rgba(71,85,105,0.15);  color: var(--gray); }
+
+    /* Extra deliverables */
+    .extra-table { width: 100%; border-collapse: collapse; }
+    .extra-table td { padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13px; }
+    .extra-table tr:first-child td { border-top: none; }
+    .extra-table tbody tr { background: var(--surface); }
+
+    /* Obs */
+    .obs { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 18px; font-size: 13px; color: var(--muted); line-height: 1.7; }
+    .obs strong { color: var(--text); }
+
+    footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 12px; display: flex; justify-content: space-between; }
+    footer span { font-family: Consolas, 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <h1>MERAKI — Encerramento de Sprint</h1>
+      <span class="tag">26/04/2026</span>
+    </div>
+    <div class="meta">Período: 14/04/2026 – 26/04/2026</div>
+    <div class="team">Equipe: <span>Kauan</span> · <span>Kaio</span> · <span>Joás</span> · <span>Tales</span></div>
+  </div>
+
+  <!-- Visão geral -->
+  <div class="section">
+    <div class="section-title">Visão Geral da Sprint</div>
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-label">Início</div>
+        <div class="info-value">14/04/2026</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Encerramento</div>
+        <div class="info-value">26/04/2026</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Tasks no backlog</div>
+        <div class="info-value">2</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Entregues</div>
+        <div class="info-value" style="color:var(--green)">1</div>
+      </div>
+      <div class="info-card">
+        <div class="info-label">Em Andamento</div>
+        <div class="info-value" style="color:var(--yellow)">1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tasks da sprint -->
+  <div class="section">
+    <div class="section-title">Tasks com Prazo na Sprint</div>
+    <table class="task-table">
+      <thead>
+        <tr>
+          <th style="width:60px">#</th>
+          <th>Task</th>
+          <th>Responsável</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="task-id">T8a</td>
+          <td>
+            <div class="task-name">feat(project-service): implementar histórico automático (RN07) e Swagger</div>
+            <div class="task-desc">Registro automático de histórico de projeto via eventos (RN07); documentação Swagger/OpenAPI gerada (RNF07).</div>
+          </td>
+          <td>
+            <div class="people">
+              <span class="person-resp">Tales</span>
+              <span class="person-apoio">Kauan</span>
+            </div>
+          </td>
+          <td><span class="badge badge-green">Entregue</span></td>
+        </tr>
+        <tr>
+          <td class="task-id">T7a</td>
+          <td>
+            <div class="task-name">identity-service — Autenticação e gestão de perfis</div>
+            <div class="task-desc">Cadastro e autenticação JWT; CRUD de perfis empresa/especialista; autorização por roles; proteções de segurança.</div>
+          </td>
+          <td>
+            <div class="people">
+              <span class="person-resp">Joás</span>
+              <span class="person-apoio">Kaio</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">Em Andamento</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Entregas adicionais -->
+  <div class="section">
+    <div class="section-title">Entregas Adicionais — Kauan</div>
+    <table class="extra-table">
+      <tbody>
+        <tr>
+          <td style="width:60px"><span class="badge badge-green">Entregue</span></td>
+          <td>
+            <div style="font-weight:500;font-size:13px;">Plano de Ação v6</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Revisão completa do plano de ação com redistribuição de tasks, atualização de status com base na branch de exploração e novo formato HTML.</div>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">Entregue</span></td>
+          <td>
+            <div style="font-weight:500;font-size:13px;">Documento de Encerramento da Sprint</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px;">Este documento — consolidação do status da sprint e registro formal do encerramento do período.</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Observações -->
+  <div class="section">
+    <div class="section-title">Observações</div>
+    <div class="obs">
+      <strong>T7a (identity-service)</strong> segue em andamento e será prioridade no início da próxima sprint. A task não foi entregue dentro do prazo previsto.<br><br>
+      O <strong>Plano de Ação v6</strong> foi elaborado por <strong>Kauan</strong> e reflete a realidade atual do projeto, incorporando o trabalho realizado na branch de exploração — cuja implementação não é contabilizada em horas no plano formal — e redistribuindo as tasks restantes de forma mais equilibrada entre os membros da equipe.
+    </div>
+  </div>
+
+  <footer>
+    <span>MERAKI — Encerramento de Sprint · 26/04/2026</span>
+    <span>Elaborado por Kauan</span>
+  </footer>
+
+</div>
+</body>
+</html>

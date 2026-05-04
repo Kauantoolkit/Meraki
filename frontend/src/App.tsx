@@ -27,7 +27,8 @@ import AvaliarPropostas from './pages/AvaliarPropostas'
 function DashboardRoute() {
   const { user } = useAuth()
   if (!user) return <Navigate to="/login" replace />
-  return (user.userType ?? user.type) === 'company'
+  const role = (user.userType ?? user.type).toLowerCase()
+  return role === 'company'
     ? <DashboardEmpresa />
     : <DashboardEspecialista />
 }
