@@ -45,8 +45,7 @@ mobile/**/*.g.dart
 *.iml
 *.ipr
 *.iws
-.vscode/settings.json
-.vscode/launch.json
+.vscode/
 
 # ─── Sistemas operacionais ────────────────────────────────────────────────────
 .DS_Store
