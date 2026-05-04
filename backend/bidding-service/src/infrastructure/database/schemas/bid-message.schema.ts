@@ -9,16 +9,8 @@ export const BidMessageSchema = new EntitySchema<BidMessage>({
     id: { type: 'uuid', primary: true, generated: 'uuid' },
     bidId: { type: String },
     senderId: { type: String },
-    message: { type: 'text' },
+    content: { type: 'text' },
+    isRead: { type: Boolean, default: false },
     createdAt: { type: Date, createDate: true },
-  },
-  relations: {
-    bid: {
-      type: 'many-to-one',
-      target: 'Bid',
-      inverseSide: 'messages',
-      joinColumn: { name: 'bidId' },
-      onDelete: 'CASCADE',
-    },
   },
 });

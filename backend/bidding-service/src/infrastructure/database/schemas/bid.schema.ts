@@ -17,12 +17,4 @@ export const BidSchema = new EntitySchema<Bid>({
     createdAt: { type: Date, createDate: true },
     updatedAt: { type: Date, updateDate: true },
   },
-  relations: {
-    messages: {
-      type: 'one-to-many',
-      target: 'BidMessage',
-      inverseSide: 'bid',
-      cascade: true,
-    },
-  },
 });

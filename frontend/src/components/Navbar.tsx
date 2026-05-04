@@ -18,7 +18,7 @@ export default function Navbar({ backUrl, projectTitle }: NavbarProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const isCompany = (user?.userType ?? user?.type) === 'company'
+  const isCompany = (user?.userType ?? user?.type)?.toLowerCase() === 'company'
 
   const navLinks = [
     { label: isCompany ? 'EMPRESA' : 'ESPECIALISTA', path: '/dashboard', roles: ['both'] },

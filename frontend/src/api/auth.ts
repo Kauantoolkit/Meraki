@@ -39,8 +39,10 @@ export const authApi = {
     return { token: res.data.accessToken, user: normalizeUser(res.data.user) }
   },
   register: async (data: RegisterPayload) => {
-    const res = await api.post<AuthResponse>('/auth/register', data)
-    return { token: res.data.accessToken, user: normalizeUser(res.data.user) }
+    await api.post('/auth/register', data)
+    // Backend register does not return a token — login after registration
+    const loginRes = await api.post<AuthResponse>('/auth/login', { email: data.email, password: data.password })
+    return { token: loginRes.data.accessToken, user: normalizeUser(loginRes.data.user) }
   },
   me: () => api.get<UserProfile>('/auth/me'),
 }

@@ -19,7 +19,7 @@ export default function Signup() {
     setLoading(true)
     setError('')
     try {
-      const { token, user } = await authApi.register({ name, email, password, userType: type === 'company' ? 'COMPANY' : 'SPECIALIST' })
+      const { token, user } = await authApi.register({ name, email, password, userType: type === 'company' ? 'COMPANY' : 'SPECIALIST', companyName: type === 'company' ? name : undefined })
       login(token, user)
       navigate('/dashboard')
     } catch {

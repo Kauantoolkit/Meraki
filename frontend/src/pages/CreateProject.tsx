@@ -70,7 +70,7 @@ export default function CreateProject() {
         description,
         budget: Number(budget),
         deadline,
-        skills,
+        requirements: skills,
         milestones: milestones
           .filter(m => m.title)
           .map(m => ({ title: m.title, description: m.description, amount: Number(m.amount) })),

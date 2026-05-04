@@ -27,8 +27,8 @@ export interface CreateProjectPayload {
   description: string
   budget: number
   deadline: string
-  skills: string[]
-  milestones: { title: string; description: string; amount: number }[]
+  requirements: string[]
+  milestones?: { title: string; description: string; amount: number }[]
 }
 
 export interface ProjectsPage { data: Project[]; total: number }
