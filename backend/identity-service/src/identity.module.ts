@@ -27,6 +27,9 @@ import { UpdateUserProfileUseCase } from './application/use-cases/update-user-pr
 import { AuthController } from './interfaces/controllers/auth.controller';
 import { UserController } from './interfaces/controllers/user.controller';
 
+// Guards
+import { RolesGuard } from './interfaces/guards/roles.guard';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([UserSchema, SpecialistProfileSchema, CompanyProfileSchema]),
@@ -51,6 +54,7 @@ import { UserController } from './interfaces/controllers/user.controller';
 
     // Auth
     JwtStrategy,
+    RolesGuard,
 
     // Events
     EventPublisherService,
