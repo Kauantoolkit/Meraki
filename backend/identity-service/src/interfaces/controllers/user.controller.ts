@@ -15,10 +15,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagg
 import { GetUserProfileUseCase } from '../../application/use-cases/get-user-profile.use-case';
 import { UpdateUserProfileUseCase } from '../../application/use-cases/update-user-profile.use-case';
 import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
-import {
-  UpdateSpecialistProfileDto,
-  UpdateCompanyProfileDto,
-} from '../../application/dto/update-profile.dto';
+import { UpdateProfileDto } from '../../application/dto/update-profile.dto';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { RolesGuard } from '../guards/roles.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
@@ -88,7 +85,7 @@ export class UserController {
   @ApiResponse({ status: 401, description: 'JWT ausente ou inválido' })
   async updateProfile(
     @CurrentUser('id') userId: string,
-    @Body() dto: UpdateSpecialistProfileDto | UpdateCompanyProfileDto,
+    @Body() dto: UpdateProfileDto,
   ) {
     return this.updateUserProfileUseCase.execute(userId, dto);
   }

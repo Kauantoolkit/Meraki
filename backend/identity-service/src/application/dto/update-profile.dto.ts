@@ -101,3 +101,80 @@ export class UpdateCompanyProfileDto {
   @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
   website?: string;
 }
+
+/**
+ * DTO unificado para `PUT /api/users/me/profile`.
+ *
+ * NestJS não consegue aplicar `ValidationPipe` em parâmetros tipados como união
+ * (`A | B`) — sem metadata em runtime, a validação é silenciosamente pulada.
+ * Consolidamos os campos das duas variantes neste DTO; o use-case persiste
+ * apenas os campos correspondentes ao `userType` do usuário autenticado.
+ */
+export class UpdateProfileDto {
+  // Specialist
+  @ApiPropertyOptional({ example: 'Desenvolvedor Flutter com 5 anos de experiência', maxLength: 2000 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2000)
+  bio?: string;
+
+  @ApiPropertyOptional({ example: ['Flutter', 'Dart', 'Firebase'], type: [String], maxItems: 20 })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @IsString({ each: true })
+  @MaxLength(50, { each: true })
+  skills?: string[];
+
+  @ApiPropertyOptional({ example: 5, description: 'Anos de experiência (0–80)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(80)
+  experience?: number;
+
+  @ApiPropertyOptional({ example: 150.0, description: 'Valor por hora (R$, máx 100000)' })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(100000)
+  hourlyRate?: number;
+
+  // Company
+  @ApiPropertyOptional({ example: 'Tech Corp Ltda', maxLength: 255 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  companyName?: string;
+
+  @ApiPropertyOptional({
+    example: '12345678000190',
+    description: 'CNPJ apenas dígitos (14 caracteres)',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{14}$/, { message: 'cnpj deve ter exatamente 14 dígitos' })
+  cnpj?: string;
+
+  @ApiPropertyOptional({ example: 'Tecnologia', enum: COMPANY_INDUSTRIES })
+  @IsOptional()
+  @IsString()
+  @IsIn(COMPANY_INDUSTRIES as unknown as string[], {
+    message: `industry deve ser um de: ${COMPANY_INDUSTRIES.join(', ')}`,
+  })
+  industry?: CompanyIndustry;
+
+  @ApiPropertyOptional({ example: '10-50', maxLength: 20 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  companySize?: string;
+
+  // Compartilhado
+  @ApiPropertyOptional({ example: 'https://techcorp.com.br', maxLength: 2048 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  website?: string;
+}
