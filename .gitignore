@@ -68,3 +68,13 @@ docs/**/*.png
 
 # ─── Claude Code ──────────────────────────────────────────────────────────────
 .claude/settings.local.json
+.claude/
+CLAUDE.md
+**/CLAUDE.md
+
+# ─── GSD (Get Shit Done) — artefatos locais de planejamento por IA ────────────
+.planning/
+.gsd/
+gsd.config.*
+AGENTS.md
+**/AGENTS.md
