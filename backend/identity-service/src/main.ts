@@ -13,7 +13,15 @@ function requireEnv(keys: string[]): void {
 }
 
 async function bootstrap() {
-  requireEnv(['JWT_SECRET', 'RABBITMQ_URL', 'DB_USER', 'DB_PASS', 'DB_NAME']);
+  requireEnv([
+    'JWT_SECRET',
+    'JWT_ACCESS_EXPIRES_IN',
+    'JWT_REFRESH_EXPIRES_IN',
+    'RABBITMQ_URL',
+    'DB_USER',
+    'DB_PASS',
+    'DB_NAME',
+  ]);
 
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);

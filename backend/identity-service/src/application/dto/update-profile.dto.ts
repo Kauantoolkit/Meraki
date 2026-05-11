@@ -8,8 +8,24 @@ import {
   MaxLength,
   ArrayMaxSize,
   IsUrl,
+  Matches,
+  IsIn,
 } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
+export const COMPANY_INDUSTRIES = [
+  'Tecnologia',
+  'Saúde',
+  'Educação',
+  'Finanças',
+  'Varejo',
+  'Indústria',
+  'Construção',
+  'Agronegócio',
+  'Serviços',
+  'Outros',
+] as const;
+export type CompanyIndustry = (typeof COMPANY_INDUSTRIES)[number];
 
 export class UpdateSpecialistProfileDto {
   @ApiPropertyOptional({ example: 'Desenvolvedor Flutter com 5 anos de experiência', maxLength: 2000 })
@@ -55,11 +71,22 @@ export class UpdateCompanyProfileDto {
   @MaxLength(255)
   companyName?: string;
 
-  @ApiPropertyOptional({ example: 'Tecnologia', maxLength: 100 })
+  @ApiPropertyOptional({
+    example: '12345678000190',
+    description: 'CNPJ apenas dígitos (14 caracteres)',
+  })
   @IsOptional()
   @IsString()
-  @MaxLength(100)
-  industry?: string;
+  @Matches(/^\d{14}$/, { message: 'cnpj deve ter exatamente 14 dígitos' })
+  cnpj?: string;
+
+  @ApiPropertyOptional({ example: 'Tecnologia', enum: COMPANY_INDUSTRIES })
+  @IsOptional()
+  @IsString()
+  @IsIn(COMPANY_INDUSTRIES as unknown as string[], {
+    message: `industry deve ser um de: ${COMPANY_INDUSTRIES.join(', ')}`,
+  })
+  industry?: CompanyIndustry;
 
   @ApiPropertyOptional({ example: '10-50', maxLength: 20 })
   @IsOptional()

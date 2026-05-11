@@ -129,7 +129,8 @@ services:
       DB_USER: ${DB_USER:?DB_USER não definido}
       DB_PASS: ${DB_PASS:?DB_PASS não definido}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET não definido}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:?RABBITMQ_USER não definido}:${RABBITMQ_PASS:?RABBITMQ_PASS não definido}@rabbitmq:5672
     depends_on:
       identity-db:

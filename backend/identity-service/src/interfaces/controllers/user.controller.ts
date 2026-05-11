@@ -2,15 +2,19 @@ import {
   Controller,
   Get,
   Put,
+  Delete,
   Body,
   Param,
   UseGuards,
   ParseUUIDPipe,
   ForbiddenException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { GetUserProfileUseCase } from '../../application/use-cases/get-user-profile.use-case';
 import { UpdateUserProfileUseCase } from '../../application/use-cases/update-user-profile.use-case';
+import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
 import {
   UpdateSpecialistProfileDto,
   UpdateCompanyProfileDto,
@@ -36,6 +40,7 @@ export class UserController {
   constructor(
     private readonly getUserProfileUseCase: GetUserProfileUseCase,
     private readonly updateUserProfileUseCase: UpdateUserProfileUseCase,
+    private readonly deleteUserUseCase: DeleteUserUseCase,
   ) {}
 
   @Get('me')
@@ -86,5 +91,20 @@ export class UserController {
     @Body() dto: UpdateSpecialistProfileDto | UpdateCompanyProfileDto,
   ) {
     return this.updateUserProfileUseCase.execute(userId, dto);
+  }
+
+  @Delete('me')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({
+    summary: 'Soft-delete da própria conta',
+    description:
+      'Escopo: qualquer usuário autenticado. Marca deletedAt, revoga todos os ' +
+      'refresh-tokens ativos e bloqueia re-login com as mesmas credenciais.',
+  })
+  @ApiResponse({ status: 204, description: 'Conta marcada como excluída' })
+  @ApiResponse({ status: 401, description: 'JWT ausente ou inválido' })
+  @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
+  async deleteMe(@CurrentUser('id') userId: string) {
+    await this.deleteUserUseCase.execute(userId);
   }
 }

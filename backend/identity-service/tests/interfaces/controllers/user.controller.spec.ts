@@ -6,13 +6,16 @@ describe('UserController.getById (ownership-or-admin)', () => {
   let controller: UserController;
   const getUserProfileUseCase = { execute: jest.fn(async (id: string) => ({ id })) };
   const updateUserProfileUseCase = { execute: jest.fn() };
+  const deleteUserUseCase = { execute: jest.fn() };
 
   beforeEach(() => {
     controller = new UserController(
       getUserProfileUseCase as never,
       updateUserProfileUseCase as never,
+      deleteUserUseCase as never,
     );
     getUserProfileUseCase.execute.mockClear();
+    deleteUserUseCase.execute.mockClear();
   });
 
   it('permite ADMIN acessar qualquer id', async () => {

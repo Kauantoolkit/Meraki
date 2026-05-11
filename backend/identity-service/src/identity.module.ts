@@ -2,14 +2,16 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 // Schemas
 import { UserSchema } from './infrastructure/database/schemas/user.schema';
 import { SpecialistProfileSchema } from './infrastructure/database/schemas/specialist-profile.schema';
 import { CompanyProfileSchema } from './infrastructure/database/schemas/company-profile.schema';
+import { RefreshTokenSchema } from './infrastructure/database/schemas/refresh-token.schema';
 
 // Infrastructure
-import { UserRepository } from './infrastructure/repositories/user.repository';
+import { UserRepository, RefreshTokenRepository } from './infrastructure/repositories/user.repository';
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 import { RabbitMQModule } from './infrastructure/rabbitmq/rabbitmq.module';
 import { EventPublisherService } from './infrastructure/rabbitmq/event-publisher.service';
@@ -17,11 +19,17 @@ import { EventPublisherService } from './infrastructure/rabbitmq/event-publisher
 // Domain Factories
 import { UserFactory } from './domain/factories/user.factory';
 
+// Application Services
+import { TokenService } from './application/services/token.service';
+
 // Use Cases
 import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
 import { AuthenticateUseCase } from './application/use-cases/authenticate.use-case';
 import { GetUserProfileUseCase } from './application/use-cases/get-user-profile.use-case';
 import { UpdateUserProfileUseCase } from './application/use-cases/update-user-profile.use-case';
+import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-case';
+import { LogoutUseCase } from './application/use-cases/logout.use-case';
+import { DeleteUserUseCase } from './application/use-cases/delete-user.use-case';
 
 // Controllers
 import { AuthController } from './interfaces/controllers/auth.controller';
@@ -32,29 +40,38 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserSchema, SpecialistProfileSchema, CompanyProfileSchema]),
+    TypeOrmModule.forFeature([
+      UserSchema,
+      SpecialistProfileSchema,
+      CompanyProfileSchema,
+      RefreshTokenSchema,
+    ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: {
-       expiresIn: (process.env.JWT_EXPIRES_IN ?? '7d') as any,
-      },
+      // Cada chamada de jwtService.sign() passa expiresIn explicitamente via TokenService.
     }),
+    ThrottlerModule.forRoot([
+      // Limite padrão p/ qualquer endpoint sob ThrottlerGuard: 100 req/min/IP
+      { ttl: 60_000, limit: 100 },
+    ]),
     RabbitMQModule,
   ],
   controllers: [AuthController, UserController],
   providers: [
-    // Repository implementation + token de injeção
+    // Repository implementations + tokens de injeção
     UserRepository,
-    {
-      provide: 'IUserRepository',
-      useClass: UserRepository,
-    },
+    RefreshTokenRepository,
+    { provide: 'IUserRepository', useClass: UserRepository },
+    { provide: 'IRefreshTokenRepository', useClass: RefreshTokenRepository },
 
     // Auth
     JwtStrategy,
     RolesGuard,
+
+    // Application services
+    TokenService,
 
     // Events
     EventPublisherService,
@@ -67,6 +84,9 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
     AuthenticateUseCase,
     GetUserProfileUseCase,
     UpdateUserProfileUseCase,
+    RefreshTokenUseCase,
+    LogoutUseCase,
+    DeleteUserUseCase,
   ],
 })
 export class IdentityModule {}
