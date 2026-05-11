@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Body, Param, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { GetUserProfileUseCase } from '../../application/use-cases/get-user-profile.use-case';
 import { UpdateUserProfileUseCase } from '../../application/use-cases/update-user-profile.use-case';
@@ -30,7 +30,7 @@ export class UserController {
   @ApiOperation({ summary: 'Buscar usuário por ID (uso interno entre serviços)' })
   @ApiResponse({ status: 200, description: 'Dados do usuário' })
   @ApiResponse({ status: 404, description: 'Usuário não encontrado' })
-  async getById(@Param('id') id: string) {
+  async getById(@Param('id', ParseUUIDPipe) id: string) {
     return this.getUserProfileUseCase.execute(id);
   }
 

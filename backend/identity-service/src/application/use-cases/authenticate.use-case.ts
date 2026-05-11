@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { LoginDto } from '../dto/login.dto';
 import { AuthResponseDto } from '../dto/user-response.dto';
+import { Password } from '../../domain/value-objects/password.value-object';
 
 @Injectable()
 export class AuthenticateUseCase {
@@ -22,7 +22,7 @@ export class AuthenticateUseCase {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const isPasswordValid = await Password.matches(dto.password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
