@@ -21,6 +21,13 @@ export class MilestonesController {
     return req.headers.authorization?.split(' ')[1];
   }
 
+  @Put(':id/start')
+  @Roles('SPECIALIST')
+  @ApiOperation({ summary: 'Iniciar milestone (especialista) — valida RN04' })
+  startMilestone(@Param('id') id: string, @Req() req: Request) {
+    return this.milestonesService.startMilestone(id, this.token(req));
+  }
+
   @Post(':id/submit')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Submeter entrega de milestone (especialista)' })

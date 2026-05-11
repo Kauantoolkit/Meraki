@@ -1,0 +1,632 @@
+{
+  "_meta": {
+    "owner": "Kauan",
+    "tasks": ["T8b (apoio)", "T10b", "T12b"],
+    "drs": "meraki_drs 1.0",
+    "strategy": "Cada página → estados possíveis → cada estado → interações → cada interação → resultado + próximos caminhos. [CICLO] = já visitado."
+  },
+
+  "/bidding/:projectId": {
+    "name": "Submeter Proposta",
+    "drs": ["RF05", "RN02"],
+    "role": "specialist",
+    "states": {
+      "S1-loading": {
+        "condition": "loading === true",
+        "renders": "Carregando projeto...",
+        "status": "[ ]",
+        "paths": {
+          "P1-load-success": {
+            "condition": "getById + myBids resolve OK, sem bid existente",
+            "destino": "S2-form-visible",
+            "status": "[ ]"
+          },
+          "P2-load-with-existing-bid": {
+            "condition": "myBids retorna bid ativa no mesmo projeto (RN02)",
+            "destino": "S3-overlay-bid-existente",
+            "status": "[ ]"
+          },
+          "P3-load-api-error": {
+            "condition": "getById ou myBids rejeita (500/404)",
+            "destino": "S4-project-null",
+            "status": "[ ]"
+          }
+        }
+      },
+
+      "S2-form-visible": {
+        "condition": "project loaded, existingBid === null, submitted === null",
+        "renders": "Brief do projeto + formulário de proposta",
+        "drs_check": ["RF05"],
+        "paths": {
+          "P4-fill-amount": {
+            "action": "Digitar valor no input proposedBudget (type=number, required, min=1)",
+            "destino": "S2-form-visible",
+            "status": "[ ]"
+          },
+          "P5-fill-duration": {
+            "action": "Digitar dias no input estimatedDays (type=number, required, min=1)",
+            "destino": "S2-form-visible",
+            "status": "[ ]"
+          },
+          "P6-fill-coverletter": {
+            "action": "Digitar texto no textarea (required)",
+            "destino": "S2-form-visible",
+            "status": "[ ]"
+          },
+          "P7-click-template": {
+            "action": "Click [Inserir Template]",
+            "result": "textarea preenchido com TEMPLATE(project.title, 'Especialista')",
+            "destino": "S2-form-visible",
+            "status": "[✓]"
+          },
+          "P8-submit-all-valid": {
+            "action": "Click EXECUTE_SUBMIT() com todos campos preenchidos",
+            "condition": "bidsApi.submit() retorna 201",
+            "destino": "S5-overlay-sucesso",
+            "drs_check": ["RF05"],
+            "status": "[✓]"
+          },
+          "P9-submit-api-error": {
+            "action": "Click EXECUTE_SUBMIT() mas API retorna 400/500",
+            "condition": "bidsApi.submit() rejeita",
+            "result": "alert('Erro ao submeter proposta...')",
+            "destino": "S2-form-visible",
+            "drs_check": ["RN02"],
+            "status": "[✓]"
+          },
+          "P10-submit-html5-validation": {
+            "action": "Click EXECUTE_SUBMIT() com campo vazio",
+            "condition": "HTML5 required impede submit",
+            "result": "Browser mostra tooltip de validação, form NÃO é submetido",
+            "destino": "S2-form-visible",
+            "status": "[✓]"
+          },
+          "P11-navbar-back": {
+            "action": "Click botão voltar na navbar",
+            "destino": "/dashboard [CICLO]",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S3-overlay-bid-existente": {
+        "condition": "existingBid !== null && submitted === null",
+        "renders": "Overlay 'PROPOSTA JÁ SUBMETIDA' + dados da bid + mensagem RN02",
+        "drs_check": ["RN02"],
+        "paths": {
+          "P12-retornar-workspace": {
+            "action": "Click '< Retornar ao Workspace'",
+            "destino": "/dashboard [CICLO]",
+            "status": "[✓]"
+          },
+          "P13-existing-bid-status-pending": {
+            "condition": "existingBid.status === 'PENDING'",
+            "renders": "Status em azul",
+            "status": "[ ]"
+          },
+          "P14-existing-bid-status-accepted": {
+            "condition": "existingBid.status === 'ACCEPTED'",
+            "renders": "Status em verde (text-brand-500)",
+            "status": "[✓]"
+          },
+          "P15-existing-bid-status-rejected": {
+            "condition": "existingBid.status === 'REJECTED'",
+            "renders": "Status em vermelho (text-red-400)",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S4-project-null": {
+        "condition": "project === null após loading",
+        "renders": "Página vazia (project?.title = undefined, budget = NaN)",
+        "note": "GAP: não há tratamento de erro explícito para projeto não encontrado",
+        "status": "[ ]"
+      },
+
+      "S5-overlay-sucesso": {
+        "condition": "submitted !== null",
+        "renders": "Overlay 'PROPOSTA SUBMETIDA' + detalhes da bid + 201 CREATED",
+        "drs_check": ["RF05"],
+        "paths": {
+          "P16-retornar-workspace-sucesso": {
+            "action": "Click '< Retornar ao Workspace'",
+            "destino": "/dashboard [CICLO]",
+            "status": "[✓]"
+          }
+        }
+      }
+    }
+  },
+
+  "/financial": {
+    "name": "Financeiro (Empresa)",
+    "drs": ["RF10", "RN05", "RN06"],
+    "role": "company",
+    "states": {
+      "S1-loading": {
+        "condition": "loading === true",
+        "renders": "Carregando...",
+        "status": "[ ]",
+        "paths": {
+          "P1-load-success-with-data": {
+            "condition": "paymentsApi.list() resolve com payments[]",
+            "destino": "S2-ledger-visible",
+            "status": "[✓]"
+          },
+          "P2-load-success-empty": {
+            "condition": "paymentsApi.list() resolve com []",
+            "destino": "S3-empty",
+            "status": "[✓]"
+          },
+          "P3-load-api-error": {
+            "condition": "paymentsApi.list() rejeita",
+            "result": "catch silencia erro, payments = []",
+            "destino": "S3-empty",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S2-ledger-visible": {
+        "condition": "payments.length > 0",
+        "renders": "3 stats cards + tabela de transações + painel de ações pendentes",
+        "drs_check": ["RF10"],
+        "paths": {
+          "P4-stats-escrow": {
+            "check": "Card 'Saldo Retido (Escrow)' mostra fmt(escrow) — nota: escrow é sempre 0 (useState(0))",
+            "gap": "escrow hardcoded a 0, não calcula de payments",
+            "status": "[✓]"
+          },
+          "P5-stats-released": {
+            "check": "Card 'Total Liberado' mostra soma de netAmount dos RELEASED",
+            "status": "[✓]"
+          },
+          "P6-stats-aguardando": {
+            "check": "Card 'Aguardando' mostra totalFund - released",
+            "status": "[✓]"
+          },
+          "P7-ledger-rows": {
+            "check": "Cada payment renderiza: id.slice(0,8), data, ESCROW_REL, netAmount, status badge",
+            "status": "[✓]"
+          },
+          "P8-click-exportar-csv": {
+            "action": "Click 'Exportar CSV'",
+            "result": "Sem ação (placeholder)",
+            "status": "[✓]"
+          },
+          "P9-click-aportar-fundos": {
+            "action": "Click 'APORTAR FUNDOS'",
+            "result": "Sem ação (placeholder)",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S3-empty": {
+        "condition": "payments.length === 0",
+        "renders": "'Nenhuma transação registada.'",
+        "status": "[✓]"
+      },
+
+      "S4-pending-milestones-empty": {
+        "condition": "pendingMilestones.length === 0",
+        "renders": "'Nenhuma ação pendente' + card pré-visualização (demo) + botão disabled",
+        "status": "[✓]",
+        "paths": {
+          "P10-demo-approve-disabled": {
+            "check": "Botão APROVAR RELEASE na pré-visualização está disabled",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S5-pending-milestones-with-data": {
+        "condition": "pendingMilestones.length > 0",
+        "renders": "Lista de milestones com botões APROVAR RELEASE ativos",
+        "note": "pendingMilestones nunca é populado via API no código atual — só via setPendingMilestones",
+        "drs_check": ["RF10", "RN05"],
+        "paths": {
+          "P11-click-aprovar-success": {
+            "action": "Click 'APROVAR RELEASE' em milestone",
+            "condition": "paymentsApi.releaseMilestone() resolve OK",
+            "result": "milestone removida da lista, payments atualizados",
+            "drs_check": ["RF10", "RN05"],
+            "status": "[ ]"
+          },
+          "P12-click-aprovar-failure": {
+            "action": "Click 'APROVAR RELEASE' em milestone",
+            "condition": "paymentsApi.releaseMilestone() rejeita",
+            "result": "alert('Erro ao aprovar pagamento.')",
+            "drs_check": ["RNF04"],
+            "status": "[ ]"
+          },
+          "P13-aprovar-loading-state": {
+            "check": "Botão mostra 'Processando...' enquanto approving === m.id",
+            "status": "[ ]"
+          }
+        }
+      }
+    },
+
+    "gaps": [
+      "escrow é hardcoded 0 — deveria calcular de PENDING payments",
+      "pendingMilestones nunca populado via API (nenhum useEffect carrega milestones pendentes)",
+      "RN06 (taxa da plataforma) não exibido em nenhum lugar"
+    ]
+  },
+
+  "/earnings": {
+    "name": "Ganhos Especialista",
+    "drs": ["RF10", "RN06"],
+    "role": "specialist",
+    "states": {
+      "S1-loading": {
+        "condition": "loading === true",
+        "renders": "Carregando...",
+        "status": "[ ]"
+      },
+
+      "S2-with-data": {
+        "condition": "payments.length > 0",
+        "renders": "3 stats + extrato detalhado",
+        "drs_check": ["RF10"],
+        "paths": {
+          "P1-saldo-disponivel": {
+            "check": "Sum of RELEASED netAmount",
+            "status": "[✓]"
+          },
+          "P2-em-escrow": {
+            "check": "Sum of PENDING amount",
+            "status": "[✓]"
+          },
+          "P3-ganhos-totais": {
+            "check": "Sum of ALL netAmount",
+            "status": "[✓]"
+          },
+          "P4-released-row": {
+            "check": "RELEASED → 'Liberação Escrow (Milestone)' + green arrow + '+' prefix",
+            "status": "[✓]"
+          },
+          "P5-pending-row": {
+            "check": "PENDING → 'Saque Efetuado (PIX)' + red arrow + '-' prefix",
+            "status": "[✓]"
+          },
+          "P6-refunded-row": {
+            "check": "REFUNDED → badge vermelho",
+            "status": "[✓]"
+          },
+          "P7-tx-id-format": {
+            "check": "TX-{id.slice(0,6).toUpperCase()} rendered correctly",
+            "status": "[✓]"
+          },
+          "P8-click-solicitar-saque": {
+            "action": "Click 'Solicitar Saque'",
+            "result": "Sem ação (placeholder)",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S3-empty": {
+        "condition": "payments.length === 0",
+        "renders": "'Nenhum pagamento recebido ainda.'",
+        "status": "[✓]"
+      }
+    },
+
+    "gaps": [
+      "RN06: taxa da plataforma (fee) não é exibida — especialista não vê quanto foi retido",
+      "PENDING payment mostra 'Saque Efetuado (PIX)' — semântica confusa, deveria ser 'Em processamento'"
+    ]
+  },
+
+  "/kanban/:projectId": {
+    "name": "Kanban Board",
+    "drs": ["RF08", "RF09", "RF10", "RN04", "RN05"],
+    "role": "both",
+    "states": {
+      "S0-no-projectId": {
+        "condition": "projectId === undefined",
+        "result": "navigate('/dashboard', { replace: true })",
+        "status": "[✓]"
+      },
+
+      "S1-loading": {
+        "condition": "loading === true",
+        "renders": "Carregando board...",
+        "status": "[ ]"
+      },
+
+      "S2-board-loaded": {
+        "condition": "project + milestones carregados",
+        "renders": "Header + 4 colunas Kanban + history panel",
+        "drs_check": ["RF08"],
+        "paths": {
+          "P1-column-pending-empty": {
+            "check": "Coluna PENDING sem milestones → 'Sem Registos'",
+            "status": "[ ]"
+          },
+          "P2-column-approved-no-empty-msg": {
+            "check": "Coluna APPROVED sem milestones → NÃO mostra 'Sem Registos' (exceção no código)",
+            "status": "[ ]"
+          },
+          "P3-milestone-card-renders": {
+            "check": "Card mostra: M{index}, title, amount em R$",
+            "status": "[✓]"
+          },
+          "P4-history-panel": {
+            "check": "Painel direito mostra events de milestones não-PENDING",
+            "status": "[ ]"
+          },
+          "P5-navbar-back": {
+            "action": "Click voltar navbar",
+            "destino": "/dashboard [CICLO]",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S3-specialist-views": {
+        "condition": "isCompany === false",
+        "drs_check": ["RF08", "RF09", "RN04"],
+        "paths": {
+          "P6-pending-can-start": {
+            "condition": "milestone.status === 'PENDING' && canStart === true",
+            "renders": "Botão 'INICIAR TRABALHO' (enabled)",
+            "action": "Click → advanceMilestone(id, 'IN_PROGRESS')",
+            "drs_check": ["RF08", "RN04"],
+            "status": "[✓]"
+          },
+          "P7-pending-blocked": {
+            "condition": "milestone.status === 'PENDING' && canStart === false",
+            "renders": "Botão 'BLOQUEADA' (disabled) + title='RN04'",
+            "drs_check": ["RN04"],
+            "status": "[✓]"
+          },
+          "P8-in-progress-submit": {
+            "condition": "milestone.status === 'IN_PROGRESS'",
+            "renders": "Botão 'SUBMETER ENTREGA'",
+            "action": "Click → abre submit modal",
+            "drs_check": ["RF09"],
+            "status": "[✓]"
+          },
+          "P9-submitted-review-no-button": {
+            "condition": "milestone.status === 'SUBMITTED_REVIEW' && !isCompany",
+            "renders": "Nenhum botão de ação (especialista espera aprovação)",
+            "status": "[✓]"
+          },
+          "P10-approved-disabled": {
+            "condition": "milestone.status === 'APPROVED'",
+            "renders": "Botão 'PAGO E FINALIZADO' (disabled) + title/amount strikethrough",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S4-company-views": {
+        "condition": "isCompany === true",
+        "drs_check": ["RF09", "RF10", "RN05"],
+        "paths": {
+          "P11-submitted-review-approve": {
+            "condition": "milestone.status === 'SUBMITTED_REVIEW'",
+            "renders": "Botão 'APROVAR & PAGAR'",
+            "action": "Click → abre approve modal",
+            "drs_check": ["RF09", "RF10", "RN05"],
+            "status": "[✓]"
+          },
+          "P12-pending-no-button": {
+            "condition": "milestone.status === 'PENDING' && isCompany",
+            "renders": "Nenhum botão (empresa não inicia milestones)",
+            "status": "[✓]"
+          },
+          "P13-in-progress-no-button": {
+            "condition": "milestone.status === 'IN_PROGRESS' && isCompany",
+            "renders": "Nenhum botão (empresa espera submissão)",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S5-submit-modal": {
+        "condition": "submitModal === true (specialist)",
+        "renders": "Modal com campos: Repositório URL + Notas de Release",
+        "drs_check": ["RF09"],
+        "paths": {
+          "P14-fill-and-confirm": {
+            "action": "Preencher campos → Click DEPLOY_SUBMIT()",
+            "condition": "milestonesApi.submit() resolve OK",
+            "result": "Modal fecha, milestones atualizados, campos limpos",
+            "status": "[ ]"
+          },
+          "P15-confirm-failure": {
+            "action": "Click DEPLOY_SUBMIT()",
+            "condition": "milestonesApi.submit() rejeita",
+            "result": "alert('Erro ao submeter entrega.')",
+            "status": "[ ]"
+          },
+          "P16-cancel": {
+            "action": "Click CANCELAR",
+            "result": "Modal fecha, nada muda",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S6-approve-modal": {
+        "condition": "approveModal === true (company)",
+        "renders": "Modal com warning irreversível + milestone name",
+        "drs_check": ["RF10", "RN05"],
+        "paths": {
+          "P17-confirm-approve": {
+            "action": "Click CONFIRMAR_PAGAMENTO()",
+            "condition": "milestonesApi.updateStatus() resolve OK",
+            "result": "Modal fecha, milestone move para APPROVED",
+            "status": "[ ]"
+          },
+          "P18-confirm-approve-failure": {
+            "action": "Click CONFIRMAR_PAGAMENTO()",
+            "condition": "API rejeita",
+            "result": "alert('Erro ao atualizar milestone.')",
+            "status": "[ ]"
+          },
+          "P19-cancel": {
+            "action": "Click CANCELAR",
+            "result": "Modal fecha",
+            "status": "[✓]"
+          }
+        }
+      }
+    }
+  },
+
+  "/portfolio": {
+    "name": "Meu Portfólio",
+    "drs": ["RF11", "RF14"],
+    "role": "specialist",
+    "states": {
+      "S1-loading": {
+        "condition": "loading === true",
+        "renders": "Carregando perfil...",
+        "status": "[✓]"
+      },
+
+      "S2-no-profile": {
+        "condition": "profile === null",
+        "renders": "'Perfil ainda não configurado.'",
+        "status": "[✓]"
+      },
+
+      "S3-profile-loaded": {
+        "condition": "profile !== null",
+        "renders": "Card perfil + stats + tabs",
+        "drs_check": ["RF14"],
+        "paths": {
+          "P1-name-bio-id": {
+            "check": "profile.name, bio, userId.slice(0,12) exibidos",
+            "status": "[✓]"
+          },
+          "P2-stats-rating": {
+            "check": "rating.toFixed(1) ou '—'",
+            "status": "[✓]"
+          },
+          "P3-stats-projects": {
+            "check": "completedProjects ?? 0",
+            "status": "[✓]"
+          },
+          "P4-skills-visible": {
+            "condition": "skills.length > 0",
+            "renders": "Seção 'Stack Tecnológica' com tags",
+            "status": "[✓]"
+          },
+          "P5-skills-hidden": {
+            "condition": "skills.length === 0 || !skills",
+            "renders": "Seção de skills oculta",
+            "status": "[✓]"
+          },
+          "P6-credentials": {
+            "check": "Sempre mostra AWS cert (hardcoded)",
+            "status": "[✓]"
+          },
+          "P7-editar-perfil": {
+            "action": "Click 'Editar Perfil'",
+            "result": "Sem ação (placeholder)",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S4-tab-history": {
+        "condition": "tab === 'history' (default)",
+        "drs_check": ["RF11", "RF14"],
+        "paths": {
+          "P8-with-work-history": {
+            "condition": "workHistory.length > 0",
+            "check": "Cards com: projectTitle, companyName, amount (R$), completedAt (data BR), 5 estrelas, badge CONCLUÍDO",
+            "status": "[✓]"
+          },
+          "P9-empty-work-history": {
+            "condition": "workHistory.length === 0",
+            "renders": "'Nenhum projeto concluído ainda.'",
+            "status": "[✓]"
+          }
+        }
+      },
+
+      "S5-tab-repos": {
+        "condition": "tab === 'repos'",
+        "paths": {
+          "P10-click-tab-repos": {
+            "action": "Click tab 'Repositórios Públicos'",
+            "renders": "Repo cards (hardcoded meraki-delivery-service)",
+            "status": "[✓]"
+          }
+        }
+      }
+    }
+  },
+
+  "/profile/specialist/:id": {
+    "name": "Perfil Especialista Público",
+    "drs": ["RF12", "RF14"],
+    "role": "any",
+    "states": {
+      "S1-loading": {
+        "renders": "Carregando perfil...",
+        "status": "[✓]"
+      },
+      "S2-not-found": {
+        "condition": "profile === null",
+        "renders": "'Perfil não encontrado.'",
+        "status": "[✓]"
+      },
+      "S3-loaded": {
+        "condition": "profile !== null",
+        "renders": "Mesmo layout do Portfolio mas com 'Iniciar Projeto' em vez de 'Editar Perfil'",
+        "drs_check": ["RF12", "RF14"],
+        "paths": {
+          "P1-iniciar-projeto": {
+            "action": "Click 'Iniciar Projeto'",
+            "destino": "/projects/new [CICLO]",
+            "status": "[✓]"
+          },
+          "P2-tab-history": { "status": "[✓]" },
+          "P3-tab-repos": { "status": "[✓]" },
+          "P4-navbar-back": {
+            "destino": "/talents [CICLO]",
+            "status": "[ ]"
+          }
+        }
+      }
+    }
+  },
+
+  "/profile/company/:id": {
+    "name": "Perfil Empresa Público",
+    "drs": ["RF13"],
+    "role": "any",
+    "states": {
+      "S1-loading": {
+        "renders": "Carregando perfil...",
+        "status": "[✓]"
+      },
+      "S2-not-found": {
+        "condition": "profile === null",
+        "renders": "'Perfil não encontrado.'",
+        "status": "[✓]"
+      },
+      "S3-loaded": {
+        "condition": "profile !== null",
+        "renders": "Hero + About + Projects table + Reviews",
+        "drs_check": ["RF13"],
+        "paths": {
+          "P1-about": { "check": "bio ou fallback text", "status": "[✓]" },
+          "P2-project-history": { "check": "workHistory em tabela", "status": "[✓]" },
+          "P3-reviews": { "check": "Hardcoded reviews visíveis", "status": "[✓]" },
+          "P4-navbar-back": { "destino": "/talents [CICLO]", "status": "[ ]" }
+        }
+      }
+    }
+  }
+}

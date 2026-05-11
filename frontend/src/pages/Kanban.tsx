@@ -48,25 +48,30 @@ export default function Kanban() {
       .finally(() => setLoading(false))
   }, [projectId])
 
-  async function advanceMilestone(milestoneId: string, newStatus: KanbanStatus) {
+  async function startMilestone(milestoneId: string) {
     setActionLoading(true)
     try {
-      await milestonesApi.updateStatus(milestoneId, newStatus)
+      await milestonesApi.start(milestoneId)
       const updated = await projectsApi.getMilestones(projectId!)
       setMilestones(updated.data)
     } catch {
-      alert('Erro ao atualizar milestone.')
+      alert('Erro ao iniciar milestone.')
     } finally {
       setActionLoading(false)
     }
   }
 
   async function confirmSubmit() {
-    if (!pendingMilestoneId) return
+    if (!pendingMilestoneId || !projectId) return
     setActionLoading(true)
     try {
-      await milestonesApi.submit({ milestoneId: pendingMilestoneId, repositoryUrl: repoUrl, releaseNotes })
-      const updated = await projectsApi.getMilestones(projectId!)
+      await milestonesApi.submit({
+        milestoneId: pendingMilestoneId,
+        projectId,
+        deliveryNotes: releaseNotes || undefined,
+        deliveredFiles: repoUrl ? [repoUrl] : undefined,
+      })
+      const updated = await projectsApi.getMilestones(projectId)
       setMilestones(updated.data)
       setSubmitModal(false)
       setRepoUrl('')
@@ -80,8 +85,17 @@ export default function Kanban() {
 
   async function confirmApprove() {
     if (!pendingMilestoneId) return
-    await advanceMilestone(pendingMilestoneId, 'APPROVED')
-    setApproveModal(false)
+    setActionLoading(true)
+    try {
+      await milestonesApi.approve(pendingMilestoneId)
+      const updated = await projectsApi.getMilestones(projectId!)
+      setMilestones(updated.data)
+      setApproveModal(false)
+    } catch {
+      alert('Erro ao aprovar milestone.')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   const byStatus = (status: KanbanStatus) => milestones.filter(m => m.status === status)
@@ -170,7 +184,7 @@ export default function Kanban() {
                       index={sorted.indexOf(m) + 1}
                       isCompany={isCompany}
                       canStart={m.id === nextStartableId}
-                      onStart={() => advanceMilestone(m.id, 'IN_PROGRESS')}
+                      onStart={() => startMilestone(m.id)}
                       onSubmit={() => { setPendingMilestoneId(m.id); setSubmitModal(true) }}
                       onApprove={() => { setPendingMilestoneId(m.id); setApproveModal(true) }}
                     />

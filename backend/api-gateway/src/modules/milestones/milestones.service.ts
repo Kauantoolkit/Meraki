@@ -3,10 +3,15 @@ import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { SubmitDeliveryDto } from './dto/submit-delivery.dto';
 
 const DELIVERY_URL = process.env.DELIVERY_SERVICE_URL as string;
+const PROJECT_URL = process.env.PROJECT_SERVICE_URL as string;
 
 @Injectable()
 export class MilestonesService {
   constructor(private readonly proxy: HttpProxyService) {}
+
+  startMilestone(milestoneId: string, token: string) {
+    return this.proxy.put(`${PROJECT_URL}/api/projects/milestones/${milestoneId}/start`, {}, this.proxy.authHeaders(token));
+  }
 
   submitDelivery(milestoneId: string, dto: SubmitDeliveryDto, token: string) {
     return this.proxy.post(`${DELIVERY_URL}/api/deliveries`, { ...dto, milestoneId }, this.proxy.authHeaders(token));
