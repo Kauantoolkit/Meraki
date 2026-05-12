@@ -10,6 +10,10 @@ export class Money {
     this._amount = Number(amount.toFixed(2));
   }
 
+  get amount(): number {
+    return this._amount;
+  }
+
   getAmount(): number {
     return this._amount;
   }
