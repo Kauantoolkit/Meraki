@@ -1,10 +1,9 @@
-import { CompleteProjectUseCase } from '../../../../src/application/use-cases/complete-project.use-case';
-import { Project } from '../../../../src/domain/entities/project.entity';
-import { ProjectStatus } from '../../../../src/domain/enums/project-status.enum';
-import { Milestone } from '../../../../src/domain/entities/milestone.entity';
-import { MilestoneStatus } from '../../../../src/domain/enums/milestone-status.enum';
-import { ContractFactory } from '../../../../src/domain/factories/contract.factory';
-import { ContractType } from '../../../../src/domain/enums/contract-type.enum';
+import { CompleteProjectUseCase } from '../../../src/application/use-cases/complete-project.use-case';
+import { Project } from '../../../src/domain/entities/project.entity';
+import { ProjectStatus } from '../../../src/domain/enums/project-status.enum';
+import { Milestone } from '../../../src/domain/entities/milestone.entity';
+import { MilestoneStatus } from '../../../src/domain/enums/milestone-status.enum';
+import { describe, it } from 'node:test';
 
 function createProject(): Project {
   const project = new Project();
@@ -40,9 +39,6 @@ describe('CompleteProjectUseCase', () => {
     const mockMilestoneRepo = {
       findByProject: jest.fn().mockResolvedValue([createApprovedMilestone()]),
     };
-    const mockContractRepo = {
-      save: jest.fn().mockImplementation(async (c) => c),
-    };
     const mockEvents = {
       publishProjectCompleted: jest.fn().mockResolvedValue(undefined),
     };
@@ -50,8 +46,6 @@ describe('CompleteProjectUseCase', () => {
     const useCase = new CompleteProjectUseCase(
       mockProjectRepo as any,
       mockMilestoneRepo as any,
-      mockContractRepo as any,
-      new ContractFactory(),
       mockEvents as any,
     );
 
@@ -59,11 +53,6 @@ describe('CompleteProjectUseCase', () => {
 
     expect(mockProjectRepo.save).toHaveBeenCalledTimes(1);
     expect(project.status).toBe(ProjectStatus.COMPLETED);
-    expect(mockContractRepo.save).toHaveBeenCalledTimes(1);
-    const contractSaved = (mockContractRepo.save as jest.Mock).mock.calls[0][0];
-    expect(contractSaved.type).toBe(ContractType.PROJECT);
-    expect(contractSaved.projectId).toBe('project-1');
-    expect(contractSaved.title).toContain('Projeto final');
     expect(mockEvents.publishProjectCompleted).toHaveBeenCalledTimes(1);
   });
 });
