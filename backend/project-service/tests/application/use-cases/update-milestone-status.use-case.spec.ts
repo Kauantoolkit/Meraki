@@ -31,11 +31,15 @@ describe('UpdateMilestoneStatusUseCase — RN04', () => {
       findByProject: jest.fn(() => Promise.resolve(milestones)),
       save: jest.fn((m: Milestone) => Promise.resolve(m)),
     };
+    const contractRepo: any = {
+      save: jest.fn((c) => Promise.resolve(c)),
+    };
+    const contractFactory: any = {};
     const events: any = {
       publishMilestoneUpdated: jest.fn(() => Promise.resolve()),
     };
     const emitter: any = { emit: jest.fn() };
-    const useCase = new UpdateMilestoneStatusUseCase(milestoneRepo, events, emitter);
+    const useCase = new UpdateMilestoneStatusUseCase(milestoneRepo, contractRepo, contractFactory, events, emitter);
     return { useCase, milestoneRepo, events, emitter };
   }
 
