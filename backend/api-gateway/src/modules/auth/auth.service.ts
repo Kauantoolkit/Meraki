@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL as string;
 
@@ -15,5 +16,13 @@ export class AuthService {
 
   login(dto: LoginDto) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/login`, dto);
+  }
+
+  refresh(dto: RefreshTokenDto) {
+    return this.proxy.post(`${IDENTITY_URL}/api/auth/refresh`, dto);
+  }
+
+  logout(dto: RefreshTokenDto) {
+    return this.proxy.post(`${IDENTITY_URL}/api/auth/logout`, dto);
   }
 }

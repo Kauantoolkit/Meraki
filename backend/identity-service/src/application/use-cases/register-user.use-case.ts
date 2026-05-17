@@ -3,7 +3,6 @@ import {
   ConflictException,
   Inject,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
 import { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
@@ -37,8 +36,8 @@ export class RegisterUserUseCase {
       throw new ConflictException('Já existe um usuário com este email');
     }
 
-    // Hash do password (responsabilidade da aplicação, não do domínio)
-    user.passwordHash = await bcrypt.hash(validatedPassword.value, 10);
+    // Hash via Value Object — plaintext nunca sai do VO
+    user.passwordHash = await validatedPassword.hash();
 
     // Persiste o User
     const savedUser = await this.userRepository.create(user);

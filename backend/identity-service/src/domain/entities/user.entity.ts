@@ -17,6 +17,7 @@ export class User {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 
   // ─── Domain behavior ───────────────────────────────────────────────────────
 

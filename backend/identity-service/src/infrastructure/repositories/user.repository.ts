@@ -1,10 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { User } from '../../domain/entities/user.entity';
 import { SpecialistProfile } from '../../domain/entities/specialist-profile.entity';
 import { CompanyProfile } from '../../domain/entities/company-profile.entity';
-import { IUserRepository } from '../../domain/repositories/user.repository.interface';
+import { RefreshToken } from '../../domain/entities/refresh-token.entity';
+import {
+  IUserRepository,
+  IRefreshTokenRepository,
+} from '../../domain/repositories/user.repository.interface';
 
 @Injectable()
 export class UserRepository implements IUserRepository {
@@ -20,6 +24,7 @@ export class UserRepository implements IUserRepository {
   ) {}
 
   // ─── User ────────────────────────────────────────────────────────────────
+  // TypeORM @DeleteDateColumn ignora soft-deleted automaticamente em find*.
 
   findById(id: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { id } });
@@ -39,8 +44,8 @@ export class UserRepository implements IUserRepository {
     return this.findById(id);
   }
 
-  async delete(id: string): Promise<void> {
-    await this.userRepo.delete(id);
+  async softDelete(id: string): Promise<void> {
+    await this.userRepo.softDelete(id);
   }
 
   // ─── SpecialistProfile ────────────────────────────────────────────────────
@@ -79,5 +84,33 @@ export class UserRepository implements IUserRepository {
   ): Promise<CompanyProfile> {
     await this.companyRepo.update(id, data);
     return this.companyRepo.findOne({ where: { id } });
+  }
+}
+
+@Injectable()
+export class RefreshTokenRepository implements IRefreshTokenRepository {
+  constructor(
+    @InjectRepository(RefreshToken)
+    private readonly repo: Repository<RefreshToken>,
+  ) {}
+
+  async create(data: Partial<RefreshToken>): Promise<RefreshToken> {
+    const entity = this.repo.create(data);
+    return this.repo.save(entity);
+  }
+
+  findByJti(jti: string): Promise<RefreshToken | null> {
+    return this.repo.findOne({ where: { jti } });
+  }
+
+  async revoke(jti: string, replacedByJti?: string): Promise<void> {
+    await this.repo.update(
+      { jti, revokedAt: IsNull() },
+      { revokedAt: new Date(), replacedByJti: replacedByJti ?? null },
+    );
+  }
+
+  async revokeAllForUser(userId: string): Promise<void> {
+    await this.repo.update({ userId, revokedAt: IsNull() }, { revokedAt: new Date() });
   }
 }

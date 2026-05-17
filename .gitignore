@@ -66,7 +66,23 @@ docs/**/*.docx
 docs/**/*.xlsx
 docs/**/*.png
 
+# ─── Resultados de teste (screenshots, logs de falha) ────────────────────────
+**/test-results/
+**/playwright-report/
+
+# ─── Package lock (cada dev gera o seu; não versionar) ────────────────────────
+**/package-lock.json
+
 # ─── Claude Code ──────────────────────────────────────────────────────────────
 .claude/settings.local.json
-
+.claude/
+CLAUDE.md
+**/CLAUDE.md
 */professor/
+
+# ─── GSD (Get Shit Done) — artefatos locais de planejamento por IA ────────────
+.planning/
+.gsd/
+gsd.config.*
+AGENTS.md
+**/AGENTS.md
