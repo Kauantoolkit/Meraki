@@ -1,16 +1,16 @@
 import { Injectable, UnauthorizedException, Inject } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import * as bcrypt from 'bcrypt';
 import { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { LoginDto } from '../dto/login.dto';
 import { AuthResponseDto } from '../dto/user-response.dto';
+import { Password } from '../../domain/value-objects/password.value-object';
+import { TokenService } from '../services/token.service';
 
 @Injectable()
 export class AuthenticateUseCase {
   constructor(
     @Inject('IUserRepository')
     private readonly userRepository: IUserRepository,
-    private readonly jwtService: JwtService,
+    private readonly tokenService: TokenService,
   ) {}
 
   async execute(dto: LoginDto): Promise<AuthResponseDto> {
@@ -22,21 +22,16 @@ export class AuthenticateUseCase {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const isPasswordValid = await Password.matches(dto.password, user.passwordHash);
     if (!isPasswordValid) {
       throw new UnauthorizedException('Credenciais inválidas');
     }
 
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      userType: user.userType,
-      specialistId: user.specialistId,
-      companyId: user.companyId,
-    };
+    const { accessToken, refreshToken } = await this.tokenService.issueTokenPair(user);
 
     return {
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         email: user.email,

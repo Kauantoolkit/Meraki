@@ -5,12 +5,12 @@ services:
     container_name: meraki-identity-db
     environment:
       POSTGRES_DB: ${IDENTITY_DB_NAME:-identity_db}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+      POSTGRES_USER: ${DB_USER:?DB_USER não definido}
+      POSTGRES_PASSWORD: ${DB_PASS:?DB_PASS não definido}
     volumes:
       - identity-db:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER}']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -121,16 +121,17 @@ services:
     ports:
       - '3001:3001'
     environment:
-      NODE_ENV: development
+      NODE_ENV: ${NODE_ENV:-development}
       PORT: 3001
       DB_HOST: identity-db
       DB_PORT: 5432
       DB_NAME: ${IDENTITY_DB_NAME:-identity_db}
-      DB_USER: ${DB_USER:-postgres}
-      DB_PASS: ${DB_PASS:-postgres}
-      JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+      DB_USER: ${DB_USER:?DB_USER não definido}
+      DB_PASS: ${DB_PASS:?DB_PASS não definido}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET não definido}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:?RABBITMQ_USER não definido}:${RABBITMQ_PASS:?RABBITMQ_PASS não definido}@rabbitmq:5672
     depends_on:
       identity-db:
         condition: service_healthy

@@ -12,5 +12,6 @@ export class UserResponseDto {
 
 export class AuthResponseDto {
   accessToken: string;
+  refreshToken: string;
   user: UserResponseDto;
 }

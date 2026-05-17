@@ -46,5 +46,10 @@ export const UserSchema = new EntitySchema<User>({
       type: 'timestamp',
       updateDate: true,
     },
+    deletedAt: {
+      type: 'timestamp',
+      nullable: true,
+      deleteDate: true,
+    },
   },
 });

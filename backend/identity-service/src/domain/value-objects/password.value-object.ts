@@ -1,9 +1,16 @@
+import * as bcrypt from 'bcrypt';
 import { InvalidPasswordException } from '../exceptions/domain.exception';
 
+/**
+ * Password Value Object — encapsula um plaintext validado.
+ * Não expõe o valor bruto; só permite (a) gerar hash bcrypt e (b) comparar contra hash existente.
+ */
 export class Password {
-  private readonly _value: string;
+  private _value: string | null;
 
   private static readonly MIN_LENGTH = 8;
+  private static readonly MAX_LENGTH = 72;
+  private static readonly DEFAULT_SALT_ROUNDS = 10;
 
   constructor(password: string) {
     Password.validate(password);
@@ -14,6 +21,11 @@ export class Password {
     if (!password || password.length < Password.MIN_LENGTH) {
       throw new InvalidPasswordException(
         `deve ter pelo menos ${Password.MIN_LENGTH} caracteres`,
+      );
+    }
+    if (password.length > Password.MAX_LENGTH) {
+      throw new InvalidPasswordException(
+        `deve ter no máximo ${Password.MAX_LENGTH} caracteres`,
       );
     }
     if (!/[A-Z]/.test(password)) {
@@ -33,11 +45,17 @@ export class Password {
     }
   }
 
-  get value(): string {
-    return this._value;
+  async hash(saltRounds: number = Password.DEFAULT_SALT_ROUNDS): Promise<string> {
+    if (this._value === null) {
+      throw new InvalidPasswordException('senha já foi consumida');
+    }
+    const hashed = await bcrypt.hash(this._value, saltRounds);
+    this._value = null;
+    return hashed;
   }
 
-  equals(other: Password): boolean {
-    return this._value === other._value;
+  static async matches(plaintext: string, hash: string): Promise<boolean> {
+    if (!plaintext || !hash) return false;
+    return bcrypt.compare(plaintext, hash);
   }
 }
