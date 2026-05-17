@@ -1,10 +1,10 @@
-import { CompleteProjectUseCase } from '../../../../src/application/use-cases/complete-project.use-case';
-import { Project } from '../../../../src/domain/entities/project.entity';
-import { ProjectStatus } from '../../../../src/domain/enums/project-status.enum';
-import { Milestone } from '../../../../src/domain/entities/milestone.entity';
-import { MilestoneStatus } from '../../../../src/domain/enums/milestone-status.enum';
-import { ContractFactory } from '../../../../src/domain/factories/contract.factory';
-import { ContractType } from '../../../../src/domain/enums/contract-type.enum';
+import { CompleteProjectUseCase } from '../../../src/application/use-cases/complete-project.use-case';
+import { Project } from '../../../src/domain/entities/project.entity';
+import { ProjectStatus } from '../../../src/domain/enums/project-status.enum';
+import { Milestone } from '../../../src/domain/entities/milestone.entity';
+import { MilestoneStatus } from '../../../src/domain/enums/milestone-status.enum';
+import { ContractFactory } from '../../../src/domain/factories/contract.factory';
+import { ContractType } from '../../../src/domain/enums/contract-type.enum';
 
 function createProject(): Project {
   const project = new Project();

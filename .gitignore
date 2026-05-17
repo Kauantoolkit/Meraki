@@ -71,6 +71,7 @@ docs/**/*.png
 .claude/
 CLAUDE.md
 **/CLAUDE.md
+*/professor/
 
 # ─── GSD (Get Shit Done) — artefatos locais de planejamento por IA ────────────
 .planning/
