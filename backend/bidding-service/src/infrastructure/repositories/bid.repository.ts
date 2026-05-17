@@ -13,7 +13,7 @@ export class BidRepository implements IBidRepository {
   ) {}
 
   findById(id: string): Promise<Bid | null> {
-    return this.repo.findOne({ where: { id }, relations: ['messages'] });
+    return this.repo.findOne({ where: { id } });
   }
 
   findByProject(projectId: string): Promise<Bid[]> {

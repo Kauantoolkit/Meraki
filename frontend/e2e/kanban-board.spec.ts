@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs, MOCK_COMPANY_USER, MOCK_SPECIALIST_USER } from './helpers/auth'
+import { loginAs } from './helpers/auth'
 
 const mockProject = {
   id: 'test-project-id',
@@ -31,7 +31,7 @@ async function setupKanbanMocks(page: import('@playwright/test').Page) {
 
 test.describe('Kanban Board - Company (RF08/RF09)', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAs(page, MOCK_COMPANY_USER)
+    await loginAs(page, 'company')
     await setupKanbanMocks(page)
   })
 
@@ -56,7 +56,7 @@ test.describe('Kanban Board - Company (RF08/RF09)', () => {
 
 test.describe('Kanban Board - Specialist (RF08/RF09)', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAs(page, MOCK_SPECIALIST_USER)
+    await loginAs(page, 'specialist')
     await setupKanbanMocks(page)
   })
 

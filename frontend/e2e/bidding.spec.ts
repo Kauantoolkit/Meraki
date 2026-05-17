@@ -141,7 +141,7 @@ test.describe('Bidding - Erros (RN02, RNF04)', () => {
         projectId: proj4.id,
         amount: 2000,
         durationDays: 10,
-        proposalText: 'Bid via API',
+        proposalText: 'Bid via API — proposta automatizada para teste de duplicidade E2E.',
       }),
     )
 

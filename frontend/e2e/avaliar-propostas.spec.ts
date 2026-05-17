@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs, MOCK_COMPANY_USER } from './helpers/auth'
+import { loginAs } from './helpers/auth'
 
 const mockProject = {
   id: 'test-project-id',
@@ -38,7 +38,7 @@ const mockBids = [
 
 test.describe('Avaliar Propostas (RF06/RF07)', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAs(page, MOCK_COMPANY_USER)
+    await loginAs(page, 'company')
     // Register specific mocks AFTER loginAs (last registered wins)
     await page.route('**/api/projects/test-project-id', (route) => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockProject) })

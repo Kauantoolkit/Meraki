@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs, MOCK_COMPANY_USER } from './helpers/auth'
+import { loginAs } from './helpers/auth'
 
 const mockSpecialistProfile = {
   id: 'test-id',
@@ -22,7 +22,7 @@ const mockCompanyProfile = {
 
 test.describe('Perfil Publico (RF12/RF13)', () => {
   test('renders specialist profile page', async ({ page }) => {
-    await loginAs(page, MOCK_COMPANY_USER)
+    await loginAs(page, 'company')
     // Register AFTER loginAs so they take priority
     await page.route('**/api/portfolio/specialist/test-id', (route) => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockSpecialistProfile) })
@@ -32,7 +32,7 @@ test.describe('Perfil Publico (RF12/RF13)', () => {
   })
 
   test('renders company profile page', async ({ page }) => {
-    await loginAs(page, MOCK_COMPANY_USER)
+    await loginAs(page, 'company')
     await page.route('**/api/companies/test-id', (route) => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockCompanyProfile) })
     })

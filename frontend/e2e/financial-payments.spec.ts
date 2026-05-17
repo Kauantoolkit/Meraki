@@ -43,13 +43,11 @@ test.describe('Financeiro - Company View (RF10, T10b)', () => {
     await page.goto('/financial')
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
-    await expect(page.getByText('Livro-Razão de Transações')).toBeVisible()
-    await expect(page.getByText('TX_ID')).toBeVisible()
+    await expect(page.getByText(/Livro-Razão de Transações/i)).toBeVisible()
 
-    // Se não há transações, deve mostrar estado vazio
-    const hasTransactions = await page.getByText('RELEASED').isVisible({ timeout: 2_000 }).catch(() => false)
-    const isEmpty = await page.getByText(/Nenhuma transação registada/i).isVisible({ timeout: 2_000 }).catch(() => false)
-    expect(hasTransactions || isEmpty).toBeTruthy()
+    // Pode ter transações (com header TX_ID) ou estar vazio
+    const ledger = page.getByText('TX_ID').or(page.getByText(/Nenhuma transação registada/i))
+    await expect(ledger.first()).toBeVisible({ timeout: 5_000 })
   })
 
   test('F85-buttons - botões de exportar e aportar visíveis', async ({ page }) => {
@@ -95,9 +93,8 @@ test.describe('Ganhos Especialista (RF10, T10b)', () => {
     await expect(page.getByText('Extrato Detalhado')).toBeVisible()
 
     // Pode ter transações reais ou estar vazio
-    const hasTransactions = await page.getByText('RELEASED').isVisible({ timeout: 2_000 }).catch(() => false)
-    const isEmpty = await page.getByText(/Nenhum pagamento recebido/i).isVisible({ timeout: 2_000 }).catch(() => false)
-    expect(hasTransactions || isEmpty).toBeTruthy()
+    const extrato = page.getByText('RELEASED').or(page.getByText(/Nenhum pagamento recebido/i))
+    await expect(extrato.first()).toBeVisible({ timeout: 5_000 })
   })
 
   test('F87-saque - botão solicitar saque visível', async ({ page }) => {

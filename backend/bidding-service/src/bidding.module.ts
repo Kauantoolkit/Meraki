@@ -3,8 +3,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 
-import { Bid } from './domain/entities/bid.entity';
-import { BidMessage } from './domain/entities/bid-message.entity';
+import { BidSchema } from './infrastructure/database/schemas/bid.schema';
+import { BidMessageSchema } from './infrastructure/database/schemas/bid-message.schema';
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 
 // Repositories (infrastructure — adapters)
@@ -31,7 +31,7 @@ import { BidController } from './interfaces/controllers/bid.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Bid, BidMessage]),
+    TypeOrmModule.forFeature([BidSchema, BidMessageSchema]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({ secret: process.env.JWT_SECRET }),
   ],

@@ -68,3 +68,5 @@ docs/**/*.png
 
 # ─── Claude Code ──────────────────────────────────────────────────────────────
 .claude/settings.local.json
+
+*/professor/

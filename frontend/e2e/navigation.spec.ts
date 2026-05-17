@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test'
-import { loginAs, MOCK_COMPANY_USER, MOCK_SPECIALIST_USER } from './helpers/auth'
+import { loginAs } from './helpers/auth'
 
 test.describe('Navbar - Company', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAs(page, MOCK_COMPANY_USER)
+    await loginAs(page, 'company')
   })
 
   test('shows company-specific nav links', async ({ page }) => {
@@ -57,7 +57,7 @@ test.describe('Navbar - Company', () => {
 
 test.describe('Navbar - Specialist', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAs(page, MOCK_SPECIALIST_USER)
+    await loginAs(page, 'specialist')
   })
 
   test('shows specialist-specific nav links', async ({ page }) => {

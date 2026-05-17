@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { loginAs, MOCK_COMPANY_USER } from './helpers/auth'
+import { loginAs } from './helpers/auth'
 
 const mockSpecialists = [
   {
@@ -16,7 +16,7 @@ const mockSpecialists = [
 
 test.describe('Explorar Talentos (RF12/RF13)', () => {
   test.beforeEach(async ({ page }) => {
-    await loginAs(page, MOCK_COMPANY_USER)
+    await loginAs(page, 'company')
     // Register AFTER loginAs so they take priority (last registered wins)
     await page.route('**/api/portfolio/specialists**', (route) => {
       route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockSpecialists) })

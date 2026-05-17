@@ -1,6 +1,6 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Bid } from '../../domain/entities/bid.entity';
-import { BidMessage } from '../../domain/entities/bid-message.entity';
+import { BidSchema } from './schemas/bid.schema';
+import { BidMessageSchema } from './schemas/bid-message.schema';
 
 export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -9,7 +9,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   database: process.env.DB_NAME || 'bidding_db',
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
-  entities: [Bid, BidMessage],
+  entities: [BidSchema, BidMessageSchema],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
 });

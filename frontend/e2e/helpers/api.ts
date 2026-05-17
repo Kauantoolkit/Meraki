@@ -107,7 +107,16 @@ export async function createProject(
     milestones?: { title: string; description: string; amount: number }[]
   },
 ) {
-  return request<any>('/projects', { method: 'POST', body: data, token })
+  const { milestones, ...projectData } = data
+  const project = await request<any>('/projects', { method: 'POST', body: projectData, token })
+
+  if (milestones && milestones.length > 0) {
+    for (const m of milestones) {
+      await request(`/projects/${project.id}/milestones`, { method: 'POST', body: m, token })
+    }
+  }
+
+  return project
 }
 
 /* ─── Bid helpers ─── */
