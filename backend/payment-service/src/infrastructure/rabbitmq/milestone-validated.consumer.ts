@@ -1,5 +1,6 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
-import { RabbitMQConfigService } from './rabbitmq-config.service';
+import { RabbitMQService } from '@shared/infra/messaging/rabbitmq.service';
+import { DeliveryRoutingKey } from '@shared/contracts/events/delivery.events';
 import { ReleasePaymentUseCase } from '../../application/use-cases/release-payment.use-case';
 
 /**
@@ -11,14 +12,14 @@ export class MilestoneValidatedConsumer implements OnModuleInit {
   private readonly logger = new Logger(MilestoneValidatedConsumer.name);
 
   constructor(
-    private readonly rabbit: RabbitMQConfigService,
+    private readonly rabbit: RabbitMQService,
     private readonly releasePaymentUseCase: ReleasePaymentUseCase,
   ) {}
 
   async onModuleInit() {
     await this.rabbit.subscribe(
       'payment.events.milestone-validated',
-      'milestone.validated',
+      DeliveryRoutingKey.MILESTONE_VALIDATED,
       async (message) => {
         const { milestoneId, projectId, amount, specialistId } = message.payload || message;
         this.logger.log(`milestone.validated: milestone=${milestoneId} amount=${amount}`);

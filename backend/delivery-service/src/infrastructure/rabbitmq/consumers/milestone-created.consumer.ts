@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
-import { RabbitMQConfigService } from '../rabbitmq-config.service';
+import { RabbitMQService } from '@shared/infra/messaging/rabbitmq.service';
 import { KanbanRepository } from '../../repositories/kanban.repository';
 import { KanbanCard } from '../../../domain/entities/kanban-card.entity';
 
@@ -9,7 +9,7 @@ export class MilestoneCreatedConsumer implements OnModuleInit {
   private readonly logger = new Logger(MilestoneCreatedConsumer.name);
 
   constructor(
-    private readonly rabbit: RabbitMQConfigService,
+    private readonly rabbit: RabbitMQService,
     private readonly kanbanRepo: KanbanRepository,
   ) {}
 

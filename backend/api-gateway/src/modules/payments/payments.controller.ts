@@ -1,9 +1,7 @@
 import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { JwtAuthGuard, RolesGuard, Roles } from '@shared/infra/auth';
 import { Request } from 'express';
 import { CreateEscrowDto } from './dto/create-escrow.dto';
 import { ReleasePaymentDto } from './dto/release-payment.dto';

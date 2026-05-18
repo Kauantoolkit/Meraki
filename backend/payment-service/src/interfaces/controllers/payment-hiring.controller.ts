@@ -7,7 +7,7 @@ import { ConfirmPaymentUseCase } from '../../application/use-cases/confirm-payme
 import { CreatePaymentHiringDto } from '../../application/dto/create-payment-hiring.dto';
 
 @ApiTags('Payment Hiring')
-@Controller('api/payments/hiring')
+@Controller('payments/hiring')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class PaymentHiringController {

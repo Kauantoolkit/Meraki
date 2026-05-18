@@ -1,0 +1,9 @@
+**/node_modules
+**/dist
+**/.env
+**/test-results
+**/*.spec.ts
+**/*.test.ts
+docs/
+scripts/
+traefik/

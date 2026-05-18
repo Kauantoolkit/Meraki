@@ -16,7 +16,7 @@ import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
+    ThrottlerModule.forRoot([{ ttl: parseInt(process.env.THROTTLE_TTL || '60000', 10), limit: parseInt(process.env.THROTTLE_LIMIT || '100', 10) }]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,

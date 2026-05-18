@@ -16,18 +16,8 @@ import { GetUserProfileUseCase } from '../../application/use-cases/get-user-prof
 import { UpdateUserProfileUseCase } from '../../application/use-cases/update-user-profile.use-case';
 import { DeleteUserUseCase } from '../../application/use-cases/delete-user.use-case';
 import { UpdateProfileDto } from '../../application/dto/update-profile.dto';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { RolesGuard } from '../guards/roles.guard';
-import { CurrentUser } from '../decorators/current-user.decorator';
+import { JwtAuthGuard, RolesGuard, CurrentUser, AuthenticatedUser } from '@shared/infra/auth';
 import { UserType } from '../../domain/enums/user-type.enum';
-
-interface AuthenticatedUser {
-  id: string;
-  email: string;
-  userType: UserType;
-  specialistId?: string;
-  companyId?: string;
-}
 
 @ApiTags('Users')
 @Controller('users')

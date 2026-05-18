@@ -1,10 +1,10 @@
 import { Controller, Get, Param, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam, ApiResponse } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { JwtAuthGuard } from '@shared/infra/auth';
 import { GetProjectHistoryUseCase } from '../../application/use-cases/get-project-history.use-case';
 
 @ApiTags('Project History')
-@Controller('api/projects')
+@Controller('projects')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class ProjectHistoryController {

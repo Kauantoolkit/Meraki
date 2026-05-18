@@ -2,8 +2,7 @@ import {
   Controller, Get, Post, Put, Body, Param, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { CurrentUser } from '../decorators/current-user.decorator';
+import { JwtAuthGuard, CurrentUser } from '@shared/infra/auth';
 import { SubmitDeliveryUseCase } from '../../application/use-cases/submit-delivery.use-case';
 import { ReviewDeliveryUseCase } from '../../application/use-cases/review-delivery.use-case';
 import { GetKanbanBoardUseCase } from '../../application/use-cases/get-kanban-board.use-case';
@@ -13,7 +12,7 @@ import { GetMilestoneCommentsUseCase } from '../../application/use-cases/get-mil
 import { SubmitDeliveryDto } from '../../application/dtos/submit-delivery.dto';
 
 @ApiTags('Deliveries')
-@Controller('api/deliveries')
+@Controller('deliveries')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class DeliveryController {
@@ -44,7 +43,7 @@ export class DeliveryController {
 }
 
 @ApiTags('Kanban')
-@Controller('api/kanban')
+@Controller('kanban')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class KanbanController {
@@ -61,7 +60,7 @@ export class KanbanController {
 }
 
 @ApiTags('History')
-@Controller('api/history')
+@Controller('history')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class HistoryController {
@@ -75,7 +74,7 @@ export class HistoryController {
 }
 
 @ApiTags('Milestones')
-@Controller('api/deliveries')
+@Controller('deliveries')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class CommentController {

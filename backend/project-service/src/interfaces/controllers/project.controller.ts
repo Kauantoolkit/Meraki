@@ -6,8 +6,7 @@ import {
   ApiTags, ApiOperation, ApiBearerAuth, ApiQuery,
   ApiParam, ApiResponse,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { CurrentUser } from '../decorators/current-user.decorator';
+import { JwtAuthGuard, CurrentUser } from '@shared/infra/auth';
 import { CreateProjectDto } from '../../application/dto/create-project.dto';
 import { UpdateProjectDto } from '../../application/dto/update-project.dto';
 import { CreateProjectUseCase } from '../../application/use-cases/create-project.use-case';
@@ -20,7 +19,7 @@ import { ProjectStatus } from '../../domain/enums/project-status.enum';
 import { FindProjectsFilter } from '../../domain/repositories/project.repository.interface';
 
 @ApiTags('Projects')
-@Controller('api/projects')
+@Controller('projects')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class ProjectController {

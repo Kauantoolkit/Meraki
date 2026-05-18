@@ -30,7 +30,7 @@ interface AuthUser {
 // ─── Portfolio ──────────────────────────────────────────────────────────────
 
 @ApiTags('Portfolio')
-@Controller('api/portfolio')
+@Controller('portfolio')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class PortfolioController {
@@ -69,7 +69,7 @@ export class PortfolioController {
 // ─── Certifications ─────────────────────────────────────────────────────────
 
 @ApiTags('Certifications')
-@Controller('api/certifications')
+@Controller('certifications')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class CertificationController {
@@ -101,7 +101,7 @@ export class CertificationController {
 // ─── Reviews ────────────────────────────────────────────────────────────────
 
 @ApiTags('Reviews')
-@Controller('api/reviews')
+@Controller('reviews')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class ReviewController {
@@ -123,7 +123,7 @@ export class ReviewController {
 // ─── Public Profiles — RF12, RF13, RF14 ─────────────────────────────────────
 
 @ApiTags('Public Profiles')
-@Controller('api/profiles')
+@Controller('profiles')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class PublicProfileController {
@@ -160,7 +160,7 @@ export class PublicProfileController {
 // ─── My Portfolio (autenticado) ──────────────────────────────────────────────
 
 @ApiTags('My Portfolio')
-@Controller('api/portfolio/me')
+@Controller('portfolio/me')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class MyPortfolioController {

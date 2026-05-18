@@ -1,9 +1,7 @@
 import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PortfolioService } from './portfolio.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard } from '../../common/guards/roles.guard';
-import { Roles } from '../../common/decorators/roles.decorator';
+import { JwtAuthGuard, RolesGuard, Roles } from '@shared/infra/auth';
 import { Request } from 'express';
 import { UpdatePortfolioProfileDto } from './dto/update-profile.dto';
 import { AddSkillDto } from './dto/add-skill.dto';

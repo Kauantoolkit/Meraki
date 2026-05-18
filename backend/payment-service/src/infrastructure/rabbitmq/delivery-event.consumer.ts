@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
-import { RabbitMQConfigService } from './rabbitmq-config.service';
+import { RabbitMQService } from '@shared/infra/messaging/rabbitmq.service';
 import { ConfirmPaymentUseCase } from '../../application/use-cases/confirm-payment.use-case';
 
 @Injectable()
@@ -7,7 +7,7 @@ export class DeliveryEventConsumer implements OnModuleInit {
   private readonly logger = new Logger(DeliveryEventConsumer.name);
 
   constructor(
-    private readonly rabbit: RabbitMQConfigService,
+    private readonly rabbit: RabbitMQService,
     private readonly confirmPayment: ConfirmPaymentUseCase,
   ) {}
 

@@ -3,15 +3,14 @@ import {
   ApiTags, ApiOperation, ApiBearerAuth,
   ApiParam, ApiResponse,
 } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { CurrentUser } from '../decorators/current-user.decorator';
+import { JwtAuthGuard, CurrentUser } from '@shared/infra/auth';
 import { CreateMilestoneDto } from '../../application/dto/create-milestone.dto';
 import { CreateMilestoneUseCase } from '../../application/use-cases/create-milestone.use-case';
 import { GetMilestonesByProjectUseCase } from '../../application/use-cases/get-milestones-by-project.use-case';
 import { UpdateMilestoneStatusUseCase } from '../../application/use-cases/update-milestone-status.use-case';
 
 @ApiTags('Milestones')
-@Controller('api/projects')
+@Controller('projects')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class MilestoneController {

@@ -116,7 +116,11 @@ services:
   # ─── SERVIÇOS ──────────────────────────────────────────────────────────────
 
   identity-service:
-    build: ./identity-service
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: identity-service
     container_name: meraki-identity-service
     ports:
       - '3001:3001'
@@ -132,6 +136,8 @@ services:
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:?RABBITMQ_USER não definido}:${RABBITMQ_PASS:?RABBITMQ_PASS não definido}@rabbitmq:5672
+      THROTTLE_AUTH_LIMIT: ${THROTTLE_AUTH_LIMIT:-5}
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT:-100}
     depends_on:
       identity-db:
         condition: service_healthy
@@ -139,7 +145,11 @@ services:
         condition: service_healthy
 
   api-gateway:
-    build: ./api-gateway
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: api-gateway
     container_name: meraki-api-gateway
     ports:
       - '3000:3000'
@@ -153,11 +163,16 @@ services:
       DELIVERY_SERVICE_URL: http://delivery-service:3004
       PAYMENT_SERVICE_URL: http://payment-service:3005
       PORTFOLIO_SERVICE_URL: http://portfolio-service:3006
+      THROTTLE_LIMIT: ${THROTTLE_LIMIT:-100}
     depends_on:
       - identity-service
 
   project-service:
-    build: ./project-service
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: project-service
     container_name: meraki-project-service
     ports:
       - '3002:3002'
@@ -178,7 +193,11 @@ services:
         condition: service_healthy
 
   bidding-service:
-    build: ./bidding-service
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: bidding-service
     container_name: meraki-bidding-service
     ports:
       - '3003:3003'
@@ -199,7 +218,11 @@ services:
         condition: service_healthy
 
   delivery-service:
-    build: ./delivery-service
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: delivery-service
     container_name: meraki-delivery-service
     ports:
       - '3004:3004'
@@ -220,7 +243,11 @@ services:
         condition: service_healthy
 
   payment-service:
-    build: ./payment-service
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: payment-service
     container_name: meraki-payment-service
     ports:
       - '3005:3005'
@@ -242,7 +269,11 @@ services:
         condition: service_healthy
 
   portfolio-service:
-    build: ./portfolio-service
+    build:
+      context: .
+      dockerfile: Dockerfile.service
+      args:
+        SERVICE_NAME: portfolio-service
     container_name: meraki-portfolio-service
     ports:
       - '3006:3006'

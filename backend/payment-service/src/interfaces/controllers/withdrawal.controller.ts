@@ -9,7 +9,7 @@ import { GetSpecialistBalanceUseCase } from '../../application/use-cases/get-spe
 import { CreateWithdrawalDto } from '../../application/dto/create-withdrawal.dto';
 
 @ApiTags('Withdrawals')
-@Controller('api/withdrawals')
+@Controller('withdrawals')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class WithdrawalController {

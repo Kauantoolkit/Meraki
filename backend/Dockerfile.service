@@ -1,0 +1,46 @@
+# ─── Dockerfile unificado para microsserviços MERAKI ─────────────────────────
+# Uso: docker build --build-arg SERVICE_NAME=identity-service -f Dockerfile.service .
+# O build context deve ser a raiz do backend/ (para acessar shared/)
+
+ARG SERVICE_NAME
+
+# ─── Builder ─────────────────────────────────────────────────────────────────
+FROM node:20-alpine AS builder
+
+ARG SERVICE_NAME
+
+WORKDIR /app
+
+# 1. Copiar e instalar dependências do serviço
+COPY ${SERVICE_NAME}/package*.json ./${SERVICE_NAME}/
+RUN cd ${SERVICE_NAME} && npm install --legacy-peer-deps
+
+# 2. Symlink node_modules to app root so shared/ files resolve deps
+RUN ln -s /app/${SERVICE_NAME}/node_modules /app/node_modules
+
+# 3. Copiar shared module (source — consumido via tsconfig paths)
+COPY shared/ ./shared/
+
+# 4. Copiar tsconfig base
+COPY tsconfig.base.json ./
+
+# 5. Copiar source do serviço
+COPY ${SERVICE_NAME}/ ./${SERVICE_NAME}/
+
+# 6. Build
+RUN cd ${SERVICE_NAME} && npm run build
+
+# ─── Production ──────────────────────────────────────────────────────────────
+FROM node:20-alpine AS production
+
+ARG SERVICE_NAME
+ENV SERVICE_NAME=${SERVICE_NAME}
+
+WORKDIR /app
+
+COPY --from=builder /app/${SERVICE_NAME}/package*.json ./
+RUN npm install --omit=dev --legacy-peer-deps
+
+COPY --from=builder /app/${SERVICE_NAME}/dist ./dist
+
+CMD node dist/${SERVICE_NAME}/src/main.js

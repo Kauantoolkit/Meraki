@@ -32,6 +32,9 @@ import { GetProjectHistoryUseCase } from './application/use-cases/get-project-hi
 import { AddMilestoneCommentUseCase } from './application/use-cases/add-milestone-comment.use-case';
 import { GetMilestoneCommentsUseCase } from './application/use-cases/get-milestone-comments.use-case';
 
+// Event Publisher (infrastructure)
+import { EventPublisherService } from './infrastructure/rabbitmq/event-publisher.service';
+
 // Consumers (infrastructure)
 import { BidAcceptedConsumer } from './infrastructure/rabbitmq/consumers/bid-accepted.consumer';
 import { MilestoneCreatedConsumer } from './infrastructure/rabbitmq/consumers/milestone-created.consumer';
@@ -58,6 +61,8 @@ import { DeliveryController, KanbanController, HistoryController, CommentControl
     { provide: KanbanColumnFactory, useFactory: () => new KanbanColumnFactory() },
     // Domain Services (instanciados sem @Injectable — domain puro)
     { provide: MilestoneProgressionDomainService, useFactory: () => new MilestoneProgressionDomainService() },
+    // Event Publisher
+    EventPublisherService,
     // Use Cases
     SubmitDeliveryUseCase,
     ReviewDeliveryUseCase,

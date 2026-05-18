@@ -28,7 +28,7 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: parseInt(process.env.THROTTLE_AUTH_LIMIT || '5', 10), ttl: 60_000 } })
   @ApiOperation({
     summary: 'Registrar novo usuário (company ou specialist)',
     description: 'Escopo: público. Rate-limit: 5 req/min por IP.',
@@ -43,7 +43,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: parseInt(process.env.THROTTLE_AUTH_LIMIT || '5', 10), ttl: 60_000 } })
   @ApiOperation({
     summary: 'Autenticar usuário e receber par accessToken + refreshToken',
     description: 'Escopo: público. Rate-limit: 5 req/min por IP.',

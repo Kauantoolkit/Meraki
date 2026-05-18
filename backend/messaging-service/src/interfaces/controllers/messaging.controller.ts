@@ -7,15 +7,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { CurrentUser } from '../decorators/current-user.decorator';
+import { JwtAuthGuard, CurrentUser } from '@shared/infra/auth';
 import { CreateConversationDto } from '../../application/dto/create-conversation.dto';
 import { GetConversationsUseCase } from '../../application/use-cases/get-conversations.use-case';
 import { GetOrCreateConversationUseCase } from '../../application/use-cases/get-or-create-conversation.use-case';
 import { GetMessagesUseCase } from '../../application/use-cases/get-messages.use-case';
 
 @ApiTags('Messaging')
-@Controller('api/conversations')
+@Controller('conversations')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class MessagingController {

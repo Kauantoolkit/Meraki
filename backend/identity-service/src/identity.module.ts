@@ -13,7 +13,6 @@ import { RefreshTokenSchema } from './infrastructure/database/schemas/refresh-to
 // Infrastructure
 import { UserRepository, RefreshTokenRepository } from './infrastructure/repositories/user.repository';
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
-import { RabbitMQModule } from './infrastructure/rabbitmq/rabbitmq.module';
 import { EventPublisherService } from './infrastructure/rabbitmq/event-publisher.service';
 
 // Domain Factories
@@ -36,7 +35,7 @@ import { AuthController } from './interfaces/controllers/auth.controller';
 import { UserController } from './interfaces/controllers/user.controller';
 
 // Guards
-import { RolesGuard } from './interfaces/guards/roles.guard';
+import { RolesGuard } from '@shared/infra/auth/guards/roles.guard';
 
 @Module({
   imports: [
@@ -53,10 +52,11 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
       // Cada chamada de jwtService.sign() passa expiresIn explicitamente via TokenService.
     }),
     ThrottlerModule.forRoot([
-      // Limite padrão p/ qualquer endpoint sob ThrottlerGuard: 100 req/min/IP
-      { ttl: 60_000, limit: 100 },
+      {
+        ttl: parseInt(process.env.THROTTLE_TTL || '60000', 10),
+        limit: parseInt(process.env.THROTTLE_LIMIT || '100', 10),
+      },
     ]),
-    RabbitMQModule,
   ],
   controllers: [AuthController, UserController],
   providers: [

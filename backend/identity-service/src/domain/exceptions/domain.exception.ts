@@ -1,9 +1,5 @@
-export class DomainException extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'DomainException';
-  }
-}
+export { DomainException } from '@shared/domain/exceptions/domain.exception';
+import { DomainException } from '@shared/domain/exceptions/domain.exception';
 
 export class InvalidEmailException extends DomainException {
   constructor(email: string) {

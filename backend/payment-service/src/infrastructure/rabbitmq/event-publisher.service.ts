@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { RabbitMQConfigService } from './rabbitmq-config.service';
+import { RabbitMQService } from '@shared/infra/messaging/rabbitmq.service';
+import { PaymentRoutingKey } from '@shared/contracts/events/payment.events';
 
 @Injectable()
 export class EventPublisherService {
-  constructor(private readonly rabbit: RabbitMQConfigService) {}
+  constructor(private readonly rabbit: RabbitMQService) {}
 
   publishPaymentCreated(payload: {
     paymentId: string;
@@ -12,7 +13,7 @@ export class EventPublisherService {
     amount: number;
     companyId: string;
   }) {
-    return this.rabbit.publishEvent('payment.created', payload);
+    return this.rabbit.publishEvent(PaymentRoutingKey.PAYMENT_CREATED, payload);
   }
 
   publishPaymentReleased(payload: {
@@ -24,7 +25,7 @@ export class EventPublisherService {
     platformFee: number;
     specialistId: string;
   }) {
-    return this.rabbit.publishEvent('payment.released', payload);
+    return this.rabbit.publishEvent(PaymentRoutingKey.PAYMENT_RELEASED, payload);
   }
 
   publishWithdrawalCompleted(payload: {
@@ -33,6 +34,6 @@ export class EventPublisherService {
     amount: number;
     method: string;
   }) {
-    return this.rabbit.publishEvent('withdrawal.completed', payload);
+    return this.rabbit.publishEvent(PaymentRoutingKey.WITHDRAWAL_COMPLETED, payload);
   }
 }

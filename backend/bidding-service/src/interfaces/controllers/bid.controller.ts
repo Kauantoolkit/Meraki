@@ -3,8 +3,7 @@ import {
   UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../guards/jwt-auth.guard';
-import { CurrentUser } from '../decorators/current-user.decorator';
+import { JwtAuthGuard, CurrentUser } from '@shared/infra/auth';
 import { SubmitBidDto } from '../../application/dto/submit-bid.dto';
 import { SendBidMessageDto } from '../../application/dto/send-bid-message.dto';
 import { SubmitBidUseCase } from '../../application/use-cases/submit-bid.use-case';
@@ -16,7 +15,7 @@ import { SendBidMessageUseCase } from '../../application/use-cases/send-bid-mess
 import { GetBidMessagesUseCase } from '../../application/use-cases/get-bid-messages.use-case';
 
 @ApiTags('Bids')
-@Controller('api/bids')
+@Controller('bids')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
 export class BidController {

@@ -1,0 +1,29 @@
+{
+  "name": "meraki-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start:identity": "cd identity-service && npm run start:dev",
+    "start:project": "cd project-service && npm run start:dev",
+    "start:bidding": "cd bidding-service && npm run start:dev",
+    "start:delivery": "cd delivery-service && npm run start:dev",
+    "start:payment": "cd payment-service && npm run start:dev",
+    "start:portfolio": "cd portfolio-service && npm run start:dev",
+    "start:messaging": "cd messaging-service && npm run start:dev",
+    "start:gateway": "cd api-gateway && npm run start:dev",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "check:identity": "cd identity-service && npx tsc --noEmit",
+    "check:project": "cd project-service && npx tsc --noEmit",
+    "check:bidding": "cd bidding-service && npx tsc --noEmit",
+    "check:delivery": "cd delivery-service && npx tsc --noEmit",
+    "check:payment": "cd payment-service && npx tsc --noEmit",
+    "check:portfolio": "cd portfolio-service && npx tsc --noEmit",
+    "check:gateway": "cd api-gateway && npx tsc --noEmit",
+    "validate:all": "npm run lint && npm run check:identity && npm run check:project && npm run check:bidding && npm run check:delivery && npm run check:payment && npm run check:portfolio && npm run check:gateway"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.9"
+  }
+}
