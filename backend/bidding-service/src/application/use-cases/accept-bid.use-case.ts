@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { BidRepository } from '../../infrastructure/repositories/bid.repository';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { BidAcceptedEvent } from '../../domain/events/bid-accepted.event';
@@ -12,25 +12,34 @@ export class AcceptBidUseCase {
     private readonly events: EventPublisherService,
   ) {}
 
-  async execute(bidId: string): Promise<void> {
+  /**
+   * @param bidId           ID da proposta a ser aceita
+   * @param callerSpecialistId  specialistId do usuário autenticado (undefined se empresa)
+   */
+  async execute(bidId: string, callerSpecialistId: string | undefined): Promise<void> {
     const bid = await this.bidRepo.findById(bidId);
     if (!bid) throw new NotFoundException('Proposta não encontrada');
 
-    // Carrega todas as bids do projeto para o Domain Service decidir
-    const projectBids = await this.bidRepo.findByProject(bid.projectId);
-
-    // Domain Service aplica RN03: valida unicidade e seleciona vencedor
-    const { winner, toReject } = this.bidSelectionService.selectWinner(bidId, projectBids);
-
-    await this.bidRepo.save(winner);
-    for (const rejected of toReject) {
-      await this.bidRepo.save(rejected);
+    // Especialista não pode aceitar a própria proposta
+    if (callerSpecialistId && bid.specialistId === callerSpecialistId) {
+      throw new ForbiddenException('Especialista não pode aceitar a própria proposta');
     }
 
-    // bid.accepted é o evento mais importante do sistema —
-    // dispara project-service (assignSpecialist) e delivery-service (init tracking)
+    const projectBids = await this.bidRepo.findByProject(bid.projectId);
+
+    // Domain Service valida RN03 e muta status em memória
+    const { winner } = this.bidSelectionService.selectWinner(bidId, projectBids);
+
+    // Infraestrutura persiste atomicamente: salva vencedor + rejeita demais em uma transação
+    await this.bidRepo.saveWinnerAtomically(winner, bid.projectId);
+
+    // bid.accepted dispara project-service (assignSpecialist) e delivery-service
     await this.events.publishBidAccepted(
-      new BidAcceptedEvent({ bidId: winner.id, projectId: winner.projectId, specialistId: winner.specialistId }),
+      new BidAcceptedEvent({
+        bidId: winner.id,
+        projectId: winner.projectId,
+        specialistId: winner.specialistId,
+      }),
     );
   }
 }
