@@ -26,9 +26,10 @@ export class BidsController {
   }
 
   @Get('project/:projectId')
-  @ApiOperation({ summary: 'Listar propostas de um projeto' })
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Listar propostas de um projeto (empresa dona)' })
   findByProject(@Param('projectId') projectId: string, @Req() req: Request) {
-    return this.bidsService.findByProject(projectId, this.token(req));
+    return this.bidsService.findByProject(projectId, this.token(req), (req.user as any).companyId);
   }
 
   @Get('my-bids')
@@ -48,14 +49,14 @@ export class BidsController {
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Aceitar proposta (empresa)' })
   accept(@Param('id') id: string, @Req() req: Request) {
-    return this.bidsService.accept(id, this.token(req));
+    return this.bidsService.accept(id, this.token(req), (req.user as any).companyId);
   }
 
   @Put(':id/reject')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Rejeitar proposta (empresa)' })
   reject(@Param('id') id: string, @Req() req: Request) {
-    return this.bidsService.reject(id, this.token(req));
+    return this.bidsService.reject(id, this.token(req), (req.user as any).companyId);
   }
 
   @Put(':id/withdraw')

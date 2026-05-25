@@ -1,6 +1,8 @@
 import { Bid } from '../entities/bid.entity';
 import { BidStatus } from '../enums/bid-status.enum';
 import { ProposedValue } from '../value-objects/proposed-value.value-object';
+import { ProposalText } from '../value-objects/proposal-text.value-object';
+import { EstimatedDuration } from '../value-objects/estimated-duration.value-object';
 import { DomainException } from '../exceptions/domain.exception';
 
 export interface CreateBidData {
@@ -15,22 +17,17 @@ export class BidFactory {
   create(data: CreateBidData): Bid {
     if (!data.projectId) throw new DomainException('projectId é obrigatório');
     if (!data.specialistId) throw new DomainException('specialistId é obrigatório');
-    if (!data.proposal || data.proposal.trim().length < 10) {
-      throw new DomainException('Proposta deve ter pelo menos 10 caracteres');
-    }
-    if (!data.estimatedDuration || data.estimatedDuration <= 0) {
-      throw new DomainException('Duração estimada deve ser maior que zero');
-    }
-
-    // Value Object valida o valor proposto
+    // Value Objects validam invariantes do domínio
+    const proposalText = new ProposalText(data.proposal);
     const proposedValue = new ProposedValue(data.proposedBudget);
+    const estimatedDuration = new EstimatedDuration(data.estimatedDuration);
 
     const bid = new Bid();
     bid.projectId = data.projectId;
     bid.specialistId = data.specialistId;
-    bid.proposal = data.proposal.trim();
+    bid.proposal = proposalText.getValue();
     bid.proposedBudget = proposedValue.getValue();
-    bid.estimatedDuration = data.estimatedDuration;
+    bid.estimatedDuration = estimatedDuration.getValue();
     bid.status = BidStatus.PENDING;
 
     return bid;
