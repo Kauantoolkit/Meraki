@@ -1,0 +1,14 @@
+{
+  "name": "@meraki/e2e-playwright",
+  "version": "1.0.0",
+  "description": "Testes de integração Playwright contra os serviços rodando via docker-compose",
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "@types/node": "^20.0.0"
+  }
+}
