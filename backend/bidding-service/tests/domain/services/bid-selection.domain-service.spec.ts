@@ -1,7 +1,8 @@
 import { BidSelectionDomainService } from '../../../src/domain/services/bid-selection.domain-service';
 import { Bid } from '../../../src/domain/entities/bid.entity';
 import { BidStatus } from '../../../src/domain/enums/bid-status.enum';
-import { ConflictException, NotFoundException } from '@nestjs/common';
+import { BidAlreadyAcceptedError } from '../../../src/domain/exceptions/bid-already-accepted.error';
+import { DomainException } from '../../../src/domain/exceptions/domain.exception';
 
 function createBid(id: string, status: BidStatus = BidStatus.PENDING): Bid {
   const bid = new Bid();
@@ -22,7 +23,7 @@ describe('BidSelectionDomainService — RN03', () => {
     service = new BidSelectionDomainService();
   });
 
-  it('deve selecionar a bid vencedora e rejeitar as demais', () => {
+  it('deve selecionar a bid vencedora e rejeitar as demais PENDING', () => {
     const bids = [createBid('bid-1'), createBid('bid-2'), createBid('bid-3')];
 
     const { winner, toReject } = service.selectWinner('bid-2', bids);
@@ -33,22 +34,30 @@ describe('BidSelectionDomainService — RN03', () => {
     toReject.forEach((b) => expect(b.status).toBe(BidStatus.REJECTED));
   });
 
-  it('RN03: deve impedir selecao quando ja existe bid aceita', () => {
+  it('RN03: deve lançar BidAlreadyAcceptedError quando ja existe bid aceita', () => {
     const bids = [
       createBid('bid-1', BidStatus.ACCEPTED),
       createBid('bid-2'),
     ];
 
-    expect(() => service.selectWinner('bid-2', bids)).toThrow(ConflictException);
+    expect(() => service.selectWinner('bid-2', bids)).toThrow(BidAlreadyAcceptedError);
   });
 
-  it('deve lancar NotFoundException se bid nao encontrada', () => {
+  it('RN03: mensagem do erro deve indicar a regra de negócio', () => {
+    const bids = [createBid('bid-1', BidStatus.ACCEPTED), createBid('bid-2')];
+
+    expect(() => service.selectWinner('bid-2', bids)).toThrow(
+      'Este projeto já possui um especialista selecionado (RN03)',
+    );
+  });
+
+  it('deve lançar DomainException se bid não encontrada no projeto', () => {
     const bids = [createBid('bid-1')];
 
-    expect(() => service.selectWinner('bid-inexistente', bids)).toThrow(NotFoundException);
+    expect(() => service.selectWinner('bid-inexistente', bids)).toThrow(DomainException);
   });
 
-  it('nao deve rejeitar bids que ja foram WITHDRAWN', () => {
+  it('não deve rejeitar bids que já foram WITHDRAWN', () => {
     const bids = [
       createBid('bid-1'),
       createBid('bid-2', BidStatus.WITHDRAWN),
@@ -62,7 +71,21 @@ describe('BidSelectionDomainService — RN03', () => {
     expect(toReject[0].id).toBe('bid-3');
   });
 
-  it('deve funcionar com apenas uma bid', () => {
+  it('não deve rejeitar bids que já foram REJECTED', () => {
+    const bids = [
+      createBid('bid-1'),
+      createBid('bid-2', BidStatus.REJECTED),
+      createBid('bid-3'),
+    ];
+
+    const { winner, toReject } = service.selectWinner('bid-1', bids);
+
+    expect(winner.status).toBe(BidStatus.ACCEPTED);
+    expect(toReject).toHaveLength(1);
+    expect(toReject[0].id).toBe('bid-3');
+  });
+
+  it('deve funcionar com apenas uma bid no projeto', () => {
     const bids = [createBid('bid-1')];
 
     const { winner, toReject } = service.selectWinner('bid-1', bids);
