@@ -24,13 +24,19 @@ export default function Bidding() {
 
   useEffect(() => {
     if (!projectId) return
-    Promise.all([
+    Promise.allSettled([
       projectsApi.getById(projectId),
       bidsApi.myBids(),
-    ]).then(([pRes, bRes]) => {
-      setProject(pRes.data)
-      const active = bRes.data.find(b => b.projectId === projectId && b.status !== 'WITHDRAWN')
-      if (active) setExistingBid(active)
+    ]).then(([pResult, bResult]) => {
+      if (pResult.status === 'fulfilled') setProject(pResult.value.data)
+      if (bResult.status === 'fulfilled') {
+        const active = bResult.value.data.find(
+          (b: { projectId: string; status: string }) =>
+            b.projectId === projectId &&
+            (b.status === 'PENDING' || b.status === 'ACCEPTED'),
+        )
+        if (active) setExistingBid(active)
+      }
     }).finally(() => setLoading(false))
   }, [projectId])
 
@@ -46,8 +52,16 @@ export default function Bidding() {
         proposalText: coverLetter,
       })
       setSubmitted(res.data)
-    } catch {
-      alert('Erro ao submeter proposta. Verifique se já tem uma proposta ativa neste projeto.')
+    } catch (e: any) {
+      const status = e?.response?.status
+      const msg: string = e?.response?.data?.message ?? ''
+      if (status === 422) {
+        alert('Este projeto não está a aceitar novas propostas.')
+      } else if (status === 409) {
+        alert('Já tem uma proposta ativa neste projeto (RN02).')
+      } else {
+        alert(`Erro ao submeter proposta: ${msg || 'Tente novamente.'}`)
+      }
     } finally {
       setSubmitting(false)
     }
@@ -77,8 +91,15 @@ export default function Bidding() {
                 <span className="font-mono text-[10px] text-zinc-400 border border-dark-border bg-dark-input px-2 py-1 tracking-widest">
                   REF: {project?.id}
                 </span>
-                <span className="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-1 tracking-widest flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" /> STATUS: OPEN
+                <span className={`font-mono text-[10px] px-2 py-1 tracking-widest flex items-center gap-1.5 border ${
+                  project?.status === 'OPEN'
+                    ? 'text-brand-500 border-brand-500/30 bg-brand-500/10'
+                    : project?.status === 'IN_PROGRESS'
+                      ? 'text-blue-400 border-blue-400/30 bg-blue-400/10'
+                      : 'text-zinc-500 border-zinc-700 bg-dark-input'
+                }`}>
+                  {project?.status === 'OPEN' && <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />}
+                  STATUS: {project?.status ?? '…'}
                 </span>
               </div>
 
@@ -157,7 +178,7 @@ export default function Bidding() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">let estimatedDays =</label>
                     <div className="relative group">
-                      <input type="number" required min={1} value={duration} onChange={e => setDuration(e.target.value)}
+                      <input type="number" required min={1} max={3650} value={duration} onChange={e => setDuration(e.target.value)}
                         placeholder="Ex: 45"
                         className="w-full pl-4 pr-12 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -177,7 +198,7 @@ export default function Bidding() {
                     <div className="absolute left-0 top-0 bottom-0 w-8 border-r border-dark-border bg-dark-input flex flex-col items-center py-2 select-none">
                       {[1,2,3,4,5,6,7,8].map(n => <span key={n} className="text-[10px] font-mono text-zinc-700">{n}</span>)}
                     </div>
-                    <textarea required value={coverLetter} onChange={e => setCoverLetter(e.target.value)}
+                    <textarea required minLength={20} maxLength={2000} value={coverLetter} onChange={e => setCoverLetter(e.target.value)}
                       placeholder="Apresente a sua proposta técnica..."
                       className="editor-textarea w-full pl-10 pr-2 py-2 bg-transparent text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none h-64" />
                   </div>
@@ -196,6 +217,21 @@ export default function Bidding() {
                   </button>
                 </div>
               </form>
+
+              {/* Projeto encerrado — não aceita novas propostas */}
+              {project && project.status !== 'OPEN' && !existingBid && !submitted && (
+                <div className="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 border border-amber-500/40">
+                  <ShieldAlert className="w-16 h-16 text-amber-400 mb-4" />
+                  <h2 className="text-xl font-mono font-bold text-white mb-2">PROJETO ENCERRADO</h2>
+                  <p className="text-xs font-mono text-amber-400 text-center mb-6">
+                    &gt; STATUS: {project.status} — Este projeto não está a aceitar novas propostas.
+                  </p>
+                  <button onClick={() => navigate('/dashboard')}
+                    className="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-amber-500 hover:text-amber-400 transition-colors">
+                    &lt; Retornar ao Workspace
+                  </button>
+                </div>
+              )}
 
               {/* RN02: Already submitted overlay */}
               {existingBid && !submitted && (

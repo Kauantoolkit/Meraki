@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { BidRepository } from '../../infrastructure/repositories/bid.repository';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { BidAcceptedEvent } from '../../domain/events/bid-accepted.event';
+import { BidRejectedEvent } from '../../domain/events/bid-rejected.event';
 import { BidSelectionDomainService } from '../../domain/services/bid-selection.domain-service';
 
 @Injectable()
@@ -27,10 +28,16 @@ export class AcceptBidUseCase {
       await this.bidRepo.save(rejected);
     }
 
-    // bid.accepted é o evento mais importante do sistema —
-    // dispara project-service (assignSpecialist) e delivery-service (init tracking)
+    // bid.accepted — dispara project-service (assignSpecialist) e delivery-service (init tracking)
     await this.events.publishBidAccepted(
       new BidAcceptedEvent({ bidId: winner.id, projectId: winner.projectId, specialistId: winner.specialistId }),
     );
+
+    // bid.rejected — notifica cada especialista que teve proposta recusada automaticamente (RN03)
+    for (const rejected of toReject) {
+      await this.events.publishBidRejected(
+        new BidRejectedEvent({ bidId: rejected.id, projectId: rejected.projectId, specialistId: rejected.specialistId }),
+      );
+    }
   }
 }

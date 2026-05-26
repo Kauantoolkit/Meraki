@@ -3,6 +3,7 @@ import { BidRepository } from '../../infrastructure/repositories/bid.repository'
 import { BidMessageRepository } from '../../infrastructure/repositories/bid-message.repository';
 import { SendBidMessageDto } from '../dto/send-bid-message.dto';
 import { BidStatus } from '../../domain/enums/bid-status.enum';
+import { BidMessage } from '../../domain/entities/bid-message.entity';
 
 @Injectable()
 export class SendBidMessageUseCase {
@@ -19,6 +20,7 @@ export class SendBidMessageUseCase {
       throw new ForbiddenException('Não é possível enviar mensagens em propostas encerradas');
     }
 
-    await this.messageRepo.save({ bidId, senderId, content: dto.message });
+    const message = BidMessage.create(bidId, senderId, dto.message);
+    await this.messageRepo.save(message);
   }
 }
