@@ -59,14 +59,26 @@ export async function ensureUser(
       body: { email, password, name, userType, ...(companyName ? { companyName } : {}) },
     })
   } catch (e: any) {
-    if (e.status !== 409 && e.status !== 400) throw e
+    if (e.status !== 409 && e.status !== 400 && e.status !== 429) throw e
   }
 
-  // Login
-  const loginRes = await request<{ accessToken: string; user: any }>('/auth/login', {
-    method: 'POST',
-    body: { email, password },
-  })
+  // Login — retry com backoff em caso de throttling (429)
+  let loginRes: { accessToken: string; user: any }
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      loginRes = await request<{ accessToken: string; user: any }>('/auth/login', {
+        method: 'POST',
+        body: { email, password },
+      })
+      break
+    } catch (e: any) {
+      if (e.status === 429 && attempt < 4) {
+        await new Promise(res => setTimeout(res, 5000 * (attempt + 1)))
+        continue
+      }
+      throw e
+    }
+  }
 
   const u = loginRes.user
   return {
@@ -78,7 +90,9 @@ export async function ensureUser(
 /* ─── Convenience accounts (reused across tests) ─── */
 
 let _company: TestUser | null = null
+let _company2: TestUser | null = null
 let _specialist: TestUser | null = null
+let _specialist2: TestUser | null = null
 
 export async function getCompanyUser(): Promise<TestUser> {
   if (!_company) {
@@ -87,11 +101,25 @@ export async function getCompanyUser(): Promise<TestUser> {
   return _company
 }
 
+export async function getCompany2User(): Promise<TestUser> {
+  if (!_company2) {
+    _company2 = await ensureUser('e2e-company2@meraki.test', 'Test@12345', 'Empresa E2E 2', 'COMPANY', 'E2E Corp 2 Ltda')
+  }
+  return _company2
+}
+
 export async function getSpecialistUser(): Promise<TestUser> {
   if (!_specialist) {
     _specialist = await ensureUser('e2e-specialist@meraki.test', 'Test@12345', 'Dev E2E', 'SPECIALIST')
   }
   return _specialist
+}
+
+export async function getSpecialist2User(): Promise<TestUser> {
+  if (!_specialist2) {
+    _specialist2 = await ensureUser('e2e-specialist2@meraki.test', 'Test@12345', 'Dev E2E 2', 'SPECIALIST')
+  }
+  return _specialist2
 }
 
 /* ─── Project helpers ─── */
@@ -138,6 +166,26 @@ export async function submitBid(
 
 export async function getMyBids(token: string) {
   return request<any[]>('/bids/my-bids', { token })
+}
+
+export async function withdrawBid(token: string, bidId: string) {
+  return request<any>(`/bids/${bidId}/withdraw`, { method: 'PUT', token })
+}
+
+export async function acceptBid(token: string, bidId: string) {
+  return request<any>(`/bids/${bidId}/accept`, { method: 'PUT', token })
+}
+
+export async function rejectBid(token: string, bidId: string) {
+  return request<any>(`/bids/${bidId}/reject`, { method: 'PUT', token })
+}
+
+export async function sendBidMessage(token: string, bidId: string, message: string) {
+  return request<any>(`/bids/${bidId}/messages`, { method: 'POST', body: { message }, token })
+}
+
+export async function getBidMessages(token: string, bidId: string) {
+  return request<any[]>(`/bids/${bidId}/messages`, { token })
 }
 
 /* ─── Milestone helpers ─── */

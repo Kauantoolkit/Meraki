@@ -7,6 +7,7 @@ import {
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { bidsApi, Bid } from '../api/bids'
+import { useAuth } from '../contexts/AuthContext'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -20,6 +21,7 @@ const STATUS_META: Record<Bid['status'], { label: string; cls: string }> = {
 export default function AvaliarPropostas() {
   const { projectId } = useParams<{ projectId: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
 
   const [project, setProject] = useState<Project | null>(null)
   const [bids, setBids] = useState<Bid[]>([])
@@ -28,17 +30,32 @@ export default function AvaliarPropostas() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [confirmModal, setConfirmModal] = useState<{ bid: Bid; action: 'accept' | 'reject' } | null>(null)
 
+  // Apenas COMPANY pode gerir propostas; especialistas são redirecionados
+  useEffect(() => {
+    if (user && user.userType !== 'COMPANY') {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [user, navigate])
+
   const hasAccepted = bids.some(b => b.status === 'ACCEPTED')
 
   useEffect(() => {
-    if (!projectId) return
-    Promise.all([projectsApi.getById(projectId), bidsApi.listForProject(projectId)])
-      .then(([pRes, bRes]) => {
-        setProject(pRes.data)
-        setBids(bRes.data)
+    if (!projectId || !user) return
+    Promise.allSettled([projectsApi.getById(projectId), bidsApi.listForProject(projectId)])
+      .then(([pResult, bResult]) => {
+        if (pResult.status === 'fulfilled') {
+          const p = pResult.value.data
+          // ACL frontend: redireciona se a empresa logada não for dona do projeto
+          if (p.companyId !== user.companyId) {
+            navigate('/dashboard', { replace: true })
+            return
+          }
+          setProject(p)
+        }
+        if (bResult.status === 'fulfilled') setBids(bResult.value.data)
       })
       .finally(() => setLoading(false))
-  }, [projectId])
+  }, [projectId, user, navigate])
 
   async function handleAction(bid: Bid, action: 'accept' | 'reject') {
     setActionId(bid.id)

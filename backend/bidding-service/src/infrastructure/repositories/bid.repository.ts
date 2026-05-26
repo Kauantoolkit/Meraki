@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Bid } from '../../domain/entities/bid.entity';
 import { IBidRepository } from '../../domain/repositories/bid.repository.interface';
 import { BidStatus } from '../../domain/enums/bid-status.enum';
@@ -34,13 +34,5 @@ export class BidRepository implements IBidRepository {
 
   save(bid: Bid): Promise<Bid> {
     return this.repo.save(bid);
-  }
-
-  /** Rejeita todas as propostas PENDING do projeto, exceto a aceita — RN03 */
-  async rejectAllPendingExcept(projectId: string, acceptedBidId: string): Promise<void> {
-    await this.repo.update(
-      { projectId, status: BidStatus.PENDING, id: Not(acceptedBidId) },
-      { status: BidStatus.REJECTED },
-    );
   }
 }
