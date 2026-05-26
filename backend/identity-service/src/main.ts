@@ -6,6 +6,9 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './interfaces/filters/http-exception.filter';
 import { DomainExceptionFilter } from './interfaces/filters/domain-exception.filter';
+import { SanitizationPipe } from './interfaces/pipes/sanitization.pipe';
+import { AuditInterceptor } from './infrastructure/auth/audit.interceptor';
+import { AuditLogService } from './application/services/audit-log.service';
 
 function requireEnv(keys: string[]): void {
   const missing = keys.filter((k) => !process.env[k]);
@@ -29,14 +32,19 @@ async function bootstrap() {
   // Prefixo global de rotas
   app.setGlobalPrefix('api');
 
-  // Validação automática dos DTOs via class-validator
+  // Validação automática dos DTOs via class-validator (ordem importa)
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,          // Remove campos não declarados no DTO
       forbidNonWhitelisted: true, // Rejeita requests com campos extras
       transform: true,          // Transforma tipos automaticamente
     }),
+    // SanitizationPipe APÓS ValidationPipe para sanitizar dados já validados
+    new SanitizationPipe(app.get(require('./infrastructure/security/xss-sanitizer.service').XssSanitizerService)),
   );
+
+  // Interceptor de auditoria (registra ações importantes)
+  app.useGlobalInterceptors(new AuditInterceptor(app.get(AuditLogService)));
 
   // Filtro global de exceções HTTP
   app.useGlobalFilters(new HttpExceptionFilter(), new DomainExceptionFilter());
