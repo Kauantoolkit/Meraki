@@ -1,6 +1,7 @@
 import { ExceptionFilter, Catch, ArgumentsHost, HttpStatus, Logger } from '@nestjs/common';
 import { Request, Response } from 'express';
 import { DomainException } from '../../domain/exceptions/domain.exception';
+import { BidAlreadyAcceptedError } from '../../domain/exceptions/bid-already-accepted.error';
 
 @Catch(DomainException)
 export class DomainExceptionFilter implements ExceptionFilter {
@@ -11,8 +12,12 @@ export class DomainExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
+    const statusCode = exception instanceof BidAlreadyAcceptedError
+      ? HttpStatus.CONFLICT
+      : HttpStatus.BAD_REQUEST;
+
     const error = {
-      statusCode: HttpStatus.BAD_REQUEST,
+      statusCode,
       timestamp: new Date().toISOString(),
       path: request.url,
       method: request.method,
@@ -21,6 +26,6 @@ export class DomainExceptionFilter implements ExceptionFilter {
 
     this.logger.warn(`Domain: ${request.method} ${request.url} → ${exception.message}`);
 
-    response.status(HttpStatus.BAD_REQUEST).json(error);
+    response.status(statusCode).json(error);
   }
 }

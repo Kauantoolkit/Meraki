@@ -1,29 +1,24 @@
 import { Bid } from '../entities/bid.entity';
 import { BidStatus } from '../enums/bid-status.enum';
 import { DomainException } from '../exceptions/domain.exception';
+import { BidAlreadyAcceptedError } from '../exceptions/bid-already-accepted.error';
 
 /**
  * Domain Service — Seleção de proposta vencedora (RN03).
  * Encapsula a regra que envolve múltiplos Aggregates (vários Bids):
- * - Validar que não existe bid aceito (apenas um vencedor por projeto)
+ * - Validar que não existe bid aceita (apenas um vencedor por projeto)
  * - Aceitar a bid escolhida
  * - Rejeitar todas as demais pendentes
  */
 export class BidSelectionDomainService {
-  /**
-   * Valida e seleciona a bid vencedora a partir de um conjunto de bids do projeto.
-   * @param bidId ID da bid a ser aceita
-   * @param projectBids Todas as bids do projeto
-   * @returns A bid aceita com status atualizado
-   */
   selectWinner(bidId: string, projectBids: Bid[]): { winner: Bid; toReject: Bid[] } {
     const alreadyAccepted = projectBids.find((b) => b.status === BidStatus.ACCEPTED);
     if (alreadyAccepted) {
-      throw new DomainException('Este projeto já possui um especialista selecionado (RN03)');
+      throw new BidAlreadyAcceptedError();
     }
 
     const winner = projectBids.find((b) => b.id === bidId);
-    if (!winner) throw new DomainException('Proposta não encontrada');
+    if (!winner) throw new DomainException('Proposta não encontrada no projeto');
 
     winner.accept(); // invariante na entity (só aceita PENDING)
 

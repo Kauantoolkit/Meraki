@@ -3,6 +3,7 @@ import { UserSchema } from '../database/schemas/user.schema';
 import { SpecialistProfileSchema } from '../database/schemas/specialist-profile.schema';
 import { CompanyProfileSchema } from '../database/schemas/company-profile.schema';
 import { AuditLog } from '../../domain/entities/audit-log.entity';
+import { RefreshTokenSchema } from '../database/schemas/refresh-token.schema';
 
 export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -11,7 +12,7 @@ export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
   database: process.env.DB_NAME || 'identity_db',
-  entities: [UserSchema, SpecialistProfileSchema, CompanyProfileSchema, AuditLog],
+  entities: [UserSchema, SpecialistProfileSchema, CompanyProfileSchema, AuditLog, RefreshTokenSchema],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
 });
