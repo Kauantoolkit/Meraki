@@ -29,7 +29,7 @@ export class AcceptBidUseCase {
     const projectBids = await this.bidRepo.findByProject(bid.projectId);
 
     // Domain Service valida RN03 e muta status em memória
-    const { winner } = this.bidSelectionService.selectWinner(bidId, projectBids);
+    const { winner, toReject } = this.bidSelectionService.selectWinner(bidId, projectBids);
 
     // Infraestrutura persiste atomicamente: salva vencedor + rejeita demais em uma transação
     await this.bidRepo.saveWinnerAtomically(winner, bid.projectId);
