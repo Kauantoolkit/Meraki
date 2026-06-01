@@ -1,5 +1,4 @@
 import { Bid } from '../entities/bid.entity';
-import { BidStatus } from '../enums/bid-status.enum';
 
 export interface IBidRepository {
   findById(id: string): Promise<Bid | null>;
@@ -9,4 +8,6 @@ export interface IBidRepository {
   findAcceptedByProject(projectId: string): Promise<Bid | null>;
   save(bid: Bid): Promise<Bid>;
   rejectAllPendingExcept(projectId: string, acceptedBidId: string): Promise<void>;
+  /** Persiste o vencedor e rejeita todas as demais PENDING em uma única transação (RN03). */
+  saveWinnerAtomically(winner: Bid, projectId: string): Promise<void>;
 }

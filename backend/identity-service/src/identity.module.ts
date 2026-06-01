@@ -9,18 +9,22 @@ import { UserSchema } from './infrastructure/database/schemas/user.schema';
 import { SpecialistProfileSchema } from './infrastructure/database/schemas/specialist-profile.schema';
 import { CompanyProfileSchema } from './infrastructure/database/schemas/company-profile.schema';
 import { RefreshTokenSchema } from './infrastructure/database/schemas/refresh-token.schema';
+import { AuditLog } from './domain/entities/audit-log.entity';
 
 // Infrastructure
 import { UserRepository, RefreshTokenRepository } from './infrastructure/repositories/user.repository';
+import { TypeormAuditLogRepository } from './infrastructure/repositories/typeorm-audit-log.repository';
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 import { RabbitMQModule } from './infrastructure/rabbitmq/rabbitmq.module';
 import { EventPublisherService } from './infrastructure/rabbitmq/event-publisher.service';
+import { XssSanitizerService } from './infrastructure/security/xss-sanitizer.service';
 
 // Domain Factories
 import { UserFactory } from './domain/factories/user.factory';
 
 // Application Services
 import { TokenService } from './application/services/token.service';
+import { AuditLogService } from './application/services/audit-log.service';
 
 // Use Cases
 import { RegisterUserUseCase } from './application/use-cases/register-user.use-case';
@@ -45,6 +49,7 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
       SpecialistProfileSchema,
       CompanyProfileSchema,
       RefreshTokenSchema,
+      AuditLog,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
@@ -63,8 +68,13 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
     // Repository implementations + tokens de injeção
     UserRepository,
     RefreshTokenRepository,
+    TypeormAuditLogRepository,
     { provide: 'IUserRepository', useClass: UserRepository },
     { provide: 'IRefreshTokenRepository', useClass: RefreshTokenRepository },
+    { provide: 'IAuditLogRepository', useClass: TypeormAuditLogRepository },
+
+    // Security Services
+    XssSanitizerService,
 
     // Auth
     JwtStrategy,
@@ -72,6 +82,7 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
 
     // Application services
     TokenService,
+    AuditLogService,
 
     // Events
     EventPublisherService,

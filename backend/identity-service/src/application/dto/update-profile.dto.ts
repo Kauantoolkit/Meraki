@@ -11,6 +11,7 @@ import {
   Matches,
   IsIn,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export const COMPANY_INDUSTRIES = [
@@ -32,6 +33,7 @@ export class UpdateSpecialistProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(2000)
+  @Transform(({ value }) => value?.trim())
   bio?: string;
 
   @ApiPropertyOptional({ example: ['Flutter', 'Dart', 'Firebase'], type: [String], maxItems: 20 })
@@ -40,6 +42,7 @@ export class UpdateSpecialistProfileDto {
   @ArrayMaxSize(20)
   @IsString({ each: true })
   @MaxLength(50, { each: true })
+  @Transform(({ value }) => value?.map((s: string) => s?.trim().toLowerCase()))
   skills?: string[];
 
   @ApiPropertyOptional({ example: 5, description: 'Anos de experiência (0–80)' })
@@ -61,6 +64,7 @@ export class UpdateSpecialistProfileDto {
   @IsString()
   @MaxLength(2048)
   @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  @Transform(({ value }) => value?.trim())
   website?: string;
 }
 
@@ -69,6 +73,7 @@ export class UpdateCompanyProfileDto {
   @IsOptional()
   @IsString()
   @MaxLength(255)
+  @Transform(({ value }) => value?.trim())
   companyName?: string;
 
   @ApiPropertyOptional({
@@ -78,6 +83,7 @@ export class UpdateCompanyProfileDto {
   @IsOptional()
   @IsString()
   @Matches(/^\d{14}$/, { message: 'cnpj deve ter exatamente 14 dígitos' })
+  @Transform(({ value }) => value?.trim().replace(/\D/g, ''))
   cnpj?: string;
 
   @ApiPropertyOptional({ example: 'Tecnologia', enum: COMPANY_INDUSTRIES })
@@ -86,12 +92,14 @@ export class UpdateCompanyProfileDto {
   @IsIn(COMPANY_INDUSTRIES as unknown as string[], {
     message: `industry deve ser um de: ${COMPANY_INDUSTRIES.join(', ')}`,
   })
+  @Transform(({ value }) => value?.trim())
   industry?: CompanyIndustry;
 
   @ApiPropertyOptional({ example: '10-50', maxLength: 20 })
   @IsOptional()
   @IsString()
   @MaxLength(20)
+  @Transform(({ value }) => value?.trim())
   companySize?: string;
 
   @ApiPropertyOptional({ example: 'https://techcorp.com.br', maxLength: 2048 })
@@ -99,6 +107,7 @@ export class UpdateCompanyProfileDto {
   @IsString()
   @MaxLength(2048)
   @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  @Transform(({ value }) => value?.trim())
   website?: string;
 }
 
