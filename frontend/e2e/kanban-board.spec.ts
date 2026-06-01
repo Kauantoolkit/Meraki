@@ -1,72 +1,75 @@
 import { test, expect } from '@playwright/test'
 import { loginAs } from './helpers/auth'
+import { getCompanyUser, getSpecialistUser, createProject, submitBid, acceptBid, type TestUser } from './helpers/api'
 
-const mockProject = {
-  id: 'test-project-id',
-  title: 'Projeto Teste',
-  description: 'desc',
-  budget: 5000,
-  deadline: '2026-12-31',
-  status: 'IN_PROGRESS',
-  companyId: 'comp-1',
-}
+let company: TestUser
+let specialist: TestUser
+let projectId: string
 
-const mockMilestones = [
-  { id: 'm1', projectId: 'test-project-id', title: 'Setup', amount: 2500, status: 'PENDING', order: 1 },
-  { id: 'm2', projectId: 'test-project-id', title: 'Entrega', amount: 2500, status: 'PENDING', order: 2 },
-]
+test.beforeAll(async () => {
+  test.setTimeout(60_000)
+  company = await getCompanyUser()
+  specialist = await getSpecialistUser()
 
-async function setupKanbanMocks(page: import('@playwright/test').Page) {
-  // Register AFTER loginAs so they take priority (last registered wins in Playwright)
-  await page.route('**/api/projects/test-project-id/milestones', (route) => {
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockMilestones) })
+  const project = await createProject(company.token, {
+    title: 'Projeto Kanban E2E',
+    description: 'Projeto criado automaticamente para testes E2E do kanban board.',
+    budget: 10000,
+    deadline: '2027-12-31',
+    requirements: ['NestJS', 'TypeScript'],
+    milestones: [
+      { title: 'Setup', description: 'Setup inicial do ambiente', amount: 5000 },
+      { title: 'Entrega', description: 'Entrega final do projeto', amount: 5000 },
+    ],
   })
-  await page.route('**/api/projects/test-project-id', (route) => {
-    route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(mockProject) })
+  projectId = project.id
+
+  // Especialista submete bid e empresa aceita → projeto passa a IN_PROGRESS
+  const bid = await submitBid(specialist.token, {
+    projectId,
+    amount: 8000,
+    durationDays: 30,
+    proposalText: 'Proposta E2E para teste do kanban board — implementação completa.',
   })
-  await page.route('**/api/deliveries/**', (route) => {
-    route.fulfill({ status: 200, contentType: 'application/json', body: '[]' })
-  })
-}
+  await acceptBid(company.token, bid.id)
+})
 
 test.describe('Kanban Board - Company (RF08/RF09)', () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page, 'company')
-    await setupKanbanMocks(page)
   })
 
   test('renders kanban board with columns', async ({ page }) => {
-    await page.goto('/kanban/test-project-id')
+    await page.goto(`/kanban/${projectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
   })
 
   test('shows project title in header', async ({ page }) => {
-    await page.goto('/kanban/test-project-id')
+    await page.goto(`/kanban/${projectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText('Projeto Teste')).toBeVisible()
+    await expect(page.getByText('Projeto Kanban E2E')).toBeVisible({ timeout: 5_000 })
   })
 
   test('shows milestone cards', async ({ page }) => {
-    await page.goto('/kanban/test-project-id')
+    await page.goto(`/kanban/${projectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText('Setup')).toBeVisible()
-    await expect(page.getByText('Entrega')).toBeVisible()
+    await expect(page.getByText('Setup')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('Entrega')).toBeVisible({ timeout: 5_000 })
   })
 })
 
 test.describe('Kanban Board - Specialist (RF08/RF09)', () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page, 'specialist')
-    await setupKanbanMocks(page)
   })
 
   test('renders kanban board for specialist', async ({ page }) => {
-    await page.goto('/kanban/test-project-id')
+    await page.goto(`/kanban/${projectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
   })
 
   test('shows INICIAR TRABALHO button on pending milestones', async ({ page }) => {
-    await page.goto('/kanban/test-project-id')
+    await page.goto(`/kanban/${projectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
     const button = page.getByRole('button', { name: /iniciar trabalho/i })
     if (await button.first().isVisible({ timeout: 3000 }).catch(() => false)) {

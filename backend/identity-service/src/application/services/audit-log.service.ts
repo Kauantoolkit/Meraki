@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { AuditLog, AuditAction } from '../../domain/entities/audit-log.entity';
 import { IAuditLogRepository } from '../../domain/repositories/audit-log.repository.interface';
 
@@ -16,6 +16,7 @@ interface AuditLogInput {
 @Injectable()
 export class AuditLogService {
   constructor(
+    @Inject('IAuditLogRepository')
     private readonly auditLogRepository: IAuditLogRepository,
   ) {}
 
