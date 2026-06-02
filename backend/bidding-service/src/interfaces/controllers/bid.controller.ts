@@ -9,8 +9,10 @@ import {
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { SubmitBidDto } from '../../application/dto/submit-bid.dto';
+import { UpdateBidDto } from '../../application/dto/update-bid.dto';
 import { SendBidMessageDto } from '../../application/dto/send-bid-message.dto';
 import { SubmitBidUseCase } from '../../application/use-cases/submit-bid.use-case';
+import { UpdateBidUseCase } from '../../application/use-cases/update-bid.use-case';
 import { AcceptBidUseCase } from '../../application/use-cases/accept-bid.use-case';
 import { RejectBidUseCase } from '../../application/use-cases/reject-bid.use-case';
 import { WithdrawBidUseCase } from '../../application/use-cases/withdraw-bid.use-case';
@@ -25,6 +27,7 @@ import { GetBidMessagesUseCase } from '../../application/use-cases/get-bid-messa
 export class BidController {
   constructor(
     private readonly submitBid: SubmitBidUseCase,
+    private readonly updateBid: UpdateBidUseCase,
     private readonly acceptBid: AcceptBidUseCase,
     private readonly rejectBid: RejectBidUseCase,
     private readonly withdrawBid: WithdrawBidUseCase,
@@ -73,6 +76,22 @@ export class BidController {
   @ApiResponse({ status: 401, description: 'Não autenticado' })
   findOne(@Param('id') id: string) {
     return this.getBids.findById(id);
+  }
+
+  @Put(':id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Atualizar proposta PENDING (especialista dono)' })
+  @ApiParam({ name: 'id', description: 'ID da proposta (UUID)' })
+  @ApiResponse({ status: 200, description: 'Proposta atualizada' })
+  @ApiResponse({ status: 400, description: 'Proposta não está em estado PENDING' })
+  @ApiResponse({ status: 403, description: 'Apenas o especialista dono pode atualizar' })
+  @ApiResponse({ status: 404, description: 'Proposta não encontrada' })
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateBidDto,
+    @CurrentUser('specialistId') specialistId: string,
+  ) {
+    return this.updateBid.execute(id, dto, specialistId);
   }
 
   @Put(':id/accept')

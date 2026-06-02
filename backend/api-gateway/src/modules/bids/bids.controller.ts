@@ -6,6 +6,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
 import { SubmitBidDto } from './dto/submit-bid.dto';
+import { UpdateBidDto } from './dto/update-bid.dto';
 
 @ApiTags('Bids')
 @Controller('bids')
@@ -43,6 +44,13 @@ export class BidsController {
   @ApiOperation({ summary: 'Detalhes da proposta' })
   findOne(@Param('id') id: string, @Req() req: Request) {
     return this.bidsService.findOne(id, this.token(req));
+  }
+
+  @Put(':id')
+  @Roles('SPECIALIST')
+  @ApiOperation({ summary: 'Atualizar proposta PENDING (especialista)' })
+  update(@Param('id') id: string, @Body() body: UpdateBidDto, @Req() req: Request) {
+    return this.bidsService.update(id, body, this.token(req));
   }
 
   @Put(':id/accept')

@@ -14,6 +14,14 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+/** Extrai a mensagem de erro da resposta da API (suporta string e array do class-validator). */
+export function extractApiError(err: unknown, fallback = 'Verifique os dados e tente novamente.'): string {
+  const data = (err as any)?.response?.data
+  const raw = data?.message ?? data?.error
+  if (Array.isArray(raw)) return raw.join(' | ')
+  return typeof raw === 'string' ? raw : fallback
+}
+
 // Notifica o AuthContext quando o token expirar (sem hard reload)
 // Ignora rotas de auth para não interferir com credenciais inválidas
 api.interceptors.response.use(

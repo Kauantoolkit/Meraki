@@ -1,6 +1,15 @@
-import { IsString, IsInt, IsNumber, IsUUID, Min, Max, MinLength, MaxLength } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsString, IsInt, IsNumber, IsUUID, IsOptional, IsArray,
+  ValidateNested, Min, Max, MinLength, MaxLength,
+} from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
+
+export class BidMilestoneProposalDto {
+  @ApiProperty() @IsUUID() milestoneId: string;
+  @ApiProperty() @IsNumber() @Min(0) @Type(() => Number) proposedAmount: number;
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(500) note?: string;
+}
 
 export class SubmitBidDto {
   @ApiProperty({ example: 'uuid-do-projeto' })
@@ -25,4 +34,11 @@ export class SubmitBidDto {
   @Max(3650)
   @Type(() => Number)
   estimatedDuration: number;
+
+  @ApiPropertyOptional({ type: [BidMilestoneProposalDto] })
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BidMilestoneProposalDto)
+  milestoneProposals?: BidMilestoneProposalDto[];
 }

@@ -1,6 +1,7 @@
 import { Injectable, ForbiddenException, UnprocessableEntityException } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { SubmitBidDto } from './dto/submit-bid.dto';
+import { UpdateBidDto } from './dto/update-bid.dto';
 
 const BIDDING_URL = process.env.BIDDING_SERVICE_URL as string;
 const PROJECT_URL  = process.env.PROJECT_SERVICE_URL  as string;
@@ -50,6 +51,10 @@ export class BidsService {
   async reject(bidId: string, token: string, requestorCompanyId: string) {
     await this.assertProjectOwnership(bidId, token, requestorCompanyId);
     return this.proxy.put(`${BIDDING_URL}/api/bids/${bidId}/reject`, {}, this.proxy.authHeaders(token));
+  }
+
+  update(bidId: string, dto: UpdateBidDto, token: string) {
+    return this.proxy.put(`${BIDDING_URL}/api/bids/${bidId}`, dto, this.proxy.authHeaders(token));
   }
 
   withdraw(bidId: string, token: string) {

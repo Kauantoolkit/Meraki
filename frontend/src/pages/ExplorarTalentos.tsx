@@ -4,32 +4,42 @@ import { Search, Star, Briefcase, User, Filter, ChevronRight } from 'lucide-reac
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile } from '../api/portfolio'
 
-const SKILL_OPTIONS = ['NestJS', 'Flutter', 'NodeJS', 'React', 'AWS', 'Docker', 'PostgreSQL', 'TypeScript', 'Kubernetes', 'GraphQL']
-const EXPERIENCE_LEVELS = ['Júnior (0-2 anos)', 'Pleno (2-5 anos)', 'Sênior (5+ anos)', 'Sênior Especialista (10%+ anos)']
-
 export default function ExplorarTalentos() {
   const navigate = useNavigate()
+  const [allSpecialists, setAllSpecialists] = useState<PublicProfile[]>([])
   const [specialists, setSpecialists] = useState<PublicProfile[]>([])
+  const [availableSkills, setAvailableSkills] = useState<string[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
-
-  // Filters (UI state only — real filtering would hit API)
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set())
-  const [minRate, setMinRate] = useState('')
-  const [maxRate, setMaxRate] = useState('')
-  const [experience, setExperience] = useState('')
 
   useEffect(() => {
     portfolioApi.listSpecialists()
-      .then(res => setSpecialists(res.data))
+      .then(res => {
+        const data = res.data
+        setAllSpecialists(data)
+        setSpecialists(data)
+        const skillSet = new Set<string>()
+        data.forEach(s => s.skills?.forEach(sk => skillSet.add(sk)))
+        setAvailableSkills(Array.from(skillSet).sort())
+      })
       .finally(() => setLoading(false))
   }, [])
 
+  function applyFilters(searchVal: string, skills: Set<string>) {
+    let result = allSpecialists
+    if (searchVal.trim()) {
+      const q = searchVal.toLowerCase()
+      result = result.filter(s => s.name.toLowerCase().includes(q) || s.bio?.toLowerCase().includes(q))
+    }
+    if (skills.size > 0) {
+      result = result.filter(s => Array.from(skills).every(sk => s.skills?.includes(sk)))
+    }
+    setSpecialists(result)
+  }
+
   function handleSearch() {
-    setLoading(true)
-    portfolioApi.listSpecialists(search)
-      .then(res => setSpecialists(res.data))
-      .finally(() => setLoading(false))
+    applyFilters(search, selectedSkills)
   }
 
   function toggleSkill(skill: string) {
@@ -37,16 +47,9 @@ export default function ExplorarTalentos() {
       const next = new Set(prev)
       if (next.has(skill)) next.delete(skill)
       else next.add(skill)
+      applyFilters(search, next)
       return next
     })
-  }
-
-  function applyFilters() {
-    setLoading(true)
-    const skillsParam = selectedSkills.size > 0 ? Array.from(selectedSkills).join(',') : undefined
-    portfolioApi.listSpecialists(search, skillsParam)
-      .then(res => setSpecialists(res.data))
-      .finally(() => setLoading(false))
   }
 
   return (
@@ -77,7 +80,7 @@ export default function ExplorarTalentos() {
             </div>
             <button onClick={handleSearch}
               className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-2 hover:bg-brand-400 border border-brand-500 transition-colors">
-              SEARCH()
+              BUSCAR()
             </button>
           </div>
         </div>
@@ -88,85 +91,55 @@ export default function ExplorarTalentos() {
             <div className="bg-dark-card border border-dark-border p-4">
               <div className="flex items-center gap-2 mb-4 pb-3 border-b border-dark-border">
                 <Filter className="w-3.5 h-3.5 text-brand-500" />
-                <h2 className="font-mono text-xs font-bold text-white uppercase tracking-wider">Eye_Filtros</h2>
+                <h2 className="font-mono text-xs font-bold text-white uppercase tracking-wider">Filtros</h2>
               </div>
 
               {/* Skills */}
               <div className="mb-5">
-                <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Stack</p>
-                <div className="space-y-1.5">
-                  {SKILL_OPTIONS.map(skill => (
-                    <label key={skill} className="flex items-center gap-2 cursor-pointer group">
-                      <div
-                        onClick={() => toggleSkill(skill)}
-                        className={`w-3.5 h-3.5 border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
-                          selectedSkills.has(skill)
-                            ? 'bg-brand-500 border-brand-500'
-                            : 'bg-dark-input border-zinc-700 group-hover:border-zinc-500'
-                        }`}
-                      >
-                        {selectedSkills.has(skill) && (
-                          <svg className="w-2.5 h-2.5 text-dark-bg" fill="currentColor" viewBox="0 0 12 12">
-                            <path d="M10 3L5 8.5L2 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                          </svg>
-                        )}
-                      </div>
-                      <span className={`font-mono text-[11px] transition-colors ${selectedSkills.has(skill) ? 'text-brand-500' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
-                        {skill}
-                      </span>
-                    </label>
-                  ))}
-                </div>
+                <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">
+                  Habilidades {availableSkills.length > 0 && <span className="text-zinc-600">({availableSkills.length})</span>}
+                </p>
+                {availableSkills.length === 0 ? (
+                  <p className="font-mono text-[10px] text-zinc-600 italic">Nenhuma habilidade cadastrada ainda.</p>
+                ) : (
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                    {availableSkills.map(skill => (
+                      <label key={skill} className="flex items-center gap-2 cursor-pointer group">
+                        <div
+                          onClick={() => toggleSkill(skill)}
+                          className={`w-3.5 h-3.5 border flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                            selectedSkills.has(skill)
+                              ? 'bg-brand-500 border-brand-500'
+                              : 'bg-dark-input border-zinc-700 group-hover:border-zinc-500'
+                          }`}
+                        >
+                          {selectedSkills.has(skill) && (
+                            <svg className="w-2.5 h-2.5 text-dark-bg" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M10 3L5 8.5L2 5.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                            </svg>
+                          )}
+                        </div>
+                        <span className={`font-mono text-[11px] transition-colors ${selectedSkills.has(skill) ? 'text-brand-500' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
+                          {skill}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Rate range */}
-              <div className="mb-5">
-                <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Valor / Hora (BRL)</p>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number" value={minRate} onChange={e => setMinRate(e.target.value)}
-                    placeholder="Min"
-                    className="w-full bg-dark-input border border-dark-border px-2 py-1.5 text-[10px] font-mono text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
-                  />
-                  <span className="text-zinc-600 font-mono text-[10px]">—</span>
-                  <input
-                    type="number" value={maxRate} onChange={e => setMaxRate(e.target.value)}
-                    placeholder="Max"
-                    className="w-full bg-dark-input border border-dark-border px-2 py-1.5 text-[10px] font-mono text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
-                  />
-                </div>
-              </div>
-
-              {/* Experience */}
-              <div className="mb-5">
-                <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Nível Profissional</p>
-                <div className="space-y-1.5">
-                  {EXPERIENCE_LEVELS.map(level => (
-                    <label key={level} className="flex items-center gap-2 cursor-pointer group">
-                      <div
-                        onClick={() => setExperience(experience === level ? '' : level)}
-                        className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${
-                          experience === level
-                            ? 'border-brand-500 bg-brand-500'
-                            : 'border-zinc-700 group-hover:border-zinc-500'
-                        }`}
-                      >
-                        {experience === level && <div className="w-1.5 h-1.5 rounded-full bg-dark-bg" />}
-                      </div>
-                      <span className={`font-mono text-[10px] transition-colors ${experience === level ? 'text-brand-500' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
-                        {level}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={applyFilters}
-                className="w-full btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-[10px] py-2.5 border border-brand-500 transition-colors uppercase tracking-widest"
-              >
-                Aplicar Filtros
-              </button>
+              {selectedSkills.size > 0 && (
+                <button
+                  onClick={() => {
+                    const empty = new Set<string>()
+                    setSelectedSkills(empty)
+                    applyFilters(search, empty)
+                  }}
+                  className="w-full font-mono text-[10px] text-zinc-500 hover:text-zinc-300 py-1.5 border border-transparent hover:border-dark-border transition-colors uppercase tracking-widest"
+                >
+                  Limpar filtros
+                </button>
+              )}
             </div>
           </aside>
 
@@ -182,23 +155,13 @@ export default function ExplorarTalentos() {
               <>
                 <div className="flex items-center justify-between mb-4">
                   <p className="font-mono text-[10px] text-zinc-500 uppercase">
-                    {specialists.length} resultado{specialists.length !== 1 ? 's' : ''} encontrados
+                    {specialists.length} de {allSpecialists.length} especialista{allSpecialists.length !== 1 ? 's' : ''}
+                    {selectedSkills.size > 0 && <span className="text-brand-500 ml-2">({selectedSkills.size} filtro{selectedSkills.size !== 1 ? 's' : ''} ativo{selectedSkills.size !== 1 ? 's' : ''})</span>}
                   </p>
-                  <span className="font-mono text-[10px] text-zinc-600">Ordenar por: Relevância</span>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {specialists.map(s => (
                     <SpecialistCard key={s.id} specialist={s} onView={() => navigate(`/profile/specialist/${s.userId}`)} />
-                  ))}
-                </div>
-
-                {/* Pagination mock */}
-                <div className="flex items-center justify-center gap-2 mt-8">
-                  {[1, 2, 3, 4, 5].map(p => (
-                    <button key={p}
-                      className={`w-8 h-8 font-mono text-xs border transition-colors ${p === 1 ? 'bg-brand-500 border-brand-500 text-dark-bg' : 'bg-dark-input border-dark-border text-zinc-400 hover:border-zinc-500'}`}>
-                      {p}
-                    </button>
                   ))}
                 </div>
               </>
@@ -216,7 +179,6 @@ function SpecialistCard({ specialist: s, onView }: { specialist: PublicProfile; 
       <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500 opacity-0 group-hover:opacity-100 transition-opacity" />
       <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-      {/* Top: avatar + name + rate */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-dark-input border border-brand-500/30 flex items-center justify-center">
@@ -227,18 +189,16 @@ function SpecialistCard({ specialist: s, onView }: { specialist: PublicProfile; 
             <p className="font-mono text-[10px] text-zinc-500">ID: {s.userId?.slice(0, 8)}</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="font-mono text-xs font-bold text-brand-500">R$ —/h</p>
-          <div className="flex items-center gap-1 justify-end mt-0.5">
+        {s.rating != null && (
+          <div className="flex items-center gap-1">
             <Star className="w-3 h-3 text-orange-400" />
-            <span className="font-mono text-[10px] text-white">{s.rating != null ? Number(s.rating).toFixed(1) : '—'}</span>
+            <span className="font-mono text-[10px] text-white">{Number(s.rating).toFixed(1)}</span>
           </div>
-        </div>
+        )}
       </div>
 
       {s.bio && <p className="text-xs text-zinc-400 mb-3 line-clamp-2">{s.bio}</p>}
 
-      {/* Skills */}
       {s.skills && s.skills.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-4">
           {s.skills.slice(0, 5).map(skill => (
@@ -252,25 +212,17 @@ function SpecialistCard({ specialist: s, onView }: { specialist: PublicProfile; 
         </div>
       )}
 
-      {/* Footer */}
       <div className="flex items-center justify-between border-t border-dark-border pt-3">
         <div className="flex items-center gap-1">
           <Briefcase className="w-3 h-3 text-zinc-500" />
-          <span className="font-mono text-[10px] text-zinc-400">{s.completedProjects ?? 0} projetos</span>
+          <span className="font-mono text-[10px] text-zinc-400">{s.completedProjects ?? 0} projetos concluídos</span>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={onView}
-            className="font-mono text-[10px] font-bold text-zinc-400 hover:text-brand-500 border border-dark-border hover:border-brand-500/50 px-3 py-1.5 transition-colors uppercase"
-          >
-            VER_PERFIL()
-          </button>
-          <button
-            className="font-mono text-[10px] font-bold text-dark-bg bg-brand-500 hover:bg-brand-400 border border-brand-500 px-3 py-1.5 transition-colors uppercase flex items-center gap-1"
-          >
-            CONTRATAR <ChevronRight className="w-3 h-3" />
-          </button>
-        </div>
+        <button
+          onClick={onView}
+          className="font-mono text-[10px] font-bold text-dark-bg bg-brand-500 hover:bg-brand-400 border border-brand-500 px-3 py-1.5 transition-colors uppercase flex items-center gap-1"
+        >
+          VER_PERFIL() <ChevronRight className="w-3 h-3" />
+        </button>
       </div>
     </div>
   )

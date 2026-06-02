@@ -22,6 +22,7 @@ export interface WorkHistoryItem {
 
 export const portfolioApi = {
   getMyProfile: () => api.get<PublicProfile>('/portfolio/me'),
+  updateProfile: (data: { bio?: string; skills?: string[] }) => api.patch<PublicProfile>('/portfolio/me', data),
   getPublicProfile: (specialistId: string) => api.get<PublicProfile>(`/portfolio/specialist/${specialistId}`),
   listSpecialists: (search?: string, skills?: string) => {
     const params = new URLSearchParams()

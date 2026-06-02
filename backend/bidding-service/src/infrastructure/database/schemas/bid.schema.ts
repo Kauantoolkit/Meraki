@@ -13,6 +13,7 @@ export const BidSchema = new EntitySchema<Bid>({
     proposal: { type: 'text' },
     proposedBudget: { type: 'decimal', precision: 10, scale: 2 },
     estimatedDuration: { type: Number },
+    milestoneProposals: { type: 'simple-json', nullable: true },
     status: { type: 'enum', enum: BidStatus, default: BidStatus.PENDING },
     createdAt: { type: Date, createDate: true },
     updatedAt: { type: Date, updateDate: true },

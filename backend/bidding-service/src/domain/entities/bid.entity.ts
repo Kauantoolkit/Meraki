@@ -2,6 +2,12 @@ import { BidStatus } from '../enums/bid-status.enum';
 import { BidMessage } from './bid-message.entity';
 import { BidNotPendingError } from '../exceptions/bid-not-pending.error';
 
+export interface BidMilestoneProposal {
+  milestoneId: string;
+  proposedAmount: number;
+  note?: string;
+}
+
 export class Bid {
   id: string;
 
@@ -14,6 +20,7 @@ export class Bid {
   proposal: string;
   proposedBudget: number;
   estimatedDuration: number; // dias
+  milestoneProposals: BidMilestoneProposal[];
   status: BidStatus;
   messages: BidMessage[];
   createdAt: Date;
@@ -40,6 +47,23 @@ export class Bid {
       throw new BidNotPendingError('retirar');
     }
     this.status = BidStatus.WITHDRAWN;
+  }
+
+  update(
+    proposal: string,
+    proposedBudget: number,
+    estimatedDuration: number,
+    milestoneProposals?: BidMilestoneProposal[],
+  ): void {
+    if (this.status !== BidStatus.PENDING) {
+      throw new BidNotPendingError('atualizar');
+    }
+    this.proposal = proposal;
+    this.proposedBudget = proposedBudget;
+    this.estimatedDuration = estimatedDuration;
+    if (milestoneProposals !== undefined) {
+      this.milestoneProposals = milestoneProposals;
+    }
   }
 
   addMessage(senderId: string, content: string): BidMessage {

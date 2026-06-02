@@ -15,6 +15,7 @@ import Portfolio from './pages/Portfolio'
 import PerfilEmpresa from './pages/PerfilEmpresa'
 import PerfilEspecialista from './pages/PerfilEspecialista'
 import AvaliarPropostas from './pages/AvaliarPropostas'
+import BuscarProjetos from './pages/BuscarProjetos'
 
 function DashboardRoute() {
   const { user } = useAuth()
@@ -50,6 +51,7 @@ function AppRoutes() {
       <Route path="/earnings" element={<ProtectedRoute><GanhosEspecialista /></ProtectedRoute>} />
       <Route path="/talents" element={<ProtectedRoute><ExplorarTalentos /></ProtectedRoute>} />
       <Route path="/portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
+      <Route path="/projects/browse" element={<ProtectedRoute><BuscarProjetos /></ProtectedRoute>} />
       <Route path="/profile/company/:id" element={<ProtectedRoute><PerfilEmpresa /></ProtectedRoute>} />
       <Route path="/profile/specialist/:id" element={<ProtectedRoute><PerfilEspecialista /></ProtectedRoute>} />
     </Routes>

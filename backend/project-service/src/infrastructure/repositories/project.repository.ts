@@ -19,7 +19,8 @@ export class ProjectRepository implements IProjectRepository {
   }
 
   async findAll(filter: FindProjectsFilter): Promise<{ data: Project[]; total: number }> {
-    const query = this.repo.createQueryBuilder('project');
+    const query = this.repo.createQueryBuilder('project')
+      .leftJoinAndSelect('project.milestones', 'milestone');
 
     if (filter.status) query.andWhere('project.status = :status', { status: filter.status });
     if (filter.companyId) query.andWhere('project.companyId = :companyId', { companyId: filter.companyId });
@@ -28,7 +29,7 @@ export class ProjectRepository implements IProjectRepository {
     const page = filter.page || 1;
     const limit = filter.limit || 20;
     query.skip((page - 1) * limit).take(limit);
-    query.orderBy('project.createdAt', 'DESC');
+    query.orderBy('project.createdAt', 'DESC').addOrderBy('milestone.order', 'ASC');
 
     const [data, total] = await query.getManyAndCount();
     return { data, total };

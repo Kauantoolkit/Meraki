@@ -29,6 +29,7 @@ export class SubmitBidUseCase {
       proposal: dto.proposal,
       proposedBudget: dto.proposedBudget,
       estimatedDuration: dto.estimatedDuration,
+      milestoneProposals: dto.milestoneProposals,
     });
 
     const saved = await this.bidRepo.save(bid);

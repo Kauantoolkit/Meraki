@@ -19,6 +19,7 @@ import { BidSelectionDomainService } from './domain/services/bid-selection.domai
 
 // Use Cases (application)
 import { SubmitBidUseCase } from './application/use-cases/submit-bid.use-case';
+import { UpdateBidUseCase } from './application/use-cases/update-bid.use-case';
 import { AcceptBidUseCase } from './application/use-cases/accept-bid.use-case';
 import { RejectBidUseCase } from './application/use-cases/reject-bid.use-case';
 import { WithdrawBidUseCase } from './application/use-cases/withdraw-bid.use-case';
@@ -47,6 +48,7 @@ import { BidController } from './interfaces/controllers/bid.controller';
     { provide: BidSelectionDomainService, useFactory: () => new BidSelectionDomainService() },
     // Use Cases
     SubmitBidUseCase,
+    UpdateBidUseCase,
     AcceptBidUseCase,
     RejectBidUseCase,
     WithdrawBidUseCase,

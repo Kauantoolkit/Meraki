@@ -21,11 +21,12 @@ export default function Navbar({ backUrl, projectTitle }: NavbarProps) {
   const isCompany = (user?.userType ?? user?.type)?.toLowerCase() === 'company'
 
   const navLinks = [
-    { label: isCompany ? 'EMPRESA' : 'ESPECIALISTA', path: '/dashboard', roles: ['both'] },
-    { label: 'TALENTOS',   path: '/talents',    roles: ['company'] },
-    { label: 'PORTFÓLIO',  path: '/portfolio',  roles: ['specialist'] },
-{ label: 'FINANCEIRO', path: '/financial',  roles: ['company'] },
-    { label: 'GANHOS',     path: '/earnings',   roles: ['specialist'] },
+    { label: isCompany ? 'EMPRESA' : 'ESPECIALISTA', path: '/dashboard',         roles: ['both'] },
+    { label: 'TALENTOS',   path: '/talents',          roles: ['company'] },
+    { label: 'PROJETOS',   path: '/projects/browse',  roles: ['specialist'] },
+    { label: 'PORTFÓLIO',  path: '/portfolio',        roles: ['specialist'] },
+    { label: 'FINANCEIRO', path: '/financial',        roles: ['company'] },
+    { label: 'GANHOS',     path: '/earnings',         roles: ['specialist'] },
   ].filter(l =>
     l.roles.includes('both') ||
     (isCompany && l.roles.includes('company')) ||

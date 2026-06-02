@@ -1,4 +1,4 @@
-import { Bid } from '../entities/bid.entity';
+import { Bid, BidMilestoneProposal } from '../entities/bid.entity';
 import { BidStatus } from '../enums/bid-status.enum';
 import { ProposedValue } from '../value-objects/proposed-value.value-object';
 import { ProposalText } from '../value-objects/proposal-text.value-object';
@@ -11,13 +11,13 @@ export interface CreateBidData {
   proposal: string;
   proposedBudget: number;
   estimatedDuration: number;
+  milestoneProposals?: BidMilestoneProposal[];
 }
 
 export class BidFactory {
   create(data: CreateBidData): Bid {
     if (!data.projectId) throw new DomainException('projectId é obrigatório');
     if (!data.specialistId) throw new DomainException('specialistId é obrigatório');
-    // Value Objects validam invariantes do domínio
     const proposalText = new ProposalText(data.proposal);
     const proposedValue = new ProposedValue(data.proposedBudget);
     const estimatedDuration = new EstimatedDuration(data.estimatedDuration);
@@ -28,6 +28,7 @@ export class BidFactory {
     bid.proposal = proposalText.getValue();
     bid.proposedBudget = proposedValue.getValue();
     bid.estimatedDuration = estimatedDuration.getValue();
+    bid.milestoneProposals = data.milestoneProposals ?? [];
     bid.status = BidStatus.PENDING;
 
     return bid;

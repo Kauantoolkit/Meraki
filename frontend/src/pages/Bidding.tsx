@@ -1,14 +1,19 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { FileCode, Building2, Coins, CalendarClock, ShieldAlert, Send, Loader2, CheckSquare } from 'lucide-react'
+import { FileCode, Building2, Coins, CalendarClock, ShieldAlert, Send, Loader2, CheckSquare, ListChecks, Pencil, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { projectsApi, Project } from '../api/projects'
-import { bidsApi, Bid } from '../api/bids'
+import { projectsApi, Project, Milestone } from '../api/projects'
+import { bidsApi, Bid, BidMilestoneProposal } from '../api/bids'
+import { extractApiError } from '../api/client'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
 const TEMPLATE = (title: string, name: string) =>
   `Olá, Equipa!\n\nAnalisei os requisitos para o projeto "${title}" e é exatamente a minha especialidade.\n\nProponho a seguinte abordagem:\n1. Análise profunda e desenho arquitetural.\n2. Setup da infraestrutura.\n3. Implementação e integração.\n4. Testes e documentação.\n\nEstou disponível para iniciar imediatamente.\n\nCumprimentos,\n${name}`
+
+function buildDefaultMilestoneProposals(milestones: Milestone[]): BidMilestoneProposal[] {
+  return milestones.map(m => ({ milestoneId: m.id, proposedAmount: m.amount, note: '' }))
+}
 
 export default function Bidding() {
   const { projectId } = useParams<{ projectId: string }>()
@@ -17,10 +22,18 @@ export default function Bidding() {
   const [amount, setAmount] = useState('')
   const [duration, setDuration] = useState('')
   const [coverLetter, setCoverLetter] = useState('')
+  const [milestoneProposals, setMilestoneProposals] = useState<BidMilestoneProposal[]>([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState<Bid | null>(null)
   const [existingBid, setExistingBid] = useState<Bid | null>(null)
+  const [editing, setEditing] = useState(false)
+  const [editAmount, setEditAmount] = useState('')
+  const [editDuration, setEditDuration] = useState('')
+  const [editProposal, setEditProposal] = useState('')
+  const [editMilestoneProposals, setEditMilestoneProposals] = useState<BidMilestoneProposal[]>([])
+  const [editError, setEditError] = useState('')
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
     if (!projectId) return
@@ -28,7 +41,15 @@ export default function Bidding() {
       projectsApi.getById(projectId),
       bidsApi.myBids(),
     ]).then(([pResult, bResult]) => {
-      if (pResult.status === 'fulfilled') setProject(pResult.value.data)
+      if (pResult.status === 'fulfilled') {
+        const p = pResult.value.data
+        setProject(p)
+        if (p.milestones && p.milestones.length > 0) {
+          const defaults = buildDefaultMilestoneProposals(p.milestones)
+          setMilestoneProposals(defaults)
+          setAmount(String(defaults.reduce((s, mp) => s + mp.proposedAmount, 0)))
+        }
+      }
       if (bResult.status === 'fulfilled') {
         const active = bResult.value.data.find(
           (b: { projectId: string; status: string }) =>
@@ -40,30 +61,94 @@ export default function Bidding() {
     }).finally(() => setLoading(false))
   }, [projectId])
 
+  function updateMilestoneProposal(milestoneId: string, field: 'proposedAmount' | 'note', value: string) {
+    setMilestoneProposals(prev => {
+      const next = prev.map(mp =>
+        mp.milestoneId === milestoneId
+          ? { ...mp, [field]: field === 'proposedAmount' ? Number(value) : value }
+          : mp,
+      )
+      if (field === 'proposedAmount') {
+        setAmount(String(next.reduce((s, mp) => s + mp.proposedAmount, 0)))
+      }
+      return next
+    })
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!project) return
     setSubmitting(true)
     try {
+      const hasMilestones = milestoneProposals.length > 0
       const res = await bidsApi.submit({
         projectId: project.id,
         amount: Number(amount),
         durationDays: Number(duration),
         proposalText: coverLetter,
+        milestoneProposals: hasMilestones ? milestoneProposals : undefined,
       })
       setSubmitted(res.data)
-    } catch (e: any) {
-      const status = e?.response?.status
-      const msg: string = e?.response?.data?.message ?? ''
+    } catch (e: unknown) {
+      const status = (e as any)?.response?.status
       if (status === 422) {
         alert('Este projeto não está a aceitar novas propostas.')
       } else if (status === 409) {
         alert('Já tem uma proposta ativa neste projeto.')
       } else {
-        alert(`Erro ao submeter proposta: ${msg || 'Tente novamente.'}`)
+        alert(`Erro ao submeter proposta: ${extractApiError(e)}`)
       }
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  function openEdit() {
+    if (!existingBid) return
+    setEditAmount(String(existingBid.amount))
+    setEditDuration(String(existingBid.durationDays))
+    setEditProposal(existingBid.proposalText)
+    setEditMilestoneProposals(
+      existingBid.milestoneProposals.length > 0
+        ? existingBid.milestoneProposals
+        : project?.milestones ? buildDefaultMilestoneProposals(project.milestones) : [],
+    )
+    setEditError('')
+    setEditing(true)
+  }
+
+  function updateEditMilestoneProposal(milestoneId: string, field: 'proposedAmount' | 'note', value: string) {
+    setEditMilestoneProposals(prev => {
+      const next = prev.map(mp =>
+        mp.milestoneId === milestoneId
+          ? { ...mp, [field]: field === 'proposedAmount' ? Number(value) : value }
+          : mp,
+      )
+      if (field === 'proposedAmount') {
+        setEditAmount(String(next.reduce((s, mp) => s + mp.proposedAmount, 0)))
+      }
+      return next
+    })
+  }
+
+  async function handleUpdate(e: React.FormEvent) {
+    e.preventDefault()
+    if (!existingBid) return
+    setUpdating(true)
+    setEditError('')
+    try {
+      const res = await bidsApi.update(existingBid.id, {
+        proposal: editProposal,
+        proposedBudget: Number(editAmount),
+        estimatedDuration: Number(editDuration),
+        milestoneProposals: editMilestoneProposals.length > 0 ? editMilestoneProposals : undefined,
+      })
+      setExistingBid(res.data)
+      setEditing(false)
+    } catch (err: unknown) {
+      setEditError(extractApiError(err, 'Erro ao atualizar. Tente novamente.'))
+    } finally {
+      setUpdating(false)
     }
   }
 
@@ -127,7 +212,7 @@ export default function Bidding() {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-px bg-dark-border">
+              <div className="grid grid-cols-2 gap-px bg-dark-border mb-6">
                 <div className="bg-dark-input p-4">
                   <div className="flex items-center gap-2 mb-1">
                     <Coins className="w-3 h-3 text-brand-500" />
@@ -138,11 +223,50 @@ export default function Bidding() {
                 <div className="bg-dark-input p-4">
                   <div className="flex items-center gap-2 mb-1">
                     <CalendarClock className="w-3 h-3 text-blue-400" />
-                    <p className="font-mono text-[10px] text-zinc-500 uppercase">Data Limite</p>
+                    <p className="font-mono text-[10px] text-zinc-500 uppercase">Prazo de Entrega</p>
                   </div>
                   <p className="font-mono font-bold text-white text-lg">{project?.deadline ?? '—'}</p>
                 </div>
               </div>
+
+              {project?.milestones && project.milestones.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <ListChecks className="w-3.5 h-3.5 text-brand-500" />
+                    <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
+                      Milestones ({project.milestones.length})
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    {project.milestones
+                      .slice()
+                      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                      .map((m, i) => (
+                        <div key={m.id} className="bg-dark-input border border-dark-border p-3 flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-2 min-w-0">
+                            <span className="font-mono text-[9px] text-zinc-600 bg-dark-card border border-dark-border px-1.5 py-0.5 shrink-0 mt-0.5">
+                              M{i + 1}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="font-mono text-xs text-white font-bold truncate">{m.title}</p>
+                              {m.description && (
+                                <p className="font-mono text-[10px] text-zinc-500 mt-0.5 line-clamp-1">{m.description}</p>
+                              )}
+                            </div>
+                          </div>
+                          <span className="font-mono text-xs text-brand-500 font-bold shrink-0">{fmt(m.amount)}</span>
+                        </div>
+                      ))}
+                  </div>
+                  <div className="flex justify-end mt-2">
+                    <p className="font-mono text-[10px] text-zinc-500">
+                      Total: <span className="text-brand-500 font-bold">
+                        {fmt(project.milestones.reduce((s, m) => s + m.amount, 0))}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 
@@ -169,11 +293,17 @@ export default function Bidding() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span className="font-mono text-zinc-500 group-focus-within:text-brand-500">R$</span>
                       </div>
-                      <input type="number" required min={1} value={amount} onChange={e => setAmount(e.target.value)}
+                      <input
+                        type="number" required min={1} value={amount}
+                        onChange={e => setAmount(e.target.value)}
+                        readOnly={milestoneProposals.length > 0}
                         placeholder="0.00"
-                        className="w-full pl-10 pr-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
+                        className={`w-full pl-10 pr-4 py-3 bg-[#000] border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none rounded-none ${milestoneProposals.length > 0 ? 'border-dark-border text-zinc-500 cursor-not-allowed' : 'border-dark-border focus:border-brand-500 focus:ring-1 focus:ring-brand-500'}`}
+                      />
                     </div>
-                    <p className="text-[9px] font-mono text-zinc-500 text-right">// Taxa de plataforma será retida no pagamento.</p>
+                    <p className="text-[9px] font-mono text-zinc-500 text-right">
+                      {milestoneProposals.length > 0 ? '// Soma automática dos milestones.' : '// Taxa de plataforma será retida no pagamento.'}
+                    </p>
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">let estimatedDays =</label>
@@ -187,6 +317,53 @@ export default function Bidding() {
                     </div>
                   </div>
                 </div>
+
+                {/* Milestone Proposals */}
+                {project?.milestones && project.milestones.length > 0 && milestoneProposals.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <ListChecks className="w-3.5 h-3.5 text-brand-500" />
+                      <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">const milestoneProposals[] = {'{'}</label>
+                    </div>
+                    <div className="space-y-2">
+                      {project.milestones
+                        .slice()
+                        .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                        .map((m, i) => {
+                          const mp = milestoneProposals.find(p => p.milestoneId === m.id)
+                          if (!mp) return null
+                          return (
+                            <div key={m.id} className="bg-[#000] border border-dark-border p-3 flex flex-col gap-2">
+                              <div className="flex items-center gap-2">
+                                <span className="font-mono text-[9px] text-zinc-600 bg-dark-card border border-dark-border px-1.5 py-0.5 shrink-0">M{i + 1}</span>
+                                <p className="font-mono text-xs text-white font-bold truncate flex-1">{m.title}</p>
+                                <span className="font-mono text-[10px] text-zinc-500 shrink-0">ref: {fmt(m.amount)}</span>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="relative">
+                                  <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-zinc-500 text-xs">R$</span>
+                                  <input
+                                    type="number" required min={0}
+                                    value={mp.proposedAmount}
+                                    onChange={e => updateMilestoneProposal(m.id, 'proposedAmount', e.target.value)}
+                                    className="w-full pl-7 pr-2 py-1.5 bg-dark-input border border-dark-border text-xs font-mono text-white focus:outline-none focus:border-brand-500 rounded-none"
+                                  />
+                                </div>
+                                <input
+                                  type="text"
+                                  value={mp.note ?? ''}
+                                  onChange={e => updateMilestoneProposal(m.id, 'note', e.target.value)}
+                                  placeholder="Observação (opcional)"
+                                  className="w-full px-2 py-1.5 bg-dark-input border border-dark-border text-xs font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                    </div>
+                    <label className="text-[10px] font-mono text-brand-500 block">{'}'}</label>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
@@ -233,31 +410,177 @@ export default function Bidding() {
                 </div>
               )}
 
-              {/* RN02: Already submitted overlay */}
-              {existingBid && !submitted && (
+              {/* Proposta existente */}
+              {existingBid && !submitted && !editing && (
                 <div className="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 border border-blue-500">
-                  <ShieldAlert className="w-16 h-16 text-blue-400 mb-4" />
-                  <h2 className="text-xl font-mono font-bold text-white mb-2">PROPOSTA JÁ SUBMETIDA</h2>
-                  <p className="text-xs font-mono text-blue-400 text-center mb-6">&gt; Apenas uma proposta ativa por projeto é permitida.</p>
-                  <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-6">
-                    <p className="font-mono text-[10px] text-zinc-500 mb-1">PROPOSTA EXISTENTE:</p>
-                    <div className="flex justify-between font-mono text-[10px]">
-                      <span className="text-zinc-400">ID:</span><span className="text-white">{existingBid.id}</span>
+                  <ShieldAlert className="w-12 h-12 text-blue-400 mb-4" />
+                  <h2 className="text-xl font-mono font-bold text-white mb-1">PROPOSTA SUBMETIDA</h2>
+                  <p className="text-xs font-mono text-blue-400 text-center mb-5">
+                    {existingBid.status === 'PENDING'
+                      ? '> Aguardando avaliação da empresa.'
+                      : existingBid.status === 'ACCEPTED'
+                        ? '> Proposta aceite. Parabéns!'
+                        : `> STATUS: ${existingBid.status}`}
+                  </p>
+                  <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-5">
+                    <p className="font-mono text-[10px] text-zinc-500 mb-2 uppercase tracking-wider">Detalhes da Proposta</p>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between font-mono text-[10px]">
+                        <span className="text-zinc-500">Valor proposto:</span>
+                        <span className="text-brand-500 font-bold">{fmt(existingBid.amount)}</span>
+                      </div>
+                      <div className="flex justify-between font-mono text-[10px]">
+                        <span className="text-zinc-500">Prazo estimado:</span>
+                        <span className="text-white">{existingBid.durationDays} dias</span>
+                      </div>
+                      <div className="flex justify-between font-mono text-[10px]">
+                        <span className="text-zinc-500">Status:</span>
+                        <span className={existingBid.status === 'ACCEPTED' ? 'text-brand-500' : existingBid.status === 'REJECTED' ? 'text-red-400' : 'text-blue-400'}>
+                          {existingBid.status}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between font-mono text-[10px]">
-                      <span className="text-zinc-400">Valor:</span><span className="text-white">{fmt(existingBid.amount)}</span>
-                    </div>
-                    <div className="flex justify-between font-mono text-[10px]">
-                      <span className="text-zinc-400">Status:</span>
-                      <span className={existingBid.status === 'ACCEPTED' ? 'text-brand-500' : existingBid.status === 'REJECTED' ? 'text-red-400' : 'text-blue-400'}>
-                        {existingBid.status}
-                      </span>
-                    </div>
+                    {existingBid.milestoneProposals.length > 0 && project?.milestones && (
+                      <div className="mt-3 pt-3 border-t border-dark-border space-y-1.5">
+                        <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Por Milestone</p>
+                        {existingBid.milestoneProposals.map(mp => {
+                          const m = project.milestones!.find(x => x.id === mp.milestoneId)
+                          return (
+                            <div key={mp.milestoneId} className="font-mono text-[10px]">
+                              <div className="flex justify-between">
+                                <span className="text-zinc-500 truncate max-w-[140px]">{m?.title ?? mp.milestoneId}</span>
+                                <span className="text-brand-500 font-bold">{fmt(mp.proposedAmount)}</span>
+                              </div>
+                              {mp.note && <p className="text-zinc-600 mt-0.5 line-clamp-1">{mp.note}</p>}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <button onClick={() => navigate('/dashboard')}
-                    className="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-brand-500 hover:text-brand-500 transition-colors">
-                    &lt; Retornar ao Workspace
-                  </button>
+                  <div className="flex gap-3">
+                    {existingBid.status === 'PENDING' && (
+                      <button onClick={openEdit}
+                        className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-5 py-2 border border-brand-500 hover:bg-brand-400 transition-colors flex items-center gap-2">
+                        <Pencil className="w-3.5 h-3.5" /> Editar Proposta
+                      </button>
+                    )}
+                    <button onClick={() => navigate('/dashboard')}
+                      className="btn-sharp bg-transparent text-white font-mono text-xs px-5 py-2 border border-dark-border hover:border-brand-500 hover:text-brand-500 transition-colors">
+                      &lt; Voltar
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Formulário de edição */}
+              {existingBid && !submitted && editing && (
+                <div className="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-10 flex flex-col p-6 border border-brand-500 overflow-y-auto">
+                  <div className="flex items-center justify-between mb-5 border-b border-dark-border pb-4">
+                    <div className="flex items-center gap-2">
+                      <Pencil className="w-4 h-4 text-brand-500" />
+                      <span className="font-mono text-sm font-bold text-white uppercase tracking-wider">Editar Proposta</span>
+                    </div>
+                    <button onClick={() => setEditing(false)} className="text-zinc-500 hover:text-white transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleUpdate} className="flex flex-col gap-5 flex-1">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Valor Proposto (R$)</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-zinc-500 text-sm">R$</span>
+                          <input
+                            type="number" required min={1} value={editAmount}
+                            onChange={e => setEditAmount(e.target.value)}
+                            readOnly={editMilestoneProposals.length > 0}
+                            className={`w-full pl-9 pr-4 py-3 bg-[#000] border text-sm font-mono text-white focus:outline-none rounded-none ${editMilestoneProposals.length > 0 ? 'border-dark-border text-zinc-500 cursor-not-allowed' : 'border-dark-border focus:border-brand-500'}`}
+                          />
+                        </div>
+                        {editMilestoneProposals.length > 0 && (
+                          <p className="text-[9px] font-mono text-zinc-500">// Soma automática dos milestones.</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Prazo Estimado (dias)</label>
+                        <div className="relative">
+                          <input type="number" required min={1} max={3650} value={editDuration} onChange={e => setEditDuration(e.target.value)}
+                            className="w-full pl-4 pr-12 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 rounded-none" />
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 font-mono text-zinc-500 text-xs">DIAS</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Edit Milestone Proposals */}
+                    {editMilestoneProposals.length > 0 && project?.milestones && (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <ListChecks className="w-3 h-3 text-brand-500" />
+                          <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">Proposta por Milestone</label>
+                        </div>
+                        <div className="space-y-2">
+                          {project.milestones
+                            .slice()
+                            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+                            .map((m, i) => {
+                              const mp = editMilestoneProposals.find(p => p.milestoneId === m.id)
+                              if (!mp) return null
+                              return (
+                                <div key={m.id} className="bg-[#000] border border-dark-border p-2.5 flex flex-col gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-mono text-[9px] text-zinc-600 bg-dark-card border border-dark-border px-1.5 py-0.5 shrink-0">M{i + 1}</span>
+                                    <p className="font-mono text-xs text-white font-bold truncate flex-1">{m.title}</p>
+                                    <span className="font-mono text-[10px] text-zinc-500 shrink-0">ref: {fmt(m.amount)}</span>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div className="relative">
+                                      <span className="absolute left-2 top-1/2 -translate-y-1/2 font-mono text-zinc-500 text-xs">R$</span>
+                                      <input
+                                        type="number" required min={0}
+                                        value={mp.proposedAmount}
+                                        onChange={e => updateEditMilestoneProposal(m.id, 'proposedAmount', e.target.value)}
+                                        className="w-full pl-7 pr-2 py-1.5 bg-dark-input border border-dark-border text-xs font-mono text-white focus:outline-none focus:border-brand-500 rounded-none"
+                                      />
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={mp.note ?? ''}
+                                      onChange={e => updateEditMilestoneProposal(m.id, 'note', e.target.value)}
+                                      placeholder="Observação (opcional)"
+                                      className="w-full px-2 py-1.5 bg-dark-input border border-dark-border text-xs font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+                                    />
+                                  </div>
+                                </div>
+                              )
+                            })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2 flex-1 flex flex-col">
+                      <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Proposta Técnica</label>
+                      <textarea required minLength={20} value={editProposal} onChange={e => setEditProposal(e.target.value)}
+                        className="flex-1 w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 focus:outline-none focus:border-brand-500 rounded-none resize-none min-h-[140px]" />
+                    </div>
+
+                    {editError && (
+                      <p className="font-mono text-xs text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2">{editError}</p>
+                    )}
+
+                    <div className="flex justify-end gap-3 pt-4 border-t border-dark-border">
+                      <button type="button" onClick={() => setEditing(false)} disabled={updating}
+                        className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase disabled:opacity-50">
+                        Cancelar
+                      </button>
+                      <button type="submit" disabled={updating}
+                        className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors uppercase disabled:opacity-60 flex items-center gap-2">
+                        {updating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                        {updating ? 'Atualizando...' : 'Salvar Alterações'}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
 

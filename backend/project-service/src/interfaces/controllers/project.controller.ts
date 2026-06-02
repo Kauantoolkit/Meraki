@@ -59,7 +59,7 @@ export class ProjectController {
   ) {
     const filter: FindProjectsFilter = { status, page, limit };
     if (userType === 'COMPANY') filter.companyId = companyId;
-    if (userType === 'SPECIALIST') filter.specialistId = specialistId;
+    if (userType === 'SPECIALIST' && status !== ProjectStatus.OPEN) filter.specialistId = specialistId;
     return this.getProjects.execute(filter);
   }
 
