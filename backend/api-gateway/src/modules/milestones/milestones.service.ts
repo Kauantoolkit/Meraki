@@ -13,16 +13,22 @@ export class MilestonesService {
     return this.proxy.put(`${PROJECT_URL}/api/projects/milestones/${milestoneId}/start`, {}, this.proxy.authHeaders(token));
   }
 
-  submitDelivery(milestoneId: string, dto: SubmitDeliveryDto, token: string) {
-    return this.proxy.post(`${DELIVERY_URL}/api/deliveries`, { ...dto, milestoneId }, this.proxy.authHeaders(token));
+  async submitDelivery(milestoneId: string, dto: SubmitDeliveryDto, token: string) {
+    const result = await this.proxy.post(`${DELIVERY_URL}/api/deliveries`, { ...dto, milestoneId }, this.proxy.authHeaders(token));
+    await this.proxy.put(`${PROJECT_URL}/api/projects/milestones/${milestoneId}/submit`, {}, this.proxy.authHeaders(token)).catch(() => {});
+    return result;
   }
 
-  approveDelivery(milestoneId: string, amount: number | undefined, token: string) {
-    return this.proxy.put(`${DELIVERY_URL}/api/deliveries/${milestoneId}/approve`, { amount }, this.proxy.authHeaders(token));
+  async approveDelivery(milestoneId: string, amount: number | undefined, token: string) {
+    const result = await this.proxy.put(`${DELIVERY_URL}/api/deliveries/${milestoneId}/approve`, { amount }, this.proxy.authHeaders(token));
+    await this.proxy.put(`${PROJECT_URL}/api/projects/milestones/${milestoneId}/approve`, {}, this.proxy.authHeaders(token)).catch(() => {});
+    return result;
   }
 
-  rejectDelivery(milestoneId: string, reason: string, token: string) {
-    return this.proxy.put(`${DELIVERY_URL}/api/deliveries/${milestoneId}/reject`, { reason }, this.proxy.authHeaders(token));
+  async rejectDelivery(milestoneId: string, reason: string, token: string) {
+    const result = await this.proxy.put(`${DELIVERY_URL}/api/deliveries/${milestoneId}/reject`, { reason }, this.proxy.authHeaders(token));
+    await this.proxy.put(`${PROJECT_URL}/api/projects/milestones/${milestoneId}/reject`, {}, this.proxy.authHeaders(token)).catch(() => {});
+    return result;
   }
 
   getKanbanBoard(projectId: string, token: string) {

@@ -1,9 +1,9 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Delivery } from '../../domain/entities/delivery.entity';
-import { KanbanColumn } from '../../domain/entities/kanban-column.entity';
-import { KanbanCard } from '../../domain/entities/kanban-card.entity';
-import { ProjectHistory } from '../../domain/entities/project-history.entity';
-import { MilestoneComment } from '../../domain/entities/milestone-comment.entity';
+import { DeliverySchema } from './schemas/delivery.schema';
+import { KanbanColumnSchema } from './schemas/kanban-column.schema';
+import { KanbanCardSchema } from './schemas/kanban-card.schema';
+import { ProjectHistorySchema } from './schemas/project-history.schema';
+import { MilestoneCommentSchema } from './schemas/milestone-comment.schema';
 
 export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -12,7 +12,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   database: process.env.DB_NAME || 'delivery_db',
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
-  entities: [Delivery, KanbanColumn, KanbanCard, ProjectHistory, MilestoneComment],
+  entities: [DeliverySchema, KanbanColumnSchema, KanbanCardSchema, ProjectHistorySchema, MilestoneCommentSchema],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
 });

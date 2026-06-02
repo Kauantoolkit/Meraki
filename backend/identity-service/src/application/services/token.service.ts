@@ -49,13 +49,13 @@ export class TokenService {
       companyId: user.companyId,
     };
     const accessToken = this.jwtService.sign(accessPayload, {
-      expiresIn: this.accessExpiresIn,
+      expiresIn: this.accessExpiresIn as never,
     });
 
     const jti = randomUUID();
     const refreshPayload: RefreshTokenPayload = { sub: user.id, jti, type: 'refresh' };
     const refreshToken = this.jwtService.sign(refreshPayload, {
-      expiresIn: this.refreshExpiresIn,
+      expiresIn: this.refreshExpiresIn as never,
     });
 
     await this.refreshTokens.create({

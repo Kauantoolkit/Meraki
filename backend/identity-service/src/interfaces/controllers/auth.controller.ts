@@ -28,10 +28,10 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Registrar novo usuário (company ou specialist)',
-    description: 'Escopo: público. Rate-limit: 5 req/min por IP.',
+    description: 'Escopo: público. Rate-limit: 30 req/min por IP.',
   })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso' })
   @ApiResponse({ status: 400, description: 'Dados inválidos ou companyName ausente' })
@@ -43,10 +43,10 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
   @ApiOperation({
     summary: 'Autenticar usuário e receber par accessToken + refreshToken',
-    description: 'Escopo: público. Rate-limit: 5 req/min por IP.',
+    description: 'Escopo: público. Rate-limit: 30 req/min por IP.',
   })
   @ApiResponse({ status: 200, description: 'Login realizado. Retorna access + refresh + user' })
   @ApiResponse({ status: 401, description: 'Credenciais inválidas' })
