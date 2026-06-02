@@ -1,34 +1,5 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Landing Page', () => {
-  test('renders navbar with logo and auth buttons', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.locator('nav')).toBeVisible()
-    await expect(page.locator('text=Meraki').first()).toBeVisible()
-    await expect(page.getByRole('button', { name: /login/i })).toBeVisible()
-    await expect(page.getByRole('button', { name: /registar/i })).toBeVisible()
-  })
-
-  test('shows features grid', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.locator('text=Dashboard Empresa')).toBeVisible()
-    await expect(page.locator('text=Kanban')).toBeVisible()
-    await expect(page.locator('text=Bidding')).toBeVisible()
-  })
-
-  test('login button navigates to /login', async ({ page }) => {
-    await page.goto('/')
-    await page.getByRole('button', { name: /login/i }).click()
-    await expect(page).toHaveURL(/\/login/)
-  })
-
-  test('register button navigates to /signup', async ({ page }) => {
-    await page.goto('/')
-    await page.getByRole('button', { name: /registar/i }).click()
-    await expect(page).toHaveURL(/\/signup/)
-  })
-})
-
 test.describe('Login Page', () => {
   test('renders login form with email and password fields', async ({ page }) => {
     await page.goto('/login')
@@ -62,10 +33,9 @@ test.describe('Login Page', () => {
     await expect(page.locator('text=Credenciais inválidas')).toBeVisible({ timeout: 5000 })
   })
 
-  test('has link to password recovery', async ({ page }) => {
-    await page.goto('/login')
-    await page.locator('text=Esqueceu').click()
-    await expect(page).toHaveURL(/\/password-recovery/)
+  test('root path redirects to /login when not authenticated', async ({ page }) => {
+    await page.goto('/')
+    await expect(page).toHaveURL(/\/login/)
   })
 })
 

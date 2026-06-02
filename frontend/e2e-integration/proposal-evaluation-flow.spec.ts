@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test'
 import { registerAndLogin } from './helpers/api'
 
-const ts = Date.now()
 const API_URL = 'http://localhost:3000/api'
 
-test.describe('UC: Avaliar Propostas e Selecionar Vencedor (RF06/RF07)', () => {
+test.describe('UC: Avaliar Propostas e Selecionar Vencedor (RF06/RF07/RN03)', () => {
+  const ts = Date.now()
   const company = {
     name: 'Eval Corp',
     email: `eval-corp-${ts}@test.com`,
     password: 'Test1234!',
     userType: 'COMPANY' as const,
+    companyName: 'Eval Corp Ltda',
   }
   const specialist = {
     name: 'Eval Dev',
@@ -19,7 +20,6 @@ test.describe('UC: Avaliar Propostas e Selecionar Vencedor (RF06/RF07)', () => {
   }
 
   let projectId: string
-  let bidId: string
   let companyToken: string
   let specialistToken: string
 
@@ -27,110 +27,78 @@ test.describe('UC: Avaliar Propostas e Selecionar Vencedor (RF06/RF07)', () => {
     const ctx = await browser.newContext()
     const page = await ctx.newPage()
 
-    // Register and login company
-    await page.request.post(`${API_URL}/auth/register`, {
-      data: { ...company, companyName: company.name },
-    })
+    // Registra e faz login da empresa
+    await page.request.post(`${API_URL}/auth/register`, { data: company })
     const companyLogin = await page.request.post(`${API_URL}/auth/login`, {
       data: { email: company.email, password: company.password },
     })
-    if (!companyLogin.ok()) {
-      await ctx.close()
-      return
-    }
-    const companyBody = await companyLogin.json()
-    companyToken = companyBody.accessToken
+    if (!companyLogin.ok()) throw new Error('Falha ao logar empresa no beforeAll')
+    companyToken = (await companyLogin.json()).accessToken
 
-    // Create project
+    // Cria projeto
     const projRes = await page.request.post(`${API_URL}/projects`, {
       headers: { Authorization: `Bearer ${companyToken}` },
       data: {
         title: 'Projeto Avaliação E2E',
-        description: 'Teste de avaliação de propostas',
+        description: 'Teste de avaliação de propostas via UI.',
         requirements: ['React', 'NestJS'],
         budget: 15000,
-        deadline: '2026-12-31',
+        deadline: '2027-12-31',
       },
     })
-    if (projRes.ok()) {
-      const proj = await projRes.json()
-      projectId = proj.id
-    }
+    if (!projRes.ok()) throw new Error('Falha ao criar projeto no beforeAll')
+    projectId = (await projRes.json()).id
 
-    // Register and login specialist
-    await page.request.post(`${API_URL}/auth/register`, {
-      data: specialist,
-    })
+    // Registra e faz login do especialista
+    await page.request.post(`${API_URL}/auth/register`, { data: specialist })
     const specLogin = await page.request.post(`${API_URL}/auth/login`, {
       data: { email: specialist.email, password: specialist.password },
     })
-    if (specLogin.ok()) {
-      const specBody = await specLogin.json()
-      specialistToken = specBody.accessToken
+    if (!specLogin.ok()) throw new Error('Falha ao logar especialista no beforeAll')
+    specialistToken = (await specLogin.json()).accessToken
 
-      // Submit bid
-      if (projectId) {
-        const bidRes = await page.request.post(`${API_URL}/bids`, {
-          headers: { Authorization: `Bearer ${specialistToken}` },
-          data: {
-            projectId,
-            amount: 12000,
-            durationDays: 30,
-            proposalText: 'Proposta E2E: experiência sólida em React e NestJS.',
-          },
-        })
-        if (bidRes.ok()) {
-          const bid = await bidRes.json()
-          bidId = bid.id
-        }
-      }
-    }
+    // Especialista submete proposta via API (setup)
+    const bidRes = await page.request.post(`${API_URL}/bids/project/${projectId}`, {
+      headers: { Authorization: `Bearer ${specialistToken}` },
+      data: {
+        proposal: 'Proposta E2E: experiência sólida em React e NestJS com foco em microsserviços.',
+        proposedBudget: 12000,
+        estimatedDuration: 30,
+      },
+    })
+    if (!bidRes.ok()) throw new Error('Falha ao submeter proposta no beforeAll')
 
     await ctx.close()
   })
 
-  test('company can see bids on evaluation page', async ({ page }) => {
-    test.skip(!projectId, 'Project was not created — backend may be down')
-    test.skip(!bidId, 'Bid was not created — endpoint may not exist')
-
+  test('empresa vê a proposta do especialista na página de avaliação', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.goto(`/projects/${projectId}/bids`)
+    await page.goto(`/projects/${projectId}/bids`, { waitUntil: 'networkidle' })
 
-    await expect(page.locator('body')).toBeVisible()
+    await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
-    // Look for bid card with specialist info
-    const bidCard = page.locator('[class*="bid"], [class*="proposal"], [class*="card"]').first()
-    if (await bidCard.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await expect(bidCard).toContainText(/eval dev|12\.?000|proposta/i)
-    }
+    // Proposta deve estar visível com dados reais do backend
+    await expect(page.getByText(/Especialista|Eval Dev/i).first()).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText(/12\.?000|R\$\s*12/i)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('button', { name: /ACEITAR_BID/i })).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('button', { name: /REJEITAR/i })).toBeVisible({ timeout: 5_000 })
   })
 
-  test('company can accept a bid', async ({ page }) => {
-    test.skip(!projectId, 'Project was not created — backend may be down')
-    test.skip(!bidId, 'Bid was not created — endpoint may not exist')
-
+  test('empresa aceita proposta via UI e é redirecionada ao kanban (RN03)', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.goto(`/projects/${projectId}/bids`)
+    await page.goto(`/projects/${projectId}/bids`, { waitUntil: 'networkidle' })
 
-    await expect(page.locator('body')).toBeVisible()
+    await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
-    // Click accept button
-    const acceptBtn = page.getByRole('button', { name: /aceitar|accept|aprovar/i }).first()
-    if (await acceptBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await acceptBtn.click()
+    // Clica em aceitar
+    await page.getByRole('button', { name: /ACEITAR_BID/i }).first().click()
 
-      // Confirm in modal if present
-      const confirmBtn = page.getByRole('button', { name: /confirmar|confirm|sim/i })
-      if (await confirmBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await confirmBtn.click()
-      }
+    // Modal de confirmação
+    await expect(page.getByText(/Confirmar/i)).toBeVisible({ timeout: 3_000 })
+    await page.getByRole('button', { name: /CONFIRMAR/i }).click()
 
-      await page.waitForTimeout(2000)
-
-      // Verify success feedback or redirect
-      const hasSuccess = await page.locator('text=/sucesso|aceita|aprovada/i').isVisible({ timeout: 3000 }).catch(() => false)
-      const hasKanban = page.url().includes('kanban')
-      expect(hasSuccess || hasKanban || true).toBeTruthy()
-    }
+    // RN03: ao aceitar, redireciona para o kanban do projeto
+    await expect(page).toHaveURL(/\/kanban\//, { timeout: 10_000 })
+    await expect(page.locator('main')).toBeVisible({ timeout: 5_000 })
   })
 })

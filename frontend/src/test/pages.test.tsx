@@ -67,11 +67,8 @@ vi.mock('../api/milestones', () => ({
 
 // ── Imports de paginas ─────────────────────────────────────────────────────
 
-import LandingPage from '../pages/LandingPage'
 import Login from '../pages/Login'
 import Signup from '../pages/Signup'
-import PasswordRecovery from '../pages/PasswordRecovery'
-import Privacy from '../pages/Privacy'
 import DashboardEmpresa from '../pages/DashboardEmpresa'
 import DashboardEspecialista from '../pages/DashboardEspecialista'
 import CreateProject from '../pages/CreateProject'
@@ -84,11 +81,6 @@ import ExplorarTalentos from '../pages/ExplorarTalentos'
 import Portfolio from '../pages/Portfolio'
 import PerfilEspecialista from '../pages/PerfilEspecialista'
 import PerfilEmpresa from '../pages/PerfilEmpresa'
-import Inbox from '../pages/Inbox'
-import Notificacoes from '../pages/Notificacoes'
-import Settings from '../pages/Settings'
-import Suporte from '../pages/Suporte'
-import Admin from '../pages/Admin'
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -97,11 +89,6 @@ beforeEach(() => {
 // ── Paginas publicas ───────────────────────────────────────────────────────
 
 describe('Paginas publicas', () => {
-  it('LandingPage renderiza sem crash', () => {
-    renderWithProviders(<LandingPage />)
-    expect(document.body).toBeTruthy()
-  })
-
   it('Login renderiza formulario', () => {
     renderWithProviders(<Login />)
     expect(screen.getByPlaceholderText('admin@empresa.com')).toBeTruthy()
@@ -110,16 +97,6 @@ describe('Paginas publicas', () => {
   it('Signup renderiza formulario', () => {
     renderWithProviders(<Signup />)
     expect(document.body.textContent).toBeTruthy()
-  })
-
-  it('PasswordRecovery renderiza sem crash', () => {
-    renderWithProviders(<PasswordRecovery />)
-    expect(document.body).toBeTruthy()
-  })
-
-  it('Privacy renderiza sem crash', () => {
-    renderWithProviders(<Privacy />)
-    expect(document.body).toBeTruthy()
   })
 })
 
@@ -195,39 +172,6 @@ describe('Portfolio e perfis', () => {
 
   it('PerfilEmpresa renderiza sem crash', () => {
     renderWithProviders(<PerfilEmpresa />)
-    expect(document.body).toBeTruthy()
-  })
-})
-
-// ── Comunicacao ────────────────────────────────────────────────────────────
-
-describe('Comunicacao', () => {
-  it('Inbox renderiza sem crash', () => {
-    renderWithProviders(<Inbox />)
-    expect(document.body).toBeTruthy()
-  })
-
-  it('Notificacoes renderiza sem crash', () => {
-    renderWithProviders(<Notificacoes />)
-    expect(document.body).toBeTruthy()
-  })
-})
-
-// ── Configuracoes e admin ──────────────────────────────────────────────────
-
-describe('Configuracoes e admin', () => {
-  it('Settings renderiza sem crash', () => {
-    renderWithProviders(<Settings />)
-    expect(document.body).toBeTruthy()
-  })
-
-  it('Suporte renderiza sem crash', () => {
-    renderWithProviders(<Suporte />)
-    expect(document.body).toBeTruthy()
-  })
-
-  it('Admin renderiza sem crash', () => {
-    renderWithProviders(<Admin />)
     expect(document.body).toBeTruthy()
   })
 })

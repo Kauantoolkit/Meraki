@@ -54,7 +54,7 @@ export default function Financeiro() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2 h-2 bg-orange-400 animate-pulse" />
-              <span className="font-mono text-[10px] tracking-widest text-orange-400 uppercase">Payment Service // Online</span>
+              <span className="font-mono text-[10px] tracking-widest text-orange-400 uppercase">Meraki // Online</span>
             </div>
             <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Gestão de Fundo de Garantia</h1>
             <p className="text-sm text-zinc-400 font-mono mt-2">

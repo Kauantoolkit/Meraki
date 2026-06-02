@@ -60,7 +60,7 @@ export default function ExplorarTalentos() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2 h-2 bg-brand-500 animate-pulse" />
-              <span className="font-mono text-[10px] tracking-widest text-brand-500 uppercase">Portfolio Service // Online</span>
+              <span className="font-mono text-[10px] tracking-widest text-brand-500 uppercase">Meraki // Online</span>
             </div>
             <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Diretório de Especialistas</h1>
             <p className="text-sm text-zinc-400 font-mono mt-2">Encontre especialistas qualificados para o seu projeto.</p>

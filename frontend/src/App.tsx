@@ -1,10 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 
-import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
-import PasswordRecovery from './pages/PasswordRecovery'
 import DashboardEmpresa from './pages/DashboardEmpresa'
 import DashboardEspecialista from './pages/DashboardEspecialista'
 import CreateProject from './pages/CreateProject'
@@ -16,12 +14,6 @@ import ExplorarTalentos from './pages/ExplorarTalentos'
 import Portfolio from './pages/Portfolio'
 import PerfilEmpresa from './pages/PerfilEmpresa'
 import PerfilEspecialista from './pages/PerfilEspecialista'
-import Inbox from './pages/Inbox'
-import Notificacoes from './pages/Notificacoes'
-import Settings from './pages/Settings'
-import Suporte from './pages/Suporte'
-import Admin from './pages/Admin'
-import Privacy from './pages/Privacy'
 import AvaliarPropostas from './pages/AvaliarPropostas'
 
 function DashboardRoute() {
@@ -44,11 +36,9 @@ function AppRoutes() {
   return (
     <Routes>
       {/* Public */}
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/password-recovery" element={<PasswordRecovery />} />
-      <Route path="/privacy" element={<Privacy />} />
 
       {/* Protected */}
       <Route path="/dashboard" element={<ProtectedRoute><DashboardRoute /></ProtectedRoute>} />
@@ -62,12 +52,6 @@ function AppRoutes() {
       <Route path="/portfolio" element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
       <Route path="/profile/company/:id" element={<ProtectedRoute><PerfilEmpresa /></ProtectedRoute>} />
       <Route path="/profile/specialist/:id" element={<ProtectedRoute><PerfilEspecialista /></ProtectedRoute>} />
-      <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
-      <Route path="/events" element={<ProtectedRoute><Notificacoes /></ProtectedRoute>} />
-      <Route path="/notifications" element={<Navigate to="/events" replace />} />
-      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-      <Route path="/support" element={<ProtectedRoute><Suporte /></ProtectedRoute>} />
-      <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
     </Routes>
   )
 }

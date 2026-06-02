@@ -20,11 +20,16 @@ export async function registerAndLogin(
   }
   await page.request.post(`${API_URL}/auth/register`, { data: regPayload }).catch(() => {})
 
-  // Always login (register may or may not return token)
-  const loginRes = await page.request.post(`${API_URL}/auth/login`, {
-    data: { email: data.email, password: data.password },
-  })
-  if (!loginRes.ok()) throw new Error(`Failed to login: ${await loginRes.text()}`)
+  // Always login — retry with backoff on 429 (throttler)
+  let loginRes: Awaited<ReturnType<typeof page.request.post>>
+  for (let attempt = 0; attempt < 5; attempt++) {
+    loginRes = await page.request.post(`${API_URL}/auth/login`, {
+      data: { email: data.email, password: data.password },
+    })
+    if (loginRes.status() !== 429) break
+    await new Promise(r => setTimeout(r, 3000 * (attempt + 1)))
+  }
+  if (!loginRes!.ok()) throw new Error(`Failed to login: ${await loginRes!.text()}`)
 
   const body = await loginRes.json()
   const user = {

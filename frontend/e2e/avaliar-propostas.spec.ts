@@ -169,7 +169,7 @@ test.describe('Avaliar Propostas — aceitação e RN03 (RF06, RN03)', () => {
     // Clica em Aceitar → modal aparece com aviso RN03
     await page.getByRole('button', { name: /ACEITAR_BID/i }).first().click()
     await expect(page.getByText(/Ação Irreversível/i).first()).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByText(/Ação Irreversível \(RN03\)/i)).toBeVisible()
+    await expect(page.getByText(/Ação Irreversível/i).first()).toBeVisible()
 
     // Confirma
     await page.getByRole('button', { name: /CONFIRMAR_ACEITE/i }).click()

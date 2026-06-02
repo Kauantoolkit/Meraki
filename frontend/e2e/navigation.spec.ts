@@ -12,8 +12,6 @@ test.describe('Navbar - Company', () => {
     await expect(nav.getByRole('button', { name: 'EMPRESA', exact: true })).toBeVisible()
     await expect(nav.getByRole('button', { name: 'TALENTOS', exact: true })).toBeVisible()
     await expect(nav.getByRole('button', { name: 'FINANCEIRO', exact: true })).toBeVisible()
-    await expect(nav.getByRole('button', { name: 'KANBAN', exact: true })).toBeVisible()
-    await expect(nav.getByRole('button', { name: 'INBOX', exact: true })).toBeVisible()
   })
 
   test('does NOT show specialist-only links', async ({ page }) => {
@@ -21,13 +19,7 @@ test.describe('Navbar - Company', () => {
     const nav = page.locator('nav')
     await expect(nav.locator('text=PORTFÓLIO')).not.toBeVisible()
     await expect(nav.locator('text=GANHOS')).not.toBeVisible()
-  })
-
-  test('kanban nav without projectId redirects back to dashboard', async ({ page }) => {
-    await page.goto('/dashboard')
-    await page.locator('nav').getByRole('button', { name: 'KANBAN', exact: true }).click()
-    // Kanban requires projectId — without it, redirects to /dashboard
-    await expect(page).toHaveURL(/\/dashboard/)
+    await expect(nav.locator('text=KANBAN')).not.toBeVisible()
   })
 
   test('navigate to financial', async ({ page }) => {
@@ -36,17 +28,9 @@ test.describe('Navbar - Company', () => {
     await expect(page).toHaveURL(/\/financial/)
   })
 
-  test('navigate to inbox', async ({ page }) => {
-    await page.goto('/dashboard')
-    await page.locator('nav').getByRole('button', { name: 'INBOX', exact: true }).click()
-    await expect(page).toHaveURL(/\/inbox/)
-  })
-
   test('logout redirects to login', async ({ page }) => {
     await page.goto('/dashboard')
-    // Open user dropdown
     await page.locator('nav').locator('[class*="cursor-pointer"]').last().click()
-    // Look for logout button
     const logoutBtn = page.locator('text=Logout').or(page.locator('text=SAIR'))
     if (await logoutBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await logoutBtn.click()
@@ -73,7 +57,7 @@ test.describe('Navbar - Specialist', () => {
     const nav = page.locator('nav')
     await expect(nav.locator('text=TALENTOS')).not.toBeVisible()
     await expect(nav.locator('text=FINANCEIRO')).not.toBeVisible()
-    await expect(nav.locator('text=ADMIN')).not.toBeVisible()
+    await expect(nav.locator('text=KANBAN')).not.toBeVisible()
   })
 
   test('navigate to portfolio', async ({ page }) => {

@@ -99,20 +99,38 @@ test.describe('Bidding - Submit Proposta (RF05, T8b apoio)', () => {
 
 /* ─── F54: RN02 - Bid já existe ─── */
 test.describe('Bidding - RN02 Proposta Única', () => {
+  let rn02ProjectId: string
+
+  test.beforeAll(async () => {
+    const proj = await createProject(company.token, {
+      title: 'Projeto RN02 Overlay Test',
+      description: 'Projeto para testar overlay de proposta já existente (RN02).',
+      budget: 5000,
+      deadline: '2027-12-31',
+      requirements: ['NestJS'],
+    })
+    rn02ProjectId = proj.id
+    await submitBid(specialist.token, {
+      projectId: rn02ProjectId,
+      amount: 3000,
+      durationDays: 20,
+      proposalText: 'Proposta submetida via API para teste F54 de bloqueio RN02.',
+    })
+  })
+
   test('F54 - bloqueia formulário quando bid já existe (RN02)', async ({ page }) => {
-    // projectId already has a bid from the F52 test
     await loginAs(page, 'specialist')
-    await page.goto(`/bidding/${projectId}`)
+    await page.goto(`/bidding/${rn02ProjectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Overlay de bloqueio deve aparecer
     await expect(page.getByText('PROPOSTA JÁ SUBMETIDA')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText(/RN02/)).toBeVisible()
+    await expect(page.getByText(/Apenas uma proposta ativa por projeto/i)).toBeVisible()
   })
 
   test('F54 - botão retornar no overlay de bid existente', async ({ page }) => {
     await loginAs(page, 'specialist')
-    await page.goto(`/bidding/${projectId}`)
+    await page.goto(`/bidding/${rn02ProjectId}`)
 
     await expect(page.getByText('PROPOSTA JÁ SUBMETIDA')).toBeVisible({ timeout: 10_000 })
     await page.getByRole('button', { name: /Retornar ao Workspace/i }).click()

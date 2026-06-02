@@ -289,6 +289,20 @@ test.describe('Kanban - Role Visibility', () => {
       proposalText: 'Role visibility test.',
     })
     await apiRequest(`/bids/${bid.id}/accept`, { method: 'PUT', token: company.token })
+
+    // Avança milestone para IN_PROGRESS (setup para o teste de SUBMETER ENTREGA)
+    const milestones = await getMilestones(specialist.token, roleProjectId)
+    if (milestones.length > 0) {
+      await startMilestone(specialist.token, milestones[0].id)
+
+      // Avança para SUBMITTED_REVIEW (setup para o teste de APROVAR & PAGAR)
+      await submitDelivery(specialist.token, {
+        milestoneId: milestones[0].id,
+        projectId: roleProjectId,
+        deliveryNotes: 'Setup: entrega automática para teste de role.',
+        deliveredFiles: ['https://github.com/test/role-test'],
+      })
+    }
   })
 
   test('Company NÃO vê INICIAR TRABALHO (só specialist pode)', async ({ page }) => {
@@ -296,17 +310,10 @@ test.describe('Kanban - Role Visibility', () => {
     await page.goto(`/kanban/${roleProjectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
-    // Company should NOT see INICIAR TRABALHO
     await expect(page.getByRole('button', { name: /INICIAR TRABALHO/i })).not.toBeVisible()
   })
 
   test('Company NÃO vê SUBMETER ENTREGA (só specialist pode)', async ({ page }) => {
-    // First advance milestone to IN_PROGRESS via API
-    const milestones = await getMilestones(specialist.token, roleProjectId)
-    if (milestones.length > 0 && milestones[0].status === 'PENDING') {
-      await startMilestone(specialist.token, milestones[0].id)
-    }
-
     await loginAs(page, 'company')
     await page.goto(`/kanban/${roleProjectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
@@ -315,17 +322,6 @@ test.describe('Kanban - Role Visibility', () => {
   })
 
   test('Specialist NÃO vê APROVAR & PAGAR (só company pode)', async ({ page }) => {
-    // Advance to SUBMITTED_REVIEW via API
-    const milestones = await getMilestones(specialist.token, roleProjectId)
-    if (milestones.length > 0 && milestones[0].status === 'IN_PROGRESS') {
-      await submitDelivery(specialist.token, {
-        milestoneId: milestones[0].id,
-        projectId: roleProjectId,
-        deliveryNotes: 'Test delivery',
-        deliveredFiles: ['https://github.com/test/role-test'],
-      })
-    }
-
     await loginAs(page, 'specialist')
     await page.goto(`/kanban/${roleProjectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })

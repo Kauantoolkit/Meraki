@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import {
   TerminalSquare, ArrowLeft, Building2, User,
-  Settings, Headphones, LogOut, ShieldAlert, Menu, X,
+  LogOut, Menu, X,
 } from 'lucide-react'
 
 interface NavbarProps {
@@ -24,14 +24,8 @@ export default function Navbar({ backUrl, projectTitle }: NavbarProps) {
     { label: isCompany ? 'EMPRESA' : 'ESPECIALISTA', path: '/dashboard', roles: ['both'] },
     { label: 'TALENTOS',   path: '/talents',    roles: ['company'] },
     { label: 'PORTFÓLIO',  path: '/portfolio',  roles: ['specialist'] },
-    { label: 'KANBAN',     path: '/kanban',     roles: ['both'] },
-    { label: 'INBOX',      path: '/inbox',      roles: ['both'] },
-    { label: 'FINANCEIRO', path: '/financial',  roles: ['company'] },
+{ label: 'FINANCEIRO', path: '/financial',  roles: ['company'] },
     { label: 'GANHOS',     path: '/earnings',   roles: ['specialist'] },
-    { label: 'EVENTOS',    path: '/events',     roles: ['both'] },
-    { label: 'SUPORTE',    path: '/support',    roles: ['both'] },
-    { label: 'SETTINGS',   path: '/settings',   roles: ['both'] },
-    { label: 'ADMIN',      path: '/admin',      roles: ['company'] },
   ].filter(l =>
     l.roles.includes('both') ||
     (isCompany && l.roles.includes('company')) ||
@@ -136,21 +130,6 @@ export default function Navbar({ backUrl, projectTitle }: NavbarProps) {
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
                   <div className="absolute right-0 top-full mt-2 w-48 bg-dark-card border border-dark-border shadow-2xl py-2 z-50">
-                    <button onClick={() => { navigate('/settings'); setDropdownOpen(false) }}
-                      className="w-full text-left px-4 py-2 text-[10px] font-mono text-zinc-400 hover:bg-dark-hover hover:text-brand-500 uppercase flex items-center gap-2">
-                      <Settings className="w-3 h-3" /> Configurações
-                    </button>
-                    <button onClick={() => { navigate('/support'); setDropdownOpen(false) }}
-                      className="w-full text-left px-4 py-2 text-[10px] font-mono text-zinc-400 hover:bg-dark-hover hover:text-brand-500 uppercase flex items-center gap-2">
-                      <Headphones className="w-3 h-3" /> Suporte Técnico
-                    </button>
-                    {isCompany && (
-                      <button onClick={() => { navigate('/admin'); setDropdownOpen(false) }}
-                        className="w-full text-left px-4 py-2 text-[10px] font-mono text-zinc-400 hover:bg-dark-hover hover:text-brand-500 uppercase flex items-center gap-2">
-                        <ShieldAlert className="w-3 h-3" /> Admin Panel
-                      </button>
-                    )}
-                    <div className="border-t border-dark-border my-1" />
                     <button onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-[10px] font-mono text-zinc-400 hover:bg-red-500/10 hover:text-red-500 uppercase flex items-center gap-2">
                       <LogOut className="w-3 h-3" /> Sair / Logout

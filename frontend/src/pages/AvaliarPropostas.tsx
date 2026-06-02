@@ -279,7 +279,7 @@ export default function AvaliarPropostas() {
                         ) : (
                           <>
                             <p className="font-mono text-[10px] text-zinc-600">
-                              RN03: Apenas um especialista pode ser aceite por projeto.
+                              Apenas um especialista pode ser aceite por projeto.
                             </p>
                             <div className="flex gap-3">
                               <button
@@ -332,7 +332,7 @@ export default function AvaliarPropostas() {
 
             {confirmModal.action === 'accept' ? (
               <div className="bg-brand-500/10 border border-brand-500/30 p-3 mb-5">
-                <p className="font-mono text-[10px] text-brand-500 uppercase mb-1">Ação Irreversível (RN03)</p>
+                <p className="font-mono text-[10px] text-brand-500 uppercase mb-1">Ação Irreversível</p>
                 <p className="font-mono text-xs text-zinc-300">
                   Ao aceitar, este especialista será o único vencedor do projeto.
                   As demais propostas serão bloqueadas automaticamente.

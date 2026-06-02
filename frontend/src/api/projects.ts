@@ -18,7 +18,7 @@ export interface Milestone {
   title: string
   description?: string
   amount: number
-  status: 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED_REVIEW' | 'APPROVED'
+  status: 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED'
   order: number
 }
 
@@ -39,6 +39,15 @@ export const projectsApi = {
   listByCompany: () => api.get<ProjectsPage>('/projects'),
   listBySpecialist: () => api.get<ProjectsPage>('/projects'),
   getById: (id: string) => api.get<Project>(`/projects/${id}`),
-  create: (data: CreateProjectPayload) => api.post<Project>('/projects', data),
+  create: async (data: CreateProjectPayload) => {
+    const { milestones, ...projectData } = data
+    const res = await api.post<Project>('/projects', projectData)
+    if (milestones && milestones.length > 0) {
+      for (const m of milestones) {
+        await api.post(`/projects/${res.data.id}/milestones`, m)
+      }
+    }
+    return res
+  },
   getMilestones: (projectId: string) => api.get<Milestone[]>(`/projects/${projectId}/milestones`),
 }

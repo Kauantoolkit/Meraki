@@ -58,7 +58,7 @@ export default function Bidding() {
       if (status === 422) {
         alert('Este projeto não está a aceitar novas propostas.')
       } else if (status === 409) {
-        alert('Já tem uma proposta ativa neste projeto (RN02).')
+        alert('Já tem uma proposta ativa neste projeto.')
       } else {
         alert(`Erro ao submeter proposta: ${msg || 'Tente novamente.'}`)
       }
@@ -238,7 +238,7 @@ export default function Bidding() {
                 <div className="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 border border-blue-500">
                   <ShieldAlert className="w-16 h-16 text-blue-400 mb-4" />
                   <h2 className="text-xl font-mono font-bold text-white mb-2">PROPOSTA JÁ SUBMETIDA</h2>
-                  <p className="text-xs font-mono text-blue-400 text-center mb-6">&gt; RN02: Apenas uma proposta ativa por projeto é permitida.</p>
+                  <p className="text-xs font-mono text-blue-400 text-center mb-6">&gt; Apenas uma proposta ativa por projeto é permitida.</p>
                   <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-6">
                     <p className="font-mono text-[10px] text-zinc-500 mb-1">PROPOSTA EXISTENTE:</p>
                     <div className="flex justify-between font-mono text-[10px]">

@@ -8,13 +8,13 @@ import { useAuth } from '../contexts/AuthContext'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
-type KanbanStatus = 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED_REVIEW' | 'APPROVED'
+type KanbanStatus = 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED'
 
 const COLS: { key: KanbanStatus; label: string; color: string; headerCls: string }[] = [
-  { key: 'PENDING',         label: 'PENDING',          color: 'text-zinc-300',  headerCls: 'border-dark-border' },
-  { key: 'IN_PROGRESS',     label: 'IN_PROGRESS',      color: 'text-brand-500', headerCls: 'border-brand-500/30 bg-brand-500/5' },
-  { key: 'SUBMITTED_REVIEW',label: 'SUBMITTED_REVIEW', color: 'text-blue-400',  headerCls: 'border-blue-500/30' },
-  { key: 'APPROVED',        label: 'APPROVED',         color: 'text-zinc-400',  headerCls: 'border-zinc-700' },
+  { key: 'PENDING',     label: 'PENDING',    color: 'text-zinc-300',  headerCls: 'border-dark-border' },
+  { key: 'IN_PROGRESS', label: 'IN_PROGRESS',color: 'text-brand-500', headerCls: 'border-brand-500/30 bg-brand-500/5' },
+  { key: 'SUBMITTED',   label: 'SUBMITTED',  color: 'text-blue-400',  headerCls: 'border-blue-500/30' },
+  { key: 'APPROVED',    label: 'APPROVED',   color: 'text-zinc-400',  headerCls: 'border-zinc-700' },
 ]
 
 export default function Kanban() {
@@ -218,7 +218,7 @@ export default function Kanban() {
               </div>
             ))}
             <div className="text-brand-500 flex items-center mt-4">
-              <span>meraki@delivery-service:~$</span>
+              <span>meraki@kanban:~$</span>
               <span className="w-2 h-3 bg-brand-500 ml-1 animate-pulse" />
             </div>
           </div>
@@ -329,10 +329,10 @@ function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSu
         ) : !isCompany && m.status === 'PENDING' && canStart ? (
           <button onClick={onStart} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase">INICIAR TRABALHO</button>
         ) : !isCompany && m.status === 'PENDING' && !canStart ? (
-          <button disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card text-zinc-600 py-1.5 cursor-not-allowed uppercase" title="Conclua a milestone anterior primeiro (RN04)">BLOQUEADA</button>
+          <button disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card text-zinc-600 py-1.5 cursor-not-allowed uppercase" title="Conclua a milestone anterior primeiro">BLOQUEADA</button>
         ) : !isCompany && m.status === 'IN_PROGRESS' ? (
           <button onClick={onSubmit} className="mt-3 w-full text-[10px] font-mono border border-blue-400 bg-blue-400/10 text-blue-400 py-1.5 hover:bg-blue-400 hover:text-dark-bg transition-colors uppercase">SUBMETER ENTREGA</button>
-        ) : isCompany && m.status === 'SUBMITTED_REVIEW' ? (
+        ) : isCompany && m.status === 'SUBMITTED' ? (
           <button onClick={onApprove} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase flex justify-center items-center gap-2">
             <Check className="w-3 h-3" /> APROVAR & PAGAR
           </button>

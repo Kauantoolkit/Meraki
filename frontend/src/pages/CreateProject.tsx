@@ -49,15 +49,15 @@ export default function CreateProject() {
     setLogs([])
 
     const logLines = [
-      { text: '> Iniciar ligação via API Gateway...', color: 'text-zinc-400', delay: 500 },
-      { text: '> Autenticar utilizador (Identity Service) -> [OK]', color: 'text-zinc-400', delay: 900 },
-      { text: '> Validar Payload (RN01: Requisitos presentes) -> [OK]', color: 'text-zinc-400', delay: 1300 },
-      { text: '> Validar Payload (RN04: Milestones definidos) -> [OK]', color: 'text-zinc-400', delay: 1700 },
-      { text: '> Invocar POST /api/projects', color: 'text-brand-500', delay: 2100 },
-      { text: '> Project Service: A gerar Project Aggregate Root...', color: 'text-zinc-400', delay: 2600 },
-      { text: '> Project Service: A guardar na base de dados PostgreSQL...', color: 'text-zinc-400', delay: 3100 },
-      { text: '> RabbitMQ: Publicar evento "project.created"', color: 'text-blue-400', delay: 3600 },
-      { text: '> Bidding Service: Evento recebido. A preparar listening de Bids.', color: 'text-orange-400', delay: 4100 },
+      { text: '> Estabelecendo ligação...', color: 'text-zinc-400', delay: 500 },
+      { text: '> Autenticar utilizador -> [OK]', color: 'text-zinc-400', delay: 900 },
+      { text: '> Validar requisitos do projeto -> [OK]', color: 'text-zinc-400', delay: 1300 },
+      { text: '> Validar milestones definidos -> [OK]', color: 'text-zinc-400', delay: 1700 },
+      { text: '> POST /api/projects', color: 'text-brand-500', delay: 2100 },
+      { text: '> A gerar estrutura do projeto...', color: 'text-zinc-400', delay: 2600 },
+      { text: '> A guardar projeto na base de dados...', color: 'text-zinc-400', delay: 3100 },
+      { text: '> Evento de criação publicado.', color: 'text-blue-400', delay: 3600 },
+      { text: '> Projeto publicado. A aguardar propostas.', color: 'text-orange-400', delay: 4100 },
     ]
 
     logLines.forEach(({ text, color, delay }) => {
@@ -88,7 +88,7 @@ export default function CreateProject() {
     { n: 1, label: 'Configuração Base' },
     { n: 2, label: 'Stack & Requisitos' },
     { n: 3, label: 'Orçamento & Prazos' },
-    { n: 4, label: 'Milestones (RN04)' },
+    { n: 4, label: 'Milestones' },
   ]
 
   return (
@@ -174,7 +174,7 @@ export default function CreateProject() {
                 <div>
                   <div className="mb-6 border-b border-dark-border pb-4">
                     <h2 className="text-xl font-bold text-white uppercase tracking-tight">Stack & Requisitos Técnicos</h2>
-                    <p className="font-mono text-xs text-zinc-500 mt-1">Conforme RN01, o projeto deve ter pelo menos um requisito.</p>
+                    <p className="font-mono text-xs text-zinc-500 mt-1">O projeto deve ter pelo menos um requisito técnico.</p>
                   </div>
                   <div className="space-y-5">
                     <div className="space-y-2">
@@ -231,7 +231,7 @@ export default function CreateProject() {
                           placeholder="0.00"
                           className="w-full pl-10 pr-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
                       </div>
-                      <p className="text-[9px] font-mono text-zinc-500 text-right">Este valor será retido no Payment Service.</p>
+                      <p className="text-[9px] font-mono text-zinc-500 text-right">Este valor será depositado em garantia (Escrow).</p>
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Deadline do Projeto</label>
@@ -258,7 +258,7 @@ export default function CreateProject() {
                   <div className="mb-6 border-b border-dark-border pb-4 flex justify-between items-end">
                     <div>
                       <h2 className="text-xl font-bold text-white uppercase tracking-tight">Milestones (Entregáveis)</h2>
-                      <p className="font-mono text-xs text-zinc-500 mt-1">RN04: Divida o projeto em entregas lógicas e pagáveis.</p>
+                      <p className="font-mono text-xs text-zinc-500 mt-1">Divida o projeto em entregas lógicas e pagáveis.</p>
                     </div>
                     <button type="button" onClick={addMilestone}
                       className="bg-dark-input hover:bg-dark-hover text-brand-500 font-mono text-xs px-4 py-2 border border-brand-500/50 hover:border-brand-500 transition-colors flex items-center gap-2">

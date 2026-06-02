@@ -14,7 +14,6 @@ test.describe('Dashboard Empresa', () => {
 
   test('shows stats cards', async ({ page }) => {
     await page.goto('/dashboard')
-    // Should show stat cards even if API fails (values will be 0)
     await expect(page.locator('main')).toBeVisible()
   })
 
@@ -35,8 +34,8 @@ test.describe('Dashboard Especialista', () => {
     await expect(page.locator('text=Terminal do Especialista')).toBeVisible()
   })
 
-  test('has procurar projetos button', async ({ page }) => {
+  test('shows open opportunities section', async ({ page }) => {
     await page.goto('/dashboard')
-    await expect(page.getByRole('button', { name: /procurar projetos/i })).toBeVisible()
+    await expect(page.getByText(/Oportunidades/i)).toBeVisible()
   })
 })

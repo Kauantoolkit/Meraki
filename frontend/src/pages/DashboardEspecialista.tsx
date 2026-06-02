@@ -52,12 +52,6 @@ export default function DashboardEspecialista() {
             <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Terminal do Especialista</h1>
             <p className="text-sm text-zinc-400 font-mono mt-2">Gira as suas entregas ativas e acompanhe o estado das propostas submetidas.</p>
           </div>
-          <button
-            onClick={() => navigate('/talents')}
-            className="btn-sharp bg-dark-input text-zinc-300 font-bold uppercase tracking-widest text-xs px-6 py-3 hover:text-white border border-dark-border hover:border-brand-500 transition-colors flex items-center gap-2"
-          >
-            <Send className="w-4 h-4" /> Procurar Projetos
-          </button>
         </div>
 
         {/* Stats */}

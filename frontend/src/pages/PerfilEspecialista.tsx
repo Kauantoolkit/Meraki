@@ -175,8 +175,8 @@ export default function PerfilEspecialista() {
                   <div className="bg-dark-card border border-dark-border p-5 flex items-center gap-4 hover:border-brand-500/40 transition-colors">
                     <GitBranch className="w-5 h-5 text-brand-500 shrink-0" />
                     <div className="flex-1">
-                      <p className="font-mono text-sm font-bold text-white">meraki-delivery-service</p>
-                      <p className="font-mono text-[10px] text-zinc-500 mt-0.5">Microserviço de entrega e Kanban — NestJS + PostgreSQL</p>
+                      <p className="font-mono text-sm font-bold text-white">Repositório de Exemplo</p>
+                      <p className="font-mono text-[10px] text-zinc-500 mt-0.5">Repositório público de exemplo para demonstração.</p>
                     </div>
                     <ExternalLink className="w-4 h-4 text-zinc-600 hover:text-brand-500 cursor-pointer transition-colors" />
                   </div>

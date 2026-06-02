@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test'
 import { registerAndLogin } from './helpers/api'
 
-const ts = Date.now()
 const API_URL = 'http://localhost:3000/api'
 
 test.describe('UC: Kanban + Milestone Delivery (RF08/RF09/RN04)', () => {
+  const ts = Date.now()
   const company = {
     name: 'Kanban Corp',
     email: `kanban-corp-${ts}@test.com`,
     password: 'Test1234!',
     userType: 'COMPANY' as const,
+    companyName: 'Kanban Corp Ltda',
   }
   const specialist = {
     name: 'Kanban Dev',
@@ -19,7 +20,6 @@ test.describe('UC: Kanban + Milestone Delivery (RF08/RF09/RN04)', () => {
   }
 
   let projectId: string
-  let bidId: string
   let companyToken: string
   let specialistToken: string
 
@@ -27,146 +27,129 @@ test.describe('UC: Kanban + Milestone Delivery (RF08/RF09/RN04)', () => {
     const ctx = await browser.newContext()
     const page = await ctx.newPage()
 
-    // Register and login company
-    await page.request.post(`${API_URL}/auth/register`, {
-      data: { ...company, companyName: company.name },
-    })
+    // Registra e faz login da empresa
+    await page.request.post(`${API_URL}/auth/register`, { data: company })
     const companyLogin = await page.request.post(`${API_URL}/auth/login`, {
       data: { email: company.email, password: company.password },
     })
-    if (!companyLogin.ok()) {
-      await ctx.close()
-      return
-    }
-    const companyBody = await companyLogin.json()
-    companyToken = companyBody.accessToken
+    if (!companyLogin.ok()) throw new Error('Falha ao logar empresa no beforeAll')
+    companyToken = (await companyLogin.json()).accessToken
 
-    // Create project
+    // Cria projeto com milestone
     const projRes = await page.request.post(`${API_URL}/projects`, {
       headers: { Authorization: `Bearer ${companyToken}` },
       data: {
         title: 'Projeto Kanban E2E',
-        description: 'Teste de fluxo kanban e entregas',
-        requirements: ['Flutter'],
+        description: 'Teste de fluxo kanban e entregas via UI.',
+        requirements: ['Flutter', 'NestJS'],
         budget: 20000,
-        deadline: '2026-12-31',
+        deadline: '2027-12-31',
       },
     })
-    if (!projRes.ok()) {
-      await ctx.close()
-      return
-    }
-    const proj = await projRes.json()
-    projectId = proj.id
+    if (!projRes.ok()) throw new Error('Falha ao criar projeto no beforeAll')
+    projectId = (await projRes.json()).id
 
-    // Register and login specialist
-    await page.request.post(`${API_URL}/auth/register`, {
-      data: specialist,
+    // Cria milestone para o projeto
+    await page.request.post(`${API_URL}/projects/${projectId}/milestones`, {
+      headers: { Authorization: `Bearer ${companyToken}` },
+      data: { title: 'Fase Alpha', description: 'Primeira entrega do projeto.', amount: 20000 },
     })
+
+    // Registra e faz login do especialista
+    await page.request.post(`${API_URL}/auth/register`, { data: specialist })
     const specLogin = await page.request.post(`${API_URL}/auth/login`, {
       data: { email: specialist.email, password: specialist.password },
     })
-    if (!specLogin.ok()) {
-      await ctx.close()
-      return
-    }
-    const specBody = await specLogin.json()
-    specialistToken = specBody.accessToken
+    if (!specLogin.ok()) throw new Error('Falha ao logar especialista no beforeAll')
+    specialistToken = (await specLogin.json()).accessToken
 
-    // Submit bid
-    const bidRes = await page.request.post(`${API_URL}/bids`, {
+    // Especialista submete proposta
+    const bidRes = await page.request.post(`${API_URL}/bids/project/${projectId}`, {
       headers: { Authorization: `Bearer ${specialistToken}` },
-      data: {
-        projectId,
-        amount: 18000,
-        durationDays: 45,
-        proposalText: 'Proposta E2E para kanban flow.',
-      },
+      data: { proposal: 'Proposta E2E para kanban flow.', proposedBudget: 18000, estimatedDuration: 45 },
     })
-    if (bidRes.ok()) {
-      const bid = await bidRes.json()
-      bidId = bid.id
+    if (!bidRes.ok()) throw new Error('Falha ao submeter proposta no beforeAll')
+    const bidId = (await bidRes.json()).id
 
-      // Accept bid as company
-      await page.request.patch(`${API_URL}/bids/${bidId}/accept`, {
-        headers: { Authorization: `Bearer ${companyToken}` },
-      })
-    }
+    // Empresa aceita a proposta
+    const acceptRes = await page.request.put(`${API_URL}/bids/${bidId}/accept`, {
+      headers: { Authorization: `Bearer ${companyToken}` },
+    })
+    if (!acceptRes.ok()) throw new Error('Falha ao aceitar proposta no beforeAll')
 
     await ctx.close()
   })
 
-  test('kanban board shows milestones after bid accepted', async ({ page }) => {
-    test.skip(!projectId, 'Project was not created')
-    test.skip(!bidId, 'Bid was not created or accepted')
+  // ── Testes via UI ─────────────────────────────────────────────────────────
 
+  test('kanban board exibe colunas e milestone após bid aceito', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.goto(`/kanban/${projectId}`)
+    await page.goto(`/kanban/${projectId}`, { waitUntil: 'networkidle' })
 
-    await expect(page.locator('body')).toBeVisible()
-
-    // Verify milestone cards or columns appear
-    const hasMilestones = await page
-      .locator('[class*="milestone"], [class*="kanban"], [class*="column"], [class*="card"]')
-      .first()
-      .isVisible({ timeout: 5000 })
-      .catch(() => false)
-
-    expect(hasMilestones || true).toBeTruthy()
+    await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
+    await expect(page.getByText('Projeto Kanban E2E')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('Fase Alpha')).toBeVisible({ timeout: 5_000 })
   })
 
-  test('specialist can start first milestone (RN04)', async ({ page }) => {
-    test.skip(!projectId, 'Project was not created')
-    test.skip(!bidId, 'Bid was not created or accepted')
-
+  test('especialista inicia milestone via UI (PENDING → IN_PROGRESS)', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.goto(`/kanban/${projectId}`)
+    await page.goto(`/kanban/${projectId}`, { waitUntil: 'networkidle' })
 
-    await expect(page.locator('body')).toBeVisible()
+    await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
-    // Click start work button on first milestone
-    const startBtn = page.getByRole('button', { name: /iniciar|start|trabalho/i }).first()
-    if (await startBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await startBtn.click()
-      await page.waitForTimeout(2000)
+    // Clica em INICIAR TRABALHO
+    const startBtn = page.getByRole('button', { name: /INICIAR TRABALHO/i })
+    await expect(startBtn).toBeVisible({ timeout: 5_000 })
+    await startBtn.click()
 
-      // Verify status changed
-      const inProgress = await page.locator('text=/em andamento|in progress|iniciado/i').isVisible({ timeout: 3000 }).catch(() => false)
-      expect(inProgress || true).toBeTruthy()
-    }
+    // Após clicar, milestone muda para IN_PROGRESS — botão SUBMETER ENTREGA deve aparecer
+    await expect(page.getByRole('button', { name: /SUBMETER ENTREGA/i })).toBeVisible({ timeout: 10_000 })
   })
 
-  test('specialist can submit delivery', async ({ page }) => {
-    test.skip(!projectId, 'Project was not created')
-    test.skip(!bidId, 'Bid was not created or accepted')
-
+  test('especialista submete entrega via UI (IN_PROGRESS → SUBMITTED_REVIEW)', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.goto(`/kanban/${projectId}`)
+    await page.goto(`/kanban/${projectId}`, { waitUntil: 'networkidle' })
 
-    await expect(page.locator('body')).toBeVisible()
+    await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
-    // Click submit delivery button
-    const deliverBtn = page.getByRole('button', { name: /submeter|entrega|deliver/i }).first()
-    if (await deliverBtn.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await deliverBtn.click()
+    // Clica em SUBMETER ENTREGA
+    const submitBtn = page.getByRole('button', { name: /SUBMETER ENTREGA/i })
+    await expect(submitBtn).toBeVisible({ timeout: 5_000 })
+    await submitBtn.click()
 
-      // Fill delivery form
-      const repoInput = page.locator('input[placeholder*="repo"], input[placeholder*="URL"], input[type="url"]').first()
-      if (await repoInput.isVisible({ timeout: 3000 }).catch(() => false)) {
-        await repoInput.fill('https://github.com/test/repo-e2e')
-      }
+    // Modal abre
+    await expect(page.getByRole('heading', { name: 'Submeter Entrega' })).toBeVisible({ timeout: 3_000 })
 
-      const notesInput = page.locator('textarea').first()
-      if (await notesInput.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await notesInput.fill('Entrega E2E: milestone concluído conforme especificação.')
-      }
+    await page.locator('input[placeholder*="github.com"]').first().fill('https://github.com/test/kanban-e2e')
+    await page.locator('textarea[placeholder*="Descreva"]').first().fill('Fase Alpha concluída conforme especificação.')
 
-      // Submit
-      const submitBtn = page.getByRole('button', { name: /enviar|submit|confirmar/i }).first()
-      if (await submitBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await submitBtn.click()
-        await page.waitForTimeout(2000)
-      }
-    }
+    await page.getByRole('button', { name: /DEPLOY_SUBMIT/i }).click()
+
+    // Modal fecha — milestone vai para SUBMITTED
+    await expect(page.getByRole('heading', { name: 'Submeter Entrega' })).not.toBeVisible({ timeout: 10_000 })
+    // Botão SUBMETER ENTREGA some da coluna (milestone saiu de IN_PROGRESS)
+    await expect(page.getByRole('button', { name: /SUBMETER ENTREGA/i })).not.toBeVisible({ timeout: 5_000 })
+  })
+
+  test('empresa aprova milestone via UI (SUBMITTED_REVIEW → APPROVED)', async ({ page }) => {
+    await registerAndLogin(page, company)
+    await page.goto(`/kanban/${projectId}`, { waitUntil: 'networkidle' })
+
+    await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
+
+    // Clica em APROVAR & PAGAR
+    const approveBtn = page.getByRole('button', { name: /APROVAR.*PAGAR/i })
+    await expect(approveBtn).toBeVisible({ timeout: 5_000 })
+    await approveBtn.click()
+
+    // Modal de confirmação abre
+    await expect(page.getByText('Aprovar Milestone')).toBeVisible({ timeout: 3_000 })
+    await expect(page.getByText(/Ação Irreversível/i)).toBeVisible()
+
+    await page.getByRole('button', { name: /CONFIRMAR_PAGAMENTO/i }).click()
+
+    // Modal fecha — milestone vai para APPROVED
+    await expect(page.getByText('Aprovar Milestone')).not.toBeVisible({ timeout: 10_000 })
+    await expect(page.getByText('PAGO E FINALIZADO')).toBeVisible({ timeout: 5_000 })
   })
 })
