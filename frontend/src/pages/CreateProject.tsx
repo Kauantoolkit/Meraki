@@ -14,7 +14,7 @@ export default function CreateProject() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [skillInput, setSkillInput] = useState('')
-  const [skills, setSkills] = useState<string[]>(['NestJS', 'Microservices'])
+  const [skills, setSkills] = useState<string[]>([])
   const [milestones, setMilestones] = useState<MilestoneInput[]>([
     { title: '', description: '', amount: '' },
     { title: '', description: '', amount: '' },
@@ -67,6 +67,14 @@ export default function CreateProject() {
       return
     }
     goToStep(4)
+  }
+
+  function advanceToMilestones() {
+    if (skills.length === 0) {
+      setStepError('Adicione pelo menos uma tecnologia ou requisito.')
+      return
+    }
+    goToStep(3)
   }
 
   async function handlePublish(e: FormEvent) {
@@ -227,7 +235,7 @@ export default function CreateProject() {
                           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                           placeholder="Ex: NestJS, RabbitMQ, Flutter..."
                           className="flex-1 px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none" />
-                        <button type="button" onClick={addSkill}
+                        <button type="button" data-testid="cp-skill-add" onClick={addSkill}
                           className="bg-dark-input text-white font-mono text-xs px-6 py-3 border border-dark-border hover:border-brand-500 transition-colors">
                           <Plus className="w-4 h-4" />
                         </button>
@@ -245,11 +253,18 @@ export default function CreateProject() {
                       </div>
                     </div>
                   </div>
+                  {stepError && (
+                    <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 mt-4 font-mono text-xs">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {stepError}
+                    </div>
+                  )}
+
                   <div className="mt-8 flex justify-between">
                     <button type="button" onClick={() => goToStep(1)} className="btn-sharp bg-dark-input text-zinc-400 font-bold font-mono text-xs px-6 py-3 border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
                       <ArrowLeft className="w-4 h-4" /> VOLTAR
                     </button>
-                    <button type="button" data-testid="cp-next-2" onClick={() => goToStep(3)} className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
+                    <button type="button" data-testid="cp-next-2" onClick={advanceToMilestones} className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
                       PRÓXIMA ETAPA <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>

@@ -56,7 +56,9 @@ export const createProjectGraph: FlowGraph = {
       to: 'cp-milestones',
       label: 'confirmar-stack',
       action: async ({ page }) => {
-        // stack já vem com NestJS + Microservices por padrão
+        // o usuário precisa adicionar pelo menos uma tecnologia (não há mais default)
+        await page.getByTestId('cp-skill-input').fill('NestJS')
+        await page.getByTestId('cp-skill-add').click()
         await page.getByTestId('cp-next-2').click()
       },
     },
