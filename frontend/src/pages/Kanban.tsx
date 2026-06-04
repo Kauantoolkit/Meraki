@@ -163,11 +163,11 @@ export default function Kanban() {
                   {col.key === 'IN_PROGRESS' && <div className="absolute inset-0 bg-brand-500/5" />}
                   <div className="flex items-center gap-2 relative z-10">
                     {col.key === 'APPROVED' ? <Check className="w-3 h-3 text-zinc-400" /> : (
-                      <div className={`w-2 h-2 ${col.key === 'IN_PROGRESS' ? 'bg-brand-500 animate-pulse' : col.key === 'SUBMITTED_REVIEW' ? 'bg-blue-500' : 'bg-zinc-600'}`} />
+                      <div className={`w-2 h-2 ${col.key === 'IN_PROGRESS' ? 'bg-brand-500 animate-pulse' : col.key === 'SUBMITTED' ? 'bg-blue-500' : 'bg-zinc-600'}`} />
                     )}
                     <h2 className={`font-mono font-bold text-xs ${col.color} ${col.key === 'APPROVED' ? 'line-through decoration-zinc-600' : ''}`}>{col.label}</h2>
                   </div>
-                  <span className={`font-mono text-xs bg-dark-input border ${col.key === 'IN_PROGRESS' ? 'border-brand-500/30 text-brand-500' : col.key === 'SUBMITTED_REVIEW' ? 'border-blue-500/30 text-blue-400' : 'border-dark-border text-zinc-500'} px-2 py-0.5 relative z-10`}>
+                  <span className={`font-mono text-xs bg-dark-input border ${col.key === 'IN_PROGRESS' ? 'border-brand-500/30 text-brand-500' : col.key === 'SUBMITTED' ? 'border-blue-500/30 text-blue-400' : 'border-dark-border text-zinc-500'} px-2 py-0.5 relative z-10`}>
                     {cards.length}
                   </span>
                 </div>
