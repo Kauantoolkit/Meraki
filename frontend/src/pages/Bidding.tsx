@@ -589,7 +589,7 @@ export default function Bidding() {
                 <div data-testid="bid-success" className="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 border border-brand-500">
                   <CheckSquare className="w-16 h-16 text-brand-500 mb-4" />
                   <h2 className="text-xl font-mono font-bold text-white mb-2">PROPOSTA SUBMETIDA</h2>
-                  <p className="text-xs font-mono text-brand-500 text-center mb-6">&gt; 201 CREATED: Evento `bid.submitted` publicado no broker.</p>
+                  <p className="text-xs font-mono text-brand-500 text-center mb-6">&gt; Proposta enviada com sucesso. Aguardando avaliação do cliente.</p>
                   <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-6">
                     <p className="font-mono text-[10px] text-zinc-500 mb-1">DETALHES DO REGISTO:</p>
                     <div className="flex justify-between font-mono text-[10px]">

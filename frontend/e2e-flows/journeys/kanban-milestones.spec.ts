@@ -44,6 +44,8 @@ test.describe('Jornada: Kanban — milestones sequenciais e histórico (RN04/RN0
     const history = await (await request.get(`${GATEWAY}/projects/${P.id}/history`, auth(c.token))).json()
     expect(JSON.stringify(history), 'RN07: histórico via gateway deve conter PROJECT_CREATED').toContain('PROJECT_CREATED')
     await expect(page.getByText('Project_History')).toBeVisible()
+    // Painel agora consome o histórico real do backend → mostra o evento PROJECT_CREATED
+    await expect(page.getByText(/PROJECT_CREATED/).first()).toBeVisible({ timeout: 10_000 })
     await rec.shoot('historico-rn07')
   })
 })

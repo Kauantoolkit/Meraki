@@ -23,6 +23,7 @@ export default function Kanban() {
   const navigate = useNavigate()
   const [project, setProject] = useState<Project | null>(null)
   const [milestones, setMilestones] = useState<Milestone[]>([])
+  const [history, setHistory] = useState<{ action: string; description: string; createdAt: string }[]>([])
   const [loading, setLoading] = useState(true)
 
   // Submit modal
@@ -40,10 +41,15 @@ export default function Kanban() {
       navigate('/dashboard', { replace: true })
       return
     }
-    Promise.all([projectsApi.getById(projectId), projectsApi.getMilestones(projectId)])
-      .then(([pRes, mRes]) => {
+    Promise.all([
+      projectsApi.getById(projectId),
+      projectsApi.getMilestones(projectId),
+      milestonesApi.getHistory(projectId).catch(() => ({ data: [] })),
+    ])
+      .then(([pRes, mRes, hRes]) => {
         setProject(pRes.data)
         setMilestones(mRes.data)
+        setHistory(((hRes as { data: unknown }).data ?? []) as { action: string; description: string; createdAt: string }[])
       })
       .finally(() => setLoading(false))
   }, [projectId])
@@ -210,11 +216,13 @@ export default function Kanban() {
               <span className="text-brand-500">PROJECT_EVENT:</span>{' '}
               Board carregado para {project?.id ?? '...'}
             </div>
-            {milestones.filter(m => m.status !== 'PENDING').map(m => (
-              <div key={m.id} className="text-zinc-500">
-                <span className="text-zinc-600">[DELIVERY]</span>{' '}
-                <span className="text-brand-500">MILESTONE_EVENT:</span>{' '}
-                {m.title} → <span className="text-white">{m.status}</span>
+            {history.length === 0 ? (
+              <div className="text-zinc-600">[SYS] Sem eventos registados ainda.</div>
+            ) : history.map((h, i) => (
+              <div key={i} className="text-zinc-500">
+                <span className="text-zinc-600">[{new Date(h.createdAt).toLocaleTimeString('pt-BR')}]</span>{' '}
+                <span className="text-brand-500">{h.action}:</span>{' '}
+                <span className="text-white">{h.description}</span>
               </div>
             ))}
             <div className="text-brand-500 flex items-center mt-4">
