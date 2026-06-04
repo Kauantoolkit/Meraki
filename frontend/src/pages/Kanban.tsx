@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Terminal, Settings2, UploadCloud, ShieldCheck, Check, Send, User, Calendar, Lock } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
+import { projectStatusLabel } from '../lib/labels'
 import { milestonesApi } from '../api/milestones'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -136,13 +137,13 @@ export default function Kanban() {
             <h1 className="text-xl font-bold text-white uppercase tracking-tight mb-1">{project?.title}</h1>
             <div className="flex flex-wrap items-center gap-3">
               <span className="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 tracking-widest flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />{project?.status}
+                <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />{projectStatusLabel[project?.status ?? ''] ?? project?.status}
               </span>
               <span className="font-mono text-[10px] text-zinc-400 border border-dark-border px-2 py-0.5 flex items-center gap-1">
                 <User className="w-3 h-3 text-brand-500" /> {project?.specialistId ?? 'Sem especialista'}
               </span>
               <span className="font-mono text-[10px] text-zinc-400 border border-dark-border px-2 py-0.5 flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-brand-500" /> Deadline: {project?.deadline}
+                <Calendar className="w-3 h-3 text-brand-500" /> Prazo: {project?.deadline}
               </span>
             </div>
           </div>
