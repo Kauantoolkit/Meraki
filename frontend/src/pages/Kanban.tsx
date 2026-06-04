@@ -11,10 +11,10 @@ const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', c
 type KanbanStatus = 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED'
 
 const COLS: { key: KanbanStatus; label: string; color: string; headerCls: string }[] = [
-  { key: 'PENDING',     label: 'PENDING',    color: 'text-zinc-300',  headerCls: 'border-dark-border' },
-  { key: 'IN_PROGRESS', label: 'IN_PROGRESS',color: 'text-brand-500', headerCls: 'border-brand-500/30 bg-brand-500/5' },
-  { key: 'SUBMITTED',   label: 'SUBMITTED',  color: 'text-blue-400',  headerCls: 'border-blue-500/30' },
-  { key: 'APPROVED',    label: 'APPROVED',   color: 'text-zinc-400',  headerCls: 'border-zinc-700' },
+  { key: 'PENDING',     label: 'Pendente',    color: 'text-zinc-300',  headerCls: 'border-dark-border' },
+  { key: 'IN_PROGRESS', label: 'Em Andamento',color: 'text-brand-500', headerCls: 'border-brand-500/30 bg-brand-500/5' },
+  { key: 'SUBMITTED',   label: 'Submetido',  color: 'text-blue-400',  headerCls: 'border-blue-500/30' },
+  { key: 'APPROVED',    label: 'Aprovado',   color: 'text-zinc-400',  headerCls: 'border-zinc-700' },
 ]
 
 export default function Kanban() {
@@ -127,7 +127,7 @@ export default function Kanban() {
   return (
     <div className="bg-dark-bg bg-grid h-screen text-zinc-300 antialiased overflow-hidden flex flex-col">
       <div className="scanline" />
-      <Navbar backUrl="/dashboard" projectTitle={project ? `${project.id} // DELIVERY_BOARD` : undefined} />
+      <Navbar backUrl="/dashboard" projectTitle={project ? `${project.id} // QUADRO_ENTREGAS` : undefined} />
 
       {/* Project Header */}
       <header className="shrink-0 bg-dark-card border-b border-dark-border px-4 sm:px-6 lg:px-8 py-4">
@@ -152,7 +152,7 @@ export default function Kanban() {
               <p className="font-mono font-bold text-brand-500">{project ? fmt(project.budget) : '—'}</p>
             </div>
             <button className="btn-sharp bg-dark-input hover:bg-dark-hover text-white font-mono text-xs px-4 py-2 border border-dark-border hover:border-brand-500 transition-colors flex items-center gap-1">
-              <Settings2 className="w-4 h-4" /> OPTIONS
+              <Settings2 className="w-4 h-4" /> OPÇÕES
             </button>
           </div>
         </div>

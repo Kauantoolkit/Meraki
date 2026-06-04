@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { bidsApi, Bid } from '../api/bids'
 import { useAuth } from '../contexts/AuthContext'
+import { projectStatusLabel, bidStatusLabel } from '../lib/labels'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -47,7 +48,7 @@ export default function DashboardEspecialista() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <div className="w-2 h-2 bg-brand-500 animate-pulse" />
-              <span className="font-mono text-[10px] tracking-widest text-brand-500 uppercase">System: Online | Status: OPEN_TO_WORK</span>
+              <span className="font-mono text-[10px] tracking-widest text-brand-500 uppercase">Sistema: Online | Status: Disponível</span>
             </div>
             <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Terminal do Especialista</h1>
             <p className="text-sm text-zinc-400 font-mono mt-2">Gira as suas entregas ativas e acompanhe o estado das propostas submetidas.</p>
@@ -66,7 +67,7 @@ export default function DashboardEspecialista() {
           </div>
           <div className="bg-dark-card border border-dark-border p-4">
             <div className="flex justify-between items-start mb-3">
-              <span className="font-mono text-[10px] text-zinc-500 uppercase">Bids Pendentes</span>
+              <span className="font-mono text-[10px] text-zinc-500 uppercase">Propostas Pendentes</span>
               <Send className="w-4 h-4 text-blue-400" />
             </div>
             <span className="text-2xl font-bold text-white font-mono">{String(myBids.filter(b => b.status === 'PENDING').length).padStart(2, '0')}</span>
@@ -107,7 +108,7 @@ export default function DashboardEspecialista() {
               <div key={p.id} className="bg-dark-card border border-brand-500/50 p-5 hover:border-brand-500 transition-colors">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="font-mono text-[10px] text-blue-400 border border-blue-400/30 bg-blue-400/10 px-2 py-0.5 tracking-widest flex items-center gap-1">
-                    OPORTUNIDADE (OPEN)
+                    OPORTUNIDADE
                   </span>
                   <span className="font-mono text-[10px] text-zinc-500">{p.id}</span>
                 </div>
@@ -127,7 +128,7 @@ export default function DashboardEspecialista() {
                   onClick={() => navigate(`/bidding/${p.id}`)}
                   className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-2 hover:bg-brand-400 border border-brand-500 transition-colors"
                 >
-                  APPLY_BID()
+                  ENVIAR_PROPOSTA()
                 </button>
               </div>
             ))}
@@ -144,7 +145,7 @@ export default function DashboardEspecialista() {
               <div key={p.id} className="bg-dark-card border border-dark-border p-5 hover:border-brand-500/50 transition-colors">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 tracking-widest flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" /> {p.status}
+                    <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" /> {projectStatusLabel[p.status] ?? p.status}
                   </span>
                   <span className="font-mono text-[10px] text-zinc-500">{p.id}</span>
                 </div>
@@ -182,7 +183,7 @@ export default function DashboardEspecialista() {
                   <div key={bid.id} className="border-b border-dark-border/50 pb-2">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-zinc-500">{bid.projectId.slice(0, 8)}</span>
-                      <span className={bidStatusColor(bid.status)}>{bid.status}</span>
+                      <span className={bidStatusColor(bid.status)}>{bidStatusLabel[bid.status] ?? bid.status}</span>
                     </div>
                     <div className="flex justify-between mt-1">
                       <span className="text-zinc-600">{fmt(bid.amount)} ({bid.durationDays} dias)</span>
