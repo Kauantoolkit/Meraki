@@ -8,6 +8,7 @@ import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { bidsApi, Bid } from '../api/bids'
 import { useAuth } from '../contexts/AuthContext'
+import { projectStatusLabel } from '../lib/labels'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -107,7 +108,7 @@ export default function AvaliarPropostas() {
                     ? 'text-brand-500 border-brand-500/30 bg-brand-500/10'
                     : 'text-blue-400 border-blue-400/30 bg-blue-400/10'
                 }`}>
-                  {hasAccepted ? 'ESPECIALISTA SELECIONADO' : `STATUS: ${project?.status}`}
+                  {hasAccepted ? 'ESPECIALISTA SELECIONADO' : `STATUS: ${projectStatusLabel[project?.status ?? ''] ?? project?.status ?? ''}`}
                 </span>
                 <span className="font-mono text-[10px] text-zinc-600">{project?.id}</span>
               </div>
@@ -300,7 +301,7 @@ export default function AvaliarPropostas() {
                                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                   : <CheckCircle className="w-3.5 h-3.5" />
                                 }
-                                ACEITAR_BID()
+                                ACEITAR_PROPOSTA()
                               </button>
                             </div>
                           </>

@@ -189,7 +189,7 @@ export default function CreateProject() {
                   <div className="space-y-5">
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Título do Projeto</label>
-                      <input type="text" required data-testid="cp-title" value={title} onChange={e => setTitle(e.target.value)}
+                      <input type="text" required maxLength={120} data-testid="cp-title" value={title} onChange={e => setTitle(e.target.value)}
                         placeholder="Ex: Desenvolvimento de API de Pagamentos"
                         className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
                     </div>
@@ -198,7 +198,7 @@ export default function CreateProject() {
                       <div className="absolute left-0 top-7 bottom-0 w-8 border-r border-dark-border bg-dark-input flex flex-col items-center py-2 select-none z-10 pointer-events-none">
                         {[1,2,3,4,5].map(n => <span key={n} className="text-[10px] font-mono text-zinc-700">{n}</span>)}
                       </div>
-                      <textarea required data-testid="cp-description" value={description} onChange={e => setDescription(e.target.value)}
+                      <textarea required maxLength={2000} data-testid="cp-description" value={description} onChange={e => setDescription(e.target.value)}
                         placeholder="Descreva o problema, o escopo e o resultado esperado..."
                         className="editor-textarea w-full pl-10 pr-4 py-2 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none h-48" />
                     </div>
@@ -223,7 +223,7 @@ export default function CreateProject() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Adicionar Tecnologia / Habilidade</label>
                       <div className="flex gap-2">
-                        <input type="text" data-testid="cp-skill-input" value={skillInput} onChange={e => setSkillInput(e.target.value)}
+                        <input type="text" maxLength={40} data-testid="cp-skill-input" value={skillInput} onChange={e => setSkillInput(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                           placeholder="Ex: NestJS, RabbitMQ, Flutter..."
                           className="flex-1 px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none" />
@@ -279,7 +279,7 @@ export default function CreateProject() {
                         </button>
                         <div className="flex items-center gap-2 mb-3">
                           <span className="font-mono text-[10px] text-zinc-400 bg-dark-input px-2 py-0.5 border border-dark-border">M{i + 1}</span>
-                          <input type="text" data-testid={`cp-mtitle-${i}`} value={m.title} onChange={e => updateMilestone(i, 'title', e.target.value)}
+                          <input type="text" maxLength={80} data-testid={`cp-mtitle-${i}`} value={m.title} onChange={e => updateMilestone(i, 'title', e.target.value)}
                             placeholder="Nome do Entregável"
                             className="bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 w-2/3 pb-1" />
                           <div className="relative w-1/3">

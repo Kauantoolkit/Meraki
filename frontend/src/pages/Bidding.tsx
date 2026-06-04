@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
 import { bidsApi, Bid, BidMilestoneProposal } from '../api/bids'
 import { extractApiError } from '../api/client'
+import { projectStatusLabel, bidStatusLabel } from '../lib/labels'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -184,7 +185,7 @@ export default function Bidding() {
                       : 'text-zinc-500 border-zinc-700 bg-dark-input'
                 }`}>
                   {project?.status === 'OPEN' && <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />}
-                  STATUS: {project?.status ?? '…'}
+                  STATUS: {project?.status ? (projectStatusLabel[project.status] ?? project.status) : '…'}
                 </span>
               </div>
 
@@ -276,7 +277,7 @@ export default function Bidding() {
               <div className="flex items-center justify-between px-4 py-3 border-b border-dark-border bg-dark-input">
                 <div className="flex items-center gap-2">
                   <FileCode className="w-4 h-4 text-brand-500" />
-                  <span className="font-mono text-xs font-bold text-white">create_proposal.sh</span>
+                  <span className="font-mono text-xs font-bold text-white">criar_proposta.sh</span>
                 </div>
                 <div className="flex gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
@@ -390,7 +391,7 @@ export default function Bidding() {
                   <button type="submit" disabled={submitting} data-testid="bid-submit"
                     className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-8 py-3 hover:bg-brand-400 border border-brand-500 transition-colors shadow-[4px_4px_0px_rgba(85,202,124,0.2)] flex items-center gap-2 disabled:opacity-70 disabled:cursor-wait">
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    <span>{submitting ? 'A PROCESSAR...' : 'EXECUTE_SUBMIT()'}</span>
+                    <span>{submitting ? 'A PROCESSAR...' : 'ENVIAR_PROPOSTA()'}</span>
                   </button>
                 </div>
               </form>
@@ -420,7 +421,7 @@ export default function Bidding() {
                       ? '> Aguardando avaliação da empresa.'
                       : existingBid.status === 'ACCEPTED'
                         ? '> Proposta aceite. Parabéns!'
-                        : `> STATUS: ${existingBid.status}`}
+                        : `> Status: ${bidStatusLabel[existingBid.status] ?? existingBid.status}`}
                   </p>
                   <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-5">
                     <p className="font-mono text-[10px] text-zinc-500 mb-2 uppercase tracking-wider">Detalhes da Proposta</p>
@@ -436,7 +437,7 @@ export default function Bidding() {
                       <div className="flex justify-between font-mono text-[10px]">
                         <span className="text-zinc-500">Status:</span>
                         <span className={existingBid.status === 'ACCEPTED' ? 'text-brand-500' : existingBid.status === 'REJECTED' ? 'text-red-400' : 'text-blue-400'}>
-                          {existingBid.status}
+                          {bidStatusLabel[existingBid.status] ?? existingBid.status}
                         </span>
                       </div>
                     </div>
