@@ -327,13 +327,13 @@ function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSu
         {isApproved ? (
           <button disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card py-1.5 text-zinc-500 cursor-not-allowed uppercase">PAGO E FINALIZADO</button>
         ) : !isCompany && m.status === 'PENDING' && canStart ? (
-          <button onClick={onStart} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase">INICIAR TRABALHO</button>
+          <button data-testid={`ms-start-${m.id}`} onClick={onStart} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase">INICIAR TRABALHO</button>
         ) : !isCompany && m.status === 'PENDING' && !canStart ? (
-          <button disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card text-zinc-600 py-1.5 cursor-not-allowed uppercase" title="Conclua a milestone anterior primeiro">BLOQUEADA</button>
+          <button data-testid={`ms-blocked-${m.id}`} disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card text-zinc-600 py-1.5 cursor-not-allowed uppercase" title="Conclua a milestone anterior primeiro">BLOQUEADA</button>
         ) : !isCompany && m.status === 'IN_PROGRESS' ? (
-          <button onClick={onSubmit} className="mt-3 w-full text-[10px] font-mono border border-blue-400 bg-blue-400/10 text-blue-400 py-1.5 hover:bg-blue-400 hover:text-dark-bg transition-colors uppercase">SUBMETER ENTREGA</button>
+          <button data-testid={`ms-submit-${m.id}`} onClick={onSubmit} className="mt-3 w-full text-[10px] font-mono border border-blue-400 bg-blue-400/10 text-blue-400 py-1.5 hover:bg-blue-400 hover:text-dark-bg transition-colors uppercase">SUBMETER ENTREGA</button>
         ) : isCompany && m.status === 'SUBMITTED' ? (
-          <button onClick={onApprove} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase flex justify-center items-center gap-2">
+          <button data-testid={`ms-approve-${m.id}`} onClick={onApprove} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase flex justify-center items-center gap-2">
             <Check className="w-3 h-3" /> APROVAR & PAGAR
           </button>
         ) : null}
