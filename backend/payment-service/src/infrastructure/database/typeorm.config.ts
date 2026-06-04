@@ -1,8 +1,8 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Payment } from '../../domain/entities/payment.entity';
-import { EscrowAccount } from '../../domain/entities/escrow-account.entity';
-import { Withdrawal } from '../../domain/entities/withdrawal.entity';
-import { SpecialistBalance } from '../../domain/entities/specialist-balance.entity';
+import { PaymentSchema } from './schemas/payment.schema';
+import { EscrowAccountSchema } from './schemas/escrow-account.schema';
+import { WithdrawalSchema } from './schemas/withdrawal.schema';
+import { SpecialistBalanceSchema } from './schemas/specialist-balance.schema';
 
 export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -11,7 +11,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   database: process.env.DB_NAME || 'payment_db',
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
-  entities: [Payment, EscrowAccount, Withdrawal, SpecialistBalance],
+  entities: [PaymentSchema, EscrowAccountSchema, WithdrawalSchema, SpecialistBalanceSchema],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
 });
