@@ -66,6 +66,7 @@ export default function BuscarProjetos() {
                   <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-600" />
                   <input
                     type="text"
+                    maxLength={40}
                     value={skillFilter}
                     onChange={e => setSkillFilter(e.target.value)}
                     placeholder="Ex: React, NestJS..."
@@ -116,6 +117,7 @@ export default function BuscarProjetos() {
                 </div>
                 <input
                   type="text"
+                  maxLength={100}
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="BUSCAR POR TÍTULO OU DESCRIÇÃO..."

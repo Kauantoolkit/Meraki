@@ -1,10 +1,10 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Portfolio } from '../../domain/entities/portfolio.entity';
-import { Certification } from '../../domain/entities/certification.entity';
-import { Review } from '../../domain/entities/review.entity';
-import { SpecialistPublicProfile } from '../../domain/entities/specialist-public-profile.entity';
-import { WorkHistory } from '../../domain/entities/work-history.entity';
-import { CompanyPublicProfile } from '../../domain/entities/company-public-profile.entity';
+import { PortfolioSchema } from './schemas/portfolio.schema';
+import { CertificationSchema } from './schemas/certification.schema';
+import { ReviewSchema } from './schemas/review.schema';
+import { SpecialistPublicProfileSchema } from './schemas/specialist-public-profile.schema';
+import { WorkHistorySchema } from './schemas/work-history.schema';
+import { CompanyPublicProfileSchema } from './schemas/company-public-profile.schema';
 
 export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -13,7 +13,7 @@ export const typeOrmConfig = (): TypeOrmModuleOptions => ({
   database: process.env.DB_NAME || 'portfolio_db',
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
-  entities: [Portfolio, Certification, Review, SpecialistPublicProfile, WorkHistory, CompanyPublicProfile],
+  entities: [PortfolioSchema, CertificationSchema, ReviewSchema, SpecialistPublicProfileSchema, WorkHistorySchema, CompanyPublicProfileSchema],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
 });

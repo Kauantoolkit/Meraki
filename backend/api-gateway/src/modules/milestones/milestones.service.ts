@@ -44,6 +44,7 @@ export class MilestonesService {
   }
 
   getProjectHistory(projectId: string, token: string) {
-    return this.proxy.get(`${DELIVERY_URL}/api/history/${projectId}`, this.proxy.authHeaders(token));
+    // Histórico RN07 (PROJECT_CREATED, MILESTONE_CREATED, MILESTONE_UPDATED) é registrado no project-service.
+    return this.proxy.get(`${PROJECT_URL}/api/projects/${projectId}/history`, this.proxy.authHeaders(token));
   }
 }

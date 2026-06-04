@@ -46,7 +46,7 @@ export default function Login() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white uppercase font-mono">Meraki</h1>
           <p className="text-xs text-zinc-500 mt-1 font-mono tracking-wider">
-            SYS.AUTH // {loginType === 'company' ? 'COMPANY' : 'SPECIALIST'}
+            SISTEMA.AUTENTICAÇÃO // {loginType === 'company' ? 'EMPRESA' : 'ESPECIALISTA'}
           </p>
         </div>
 
@@ -57,12 +57,14 @@ export default function Login() {
             style={{ transform: loginType === 'specialist' ? 'translateX(100%)' : 'translateX(0)' }}
           />
           <button
+            data-testid="login-tab-company"
             onClick={() => setLoginType('company')}
             className={`flex-1 relative z-10 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors ${loginType === 'company' ? 'text-brand-500' : 'text-zinc-600 hover:text-zinc-400'}`}
           >
             Empresa
           </button>
           <button
+            data-testid="login-tab-specialist"
             onClick={() => setLoginType('specialist')}
             className={`flex-1 relative z-10 py-2.5 text-xs font-bold uppercase tracking-widest transition-colors ${loginType === 'specialist' ? 'text-brand-500' : 'text-zinc-600 hover:text-zinc-400'}`}
           >
@@ -81,6 +83,8 @@ export default function Login() {
               <input
                 type="email"
                 required
+                maxLength={120}
+                data-testid="login-email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 placeholder={loginType === 'company' ? 'admin@empresa.com' : 'dev@especialista.com'}
@@ -103,6 +107,8 @@ export default function Login() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
+                maxLength={64}
+                data-testid="login-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -115,12 +121,13 @@ export default function Login() {
           </div>
 
           {error && (
-            <p className="text-xs font-mono text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2">{error}</p>
+            <p data-testid="login-error" className="text-xs font-mono text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2">{error}</p>
           )}
 
           <button
             type="submit"
             disabled={loading}
+            data-testid="login-submit"
             className="btn-sharp w-full bg-brand-500 text-dark-bg font-bold uppercase tracking-widest py-3.5 hover:bg-brand-400 border border-brand-500 transition-colors duration-200 flex justify-center items-center mt-6 shadow-[4px_4px_0px_rgba(85,202,124,0.2)] disabled:opacity-70 disabled:cursor-wait"
           >
             <span>{loading ? 'Processando...' : 'Inicializar'}</span>

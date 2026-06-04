@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
 import { bidsApi, Bid, BidMilestoneProposal } from '../api/bids'
 import { extractApiError } from '../api/client'
+import { projectStatusLabel, bidStatusLabel } from '../lib/labels'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -184,7 +185,7 @@ export default function Bidding() {
                       : 'text-zinc-500 border-zinc-700 bg-dark-input'
                 }`}>
                   {project?.status === 'OPEN' && <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />}
-                  STATUS: {project?.status ?? '…'}
+                  STATUS: {project?.status ? (projectStatusLabel[project.status] ?? project.status) : '…'}
                 </span>
               </div>
 
@@ -276,7 +277,7 @@ export default function Bidding() {
               <div className="flex items-center justify-between px-4 py-3 border-b border-dark-border bg-dark-input">
                 <div className="flex items-center gap-2">
                   <FileCode className="w-4 h-4 text-brand-500" />
-                  <span className="font-mono text-xs font-bold text-white">create_proposal.sh</span>
+                  <span className="font-mono text-xs font-bold text-white">criar_proposta.sh</span>
                 </div>
                 <div className="flex gap-1.5">
                   <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
@@ -294,7 +295,7 @@ export default function Bidding() {
                         <span className="font-mono text-zinc-500 group-focus-within:text-brand-500">R$</span>
                       </div>
                       <input
-                        type="number" required min={1} value={amount}
+                        type="number" required min={1} value={amount} data-testid="bid-amount"
                         onChange={e => setAmount(e.target.value)}
                         readOnly={milestoneProposals.length > 0}
                         placeholder="0.00"
@@ -308,7 +309,7 @@ export default function Bidding() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">let estimatedDays =</label>
                     <div className="relative group">
-                      <input type="number" required min={1} max={3650} value={duration} onChange={e => setDuration(e.target.value)}
+                      <input data-testid="bid-duration" type="number" required min={1} max={3650} value={duration} onChange={e => setDuration(e.target.value)}
                         placeholder="Ex: 45"
                         className="w-full pl-4 pr-12 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -375,7 +376,7 @@ export default function Bidding() {
                     <div className="absolute left-0 top-0 bottom-0 w-8 border-r border-dark-border bg-dark-input flex flex-col items-center py-2 select-none">
                       {[1,2,3,4,5,6,7,8].map(n => <span key={n} className="text-[10px] font-mono text-zinc-700">{n}</span>)}
                     </div>
-                    <textarea required minLength={20} maxLength={2000} value={coverLetter} onChange={e => setCoverLetter(e.target.value)}
+                    <textarea data-testid="bid-cover" required minLength={20} maxLength={2000} value={coverLetter} onChange={e => setCoverLetter(e.target.value)}
                       placeholder="Apresente a sua proposta técnica..."
                       className="editor-textarea w-full pl-10 pr-2 py-2 bg-transparent text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none h-64" />
                   </div>
@@ -387,10 +388,10 @@ export default function Bidding() {
                     <ShieldAlert className="w-3 h-3 text-blue-400" />
                     <span>A proposta ficará invisível para concorrentes.</span>
                   </div>
-                  <button type="submit" disabled={submitting}
+                  <button type="submit" disabled={submitting} data-testid="bid-submit"
                     className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-8 py-3 hover:bg-brand-400 border border-brand-500 transition-colors shadow-[4px_4px_0px_rgba(85,202,124,0.2)] flex items-center gap-2 disabled:opacity-70 disabled:cursor-wait">
                     {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    <span>{submitting ? 'A PROCESSAR...' : 'EXECUTE_SUBMIT()'}</span>
+                    <span>{submitting ? 'A PROCESSAR...' : 'ENVIAR_PROPOSTA()'}</span>
                   </button>
                 </div>
               </form>
@@ -420,7 +421,7 @@ export default function Bidding() {
                       ? '> Aguardando avaliação da empresa.'
                       : existingBid.status === 'ACCEPTED'
                         ? '> Proposta aceite. Parabéns!'
-                        : `> STATUS: ${existingBid.status}`}
+                        : `> Status: ${bidStatusLabel[existingBid.status] ?? existingBid.status}`}
                   </p>
                   <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-5">
                     <p className="font-mono text-[10px] text-zinc-500 mb-2 uppercase tracking-wider">Detalhes da Proposta</p>
@@ -436,7 +437,7 @@ export default function Bidding() {
                       <div className="flex justify-between font-mono text-[10px]">
                         <span className="text-zinc-500">Status:</span>
                         <span className={existingBid.status === 'ACCEPTED' ? 'text-brand-500' : existingBid.status === 'REJECTED' ? 'text-red-400' : 'text-blue-400'}>
-                          {existingBid.status}
+                          {bidStatusLabel[existingBid.status] ?? existingBid.status}
                         </span>
                       </div>
                     </div>
@@ -586,10 +587,10 @@ export default function Bidding() {
 
               {/* Success Overlay */}
               {submitted && (
-                <div className="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 border border-brand-500">
+                <div data-testid="bid-success" className="absolute inset-0 bg-dark-bg/95 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 border border-brand-500">
                   <CheckSquare className="w-16 h-16 text-brand-500 mb-4" />
                   <h2 className="text-xl font-mono font-bold text-white mb-2">PROPOSTA SUBMETIDA</h2>
-                  <p className="text-xs font-mono text-brand-500 text-center mb-6">&gt; 201 CREATED: Evento `bid.submitted` publicado no broker.</p>
+                  <p className="text-xs font-mono text-brand-500 text-center mb-6">&gt; Proposta enviada com sucesso. Aguardando avaliação do cliente.</p>
                   <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-6">
                     <p className="font-mono text-[10px] text-zinc-500 mb-1">DETALHES DO REGISTO:</p>
                     <div className="flex justify-between font-mono text-[10px]">

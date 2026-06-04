@@ -31,7 +31,7 @@ export default function PerfilEspecialista() {
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased">
       <div className="scanline" />
-      <Navbar backUrl="/talents" projectTitle="WORKSPACE // PORTFOLIO" />
+      <Navbar backUrl="/talents" projectTitle="ÁREA DE TRABALHO // PORTFÓLIO" />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!profile ? (

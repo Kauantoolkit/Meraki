@@ -73,7 +73,7 @@ export default function ExplorarTalentos() {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-zinc-500" />
               </div>
-              <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+              <input type="text" maxLength={100} value={search} onChange={e => setSearch(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 placeholder="BUSCAR ESPECIALISTA..."
                 className="w-full pl-9 pr-3 py-2.5 bg-dark-input border border-dark-border text-xs font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-brand-500 rounded-none" />

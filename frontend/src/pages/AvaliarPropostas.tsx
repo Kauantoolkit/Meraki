@@ -8,6 +8,7 @@ import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { bidsApi, Bid } from '../api/bids'
 import { useAuth } from '../contexts/AuthContext'
+import { projectStatusLabel } from '../lib/labels'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -107,7 +108,7 @@ export default function AvaliarPropostas() {
                     ? 'text-brand-500 border-brand-500/30 bg-brand-500/10'
                     : 'text-blue-400 border-blue-400/30 bg-blue-400/10'
                 }`}>
-                  {hasAccepted ? 'ESPECIALISTA SELECIONADO' : `STATUS: ${project?.status}`}
+                  {hasAccepted ? 'ESPECIALISTA SELECIONADO' : `STATUS: ${projectStatusLabel[project?.status ?? ''] ?? project?.status ?? ''}`}
                 </span>
                 <span className="font-mono text-[10px] text-zinc-600">{project?.id}</span>
               </div>
@@ -283,6 +284,7 @@ export default function AvaliarPropostas() {
                             </p>
                             <div className="flex gap-3">
                               <button
+                                data-testid={`reject-${bid.id}`}
                                 onClick={() => setConfirmModal({ bid, action: 'reject' })}
                                 disabled={!canAct}
                                 className="btn-sharp flex items-center gap-2 px-4 py-2 bg-dark-input border border-red-500/30 text-red-400 hover:border-red-500 hover:bg-red-500/10 font-mono font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -290,6 +292,7 @@ export default function AvaliarPropostas() {
                                 <XCircle className="w-3.5 h-3.5" /> REJEITAR()
                               </button>
                               <button
+                                data-testid={`accept-${bid.id}`}
                                 onClick={() => setConfirmModal({ bid, action: 'accept' })}
                                 disabled={!canAct}
                                 className="btn-sharp flex items-center gap-2 px-5 py-2 bg-brand-500 border border-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-[4px_4px_0px_rgba(85,202,124,0.2)]"
@@ -298,7 +301,7 @@ export default function AvaliarPropostas() {
                                   ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                                   : <CheckCircle className="w-3.5 h-3.5" />
                                 }
-                                ACEITAR_BID()
+                                ACEITAR_PROPOSTA()
                               </button>
                             </div>
                           </>
@@ -375,6 +378,7 @@ export default function AvaliarPropostas() {
                 CANCELAR
               </button>
               <button
+                data-testid="confirm-action"
                 onClick={() => handleAction(confirmModal.bid, confirmModal.action)}
                 className={`flex-1 btn-sharp font-bold font-mono text-xs px-4 py-3 border transition-colors uppercase ${
                   confirmModal.action === 'accept'

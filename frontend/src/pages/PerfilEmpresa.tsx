@@ -25,7 +25,7 @@ export default function PerfilEmpresa() {
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased">
       <div className="scanline" />
-      <Navbar backUrl="/talents" projectTitle="MERAKI // COMPANY_PROFILE" />
+      <Navbar backUrl="/talents" projectTitle="MERAKI // PERFIL_EMPRESA" />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!profile ? (
@@ -88,7 +88,7 @@ export default function PerfilEmpresa() {
 
                   {/* Table header */}
                   <div className="grid grid-cols-4 gap-2 px-4 py-2 border-b border-dark-border bg-dark-input">
-                    {['Projeto', 'Pub. Em', 'Descrição', 'Status'].map(h => (
+                    {['Projeto', 'Pub. Em', 'Descrição', 'Estado'].map(h => (
                       <span key={h} className="font-mono text-[9px] text-zinc-600 uppercase">{h}</span>
                     ))}
                   </div>

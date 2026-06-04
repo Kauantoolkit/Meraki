@@ -3,6 +3,7 @@ import { Lock, ArrowDownLeft, Clock, Filter, Download, ShieldCheck } from 'lucid
 import Navbar from '../components/Navbar'
 import { paymentsApi, Payment } from '../api/payments'
 import { projectsApi, Milestone } from '../api/projects'
+import { paymentStatusLabel } from '../lib/labels'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -84,7 +85,7 @@ export default function Financeiro() {
           </div>
           <div className="bg-dark-card border border-dark-border p-5">
             <div className="flex justify-between items-start mb-4">
-              <span className="font-mono text-xs text-zinc-500 uppercase">Total Liberado (Fund)</span>
+              <span className="font-mono text-xs text-zinc-500 uppercase">Total Liberado</span>
               <ArrowDownLeft className="w-4 h-4 text-brand-500" />
             </div>
             <span className="text-2xl font-bold text-white font-mono">{fmt(released)}</span>
@@ -124,7 +125,7 @@ export default function Financeiro() {
                 <>
                   {/* Table header */}
                   <div className="grid grid-cols-5 gap-2 px-4 py-2 border-b border-dark-border bg-dark-input">
-                    {['TX_ID', 'DATA/HORA', 'TIPO', 'NET (REF)', 'STATUS'].map(h => (
+                    {['TX_ID', 'DATA/HORA', 'TIPO', 'LÍQUIDO', 'ESTADO'].map(h => (
                       <span key={h} className="font-mono text-[9px] text-zinc-600 uppercase">{h}</span>
                     ))}
                   </div>
@@ -136,7 +137,7 @@ export default function Financeiro() {
                         <span className="font-mono text-[10px] text-zinc-400">ESCROW_REL</span>
                         <span className="font-mono text-xs font-bold text-white">{fmt(p.netAmount)}</span>
                         <span className={`font-mono text-[9px] px-2 py-0.5 border w-fit ${STATUS_CLS[p.status] ?? 'text-zinc-500 border-dark-border'}`}>
-                          {p.status}
+                          {paymentStatusLabel[p.status] ?? p.status}
                         </span>
                       </div>
                     ))}
@@ -182,7 +183,7 @@ export default function Financeiro() {
                       </div>
                     </div>
                     <button disabled className="w-full btn-sharp bg-orange-500/50 text-dark-bg font-bold font-mono text-[10px] py-2.5 border border-orange-500/50 uppercase cursor-not-allowed opacity-50">
-                      APROVAR RELEASE
+                      APROVAR PAGAMENTO
                     </button>
                   </div>
                 </div>
@@ -197,7 +198,7 @@ export default function Financeiro() {
                         disabled={approving === m.id}
                         className="w-full btn-sharp bg-orange-500 text-dark-bg font-bold font-mono text-[10px] py-2.5 border border-orange-500 hover:bg-orange-400 transition-colors uppercase disabled:opacity-70"
                       >
-                        {approving === m.id ? 'Processando...' : 'APROVAR RELEASE'}
+                        {approving === m.id ? 'Processando...' : 'APROVAR PAGAMENTO'}
                       </button>
                     </div>
                   ))}

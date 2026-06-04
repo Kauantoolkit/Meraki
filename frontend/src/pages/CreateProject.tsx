@@ -14,7 +14,7 @@ export default function CreateProject() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [skillInput, setSkillInput] = useState('')
-  const [skills, setSkills] = useState<string[]>(['NestJS', 'Microservices'])
+  const [skills, setSkills] = useState<string[]>([])
   const [milestones, setMilestones] = useState<MilestoneInput[]>([
     { title: '', description: '', amount: '' },
     { title: '', description: '', amount: '' },
@@ -69,6 +69,14 @@ export default function CreateProject() {
     goToStep(4)
   }
 
+  function advanceToMilestones() {
+    if (skills.length === 0) {
+      setStepError('Adicione pelo menos uma tecnologia ou requisito.')
+      return
+    }
+    goToStep(3)
+  }
+
   async function handlePublish(e: FormEvent) {
     e.preventDefault()
     if (submittingRef.current) return
@@ -117,7 +125,7 @@ export default function CreateProject() {
 
   const stepConfig = [
     { n: 1, label: 'Configuração Base' },
-    { n: 2, label: 'Stack & Requisitos' },
+    { n: 2, label: 'Tecnologias & Requisitos' },
     { n: 3, label: 'Milestones' },
     { n: 4, label: 'Orçamento & Prazo' },
   ]
@@ -189,7 +197,7 @@ export default function CreateProject() {
                   <div className="space-y-5">
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Título do Projeto</label>
-                      <input type="text" required value={title} onChange={e => setTitle(e.target.value)}
+                      <input type="text" required maxLength={120} data-testid="cp-title" value={title} onChange={e => setTitle(e.target.value)}
                         placeholder="Ex: Desenvolvimento de API de Pagamentos"
                         className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
                     </div>
@@ -198,13 +206,13 @@ export default function CreateProject() {
                       <div className="absolute left-0 top-7 bottom-0 w-8 border-r border-dark-border bg-dark-input flex flex-col items-center py-2 select-none z-10 pointer-events-none">
                         {[1,2,3,4,5].map(n => <span key={n} className="text-[10px] font-mono text-zinc-700">{n}</span>)}
                       </div>
-                      <textarea required value={description} onChange={e => setDescription(e.target.value)}
+                      <textarea required maxLength={2000} data-testid="cp-description" value={description} onChange={e => setDescription(e.target.value)}
                         placeholder="Descreva o problema, o escopo e o resultado esperado..."
                         className="editor-textarea w-full pl-10 pr-4 py-2 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none h-48" />
                     </div>
                   </div>
                   <div className="mt-8 flex justify-end">
-                    <button type="button" onClick={() => goToStep(2)}
+                    <button type="button" data-testid="cp-next-1" onClick={() => goToStep(2)}
                       className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
                       PRÓXIMA ETAPA <ArrowRight className="w-4 h-4" />
                     </button>
@@ -216,18 +224,18 @@ export default function CreateProject() {
               {step === 2 && (
                 <div>
                   <div className="mb-6 border-b border-dark-border pb-4">
-                    <h2 className="text-xl font-bold text-white uppercase tracking-tight">Stack & Requisitos Técnicos</h2>
+                    <h2 className="text-xl font-bold text-white uppercase tracking-tight">Tecnologias & Requisitos Técnicos</h2>
                     <p className="font-mono text-xs text-zinc-500 mt-1">Defina as tecnologias e habilidades necessárias.</p>
                   </div>
                   <div className="space-y-5">
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Adicionar Tecnologia / Habilidade</label>
                       <div className="flex gap-2">
-                        <input type="text" value={skillInput} onChange={e => setSkillInput(e.target.value)}
+                        <input type="text" maxLength={40} data-testid="cp-skill-input" value={skillInput} onChange={e => setSkillInput(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                           placeholder="Ex: NestJS, RabbitMQ, Flutter..."
                           className="flex-1 px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none" />
-                        <button type="button" onClick={addSkill}
+                        <button type="button" data-testid="cp-skill-add" onClick={addSkill}
                           className="bg-dark-input text-white font-mono text-xs px-6 py-3 border border-dark-border hover:border-brand-500 transition-colors">
                           <Plus className="w-4 h-4" />
                         </button>
@@ -245,11 +253,18 @@ export default function CreateProject() {
                       </div>
                     </div>
                   </div>
+                  {stepError && (
+                    <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 mt-4 font-mono text-xs">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {stepError}
+                    </div>
+                  )}
+
                   <div className="mt-8 flex justify-between">
                     <button type="button" onClick={() => goToStep(1)} className="btn-sharp bg-dark-input text-zinc-400 font-bold font-mono text-xs px-6 py-3 border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
                       <ArrowLeft className="w-4 h-4" /> VOLTAR
                     </button>
-                    <button type="button" onClick={() => goToStep(3)} className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
+                    <button type="button" data-testid="cp-next-2" onClick={advanceToMilestones} className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
                       PRÓXIMA ETAPA <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -279,12 +294,12 @@ export default function CreateProject() {
                         </button>
                         <div className="flex items-center gap-2 mb-3">
                           <span className="font-mono text-[10px] text-zinc-400 bg-dark-input px-2 py-0.5 border border-dark-border">M{i + 1}</span>
-                          <input type="text" value={m.title} onChange={e => updateMilestone(i, 'title', e.target.value)}
+                          <input type="text" maxLength={80} data-testid={`cp-mtitle-${i}`} value={m.title} onChange={e => updateMilestone(i, 'title', e.target.value)}
                             placeholder="Nome do Entregável"
                             className="bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 w-2/3 pb-1" />
                           <div className="relative w-1/3">
                             <span className="absolute left-0 top-0 font-mono text-zinc-500 text-sm">R$</span>
-                            <input type="number" min={0} value={m.amount} onChange={e => updateMilestone(i, 'amount', e.target.value)}
+                            <input type="number" min={0} data-testid={`cp-mamount-${i}`} value={m.amount} onChange={e => updateMilestone(i, 'amount', e.target.value)}
                               placeholder="0,00"
                               className="w-full pl-6 bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 pb-1" />
                           </div>
@@ -316,7 +331,7 @@ export default function CreateProject() {
                     <button type="button" onClick={() => goToStep(2)} className="btn-sharp bg-dark-input text-zinc-400 font-bold font-mono text-xs px-6 py-3 border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
                       <ArrowLeft className="w-4 h-4" /> VOLTAR
                     </button>
-                    <button type="button" onClick={advanceToStep4} className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
+                    <button type="button" data-testid="cp-next-3" onClick={advanceToStep4} className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2">
                       PRÓXIMA ETAPA <ArrowRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -340,6 +355,7 @@ export default function CreateProject() {
                         <input
                           type="number"
                           required
+                          data-testid="cp-budget"
                           min={milestonesTotal > 0 ? milestonesTotal : 1}
                           step="0.01"
                           value={budget}
@@ -359,7 +375,7 @@ export default function CreateProject() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Prazo de Entrega</label>
                       <div className="relative group">
-                        <input type="date" required value={deadline} onChange={e => setDeadline(e.target.value)}
+                        <input type="date" required data-testid="cp-deadline" value={deadline} onChange={e => setDeadline(e.target.value)}
                           className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
                       </div>
                     </div>
@@ -376,7 +392,7 @@ export default function CreateProject() {
                     <button type="button" onClick={() => goToStep(3)} className="btn-sharp bg-dark-input text-zinc-400 font-bold font-mono text-xs px-6 py-3 border border-dark-border hover:border-zinc-500 transition-colors flex items-center gap-2">
                       <ArrowLeft className="w-4 h-4" /> VOLTAR
                     </button>
-                    <button type="submit"
+                    <button type="submit" data-testid="cp-publish"
                       className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-sm px-8 py-4 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2 shadow-[4px_4px_0px_rgba(85,202,124,0.3)]">
                       <Send className="w-5 h-5" /> PUBLICAR_PROJETO()
                     </button>
@@ -406,7 +422,7 @@ export default function CreateProject() {
                   <div className="mt-6 pt-6 border-t border-red-500/30">
                     <div className="flex items-start gap-2 text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-2 mb-4 font-mono text-xs">
                       <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span>{publishError}</span>
+                      <span data-testid="cp-error">{publishError}</span>
                     </div>
                     <button onClick={() => { setPublishing(false); setPublishError('') }}
                       className="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-red-500 hover:text-red-400 transition-colors">
@@ -416,7 +432,7 @@ export default function CreateProject() {
                 )}
                 {published && (
                   <div className="mt-6 pt-6 border-t border-dark-border">
-                    <p className="font-mono text-brand-500 font-bold mb-4">&gt; Projeto publicado. A receber propostas de especialistas.</p>
+                    <p data-testid="cp-published" className="font-mono text-brand-500 font-bold mb-4">&gt; Projeto publicado. A receber propostas de especialistas.</p>
                     <button onClick={() => navigate('/dashboard')}
                       className="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-brand-500 hover:text-brand-500 transition-colors">
                       &lt; Voltar ao Painel

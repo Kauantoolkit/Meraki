@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Terminal, Settings2, UploadCloud, ShieldCheck, Check, Send, User, Calendar, Lock } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
+import { projectStatusLabel } from '../lib/labels'
 import { milestonesApi } from '../api/milestones'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -11,10 +12,10 @@ const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', c
 type KanbanStatus = 'PENDING' | 'IN_PROGRESS' | 'SUBMITTED' | 'APPROVED'
 
 const COLS: { key: KanbanStatus; label: string; color: string; headerCls: string }[] = [
-  { key: 'PENDING',     label: 'PENDING',    color: 'text-zinc-300',  headerCls: 'border-dark-border' },
-  { key: 'IN_PROGRESS', label: 'IN_PROGRESS',color: 'text-brand-500', headerCls: 'border-brand-500/30 bg-brand-500/5' },
-  { key: 'SUBMITTED',   label: 'SUBMITTED',  color: 'text-blue-400',  headerCls: 'border-blue-500/30' },
-  { key: 'APPROVED',    label: 'APPROVED',   color: 'text-zinc-400',  headerCls: 'border-zinc-700' },
+  { key: 'PENDING',     label: 'Pendente',    color: 'text-zinc-300',  headerCls: 'border-dark-border' },
+  { key: 'IN_PROGRESS', label: 'Em Andamento',color: 'text-brand-500', headerCls: 'border-brand-500/30 bg-brand-500/5' },
+  { key: 'SUBMITTED',   label: 'Submetido',  color: 'text-blue-400',  headerCls: 'border-blue-500/30' },
+  { key: 'APPROVED',    label: 'Aprovado',   color: 'text-zinc-400',  headerCls: 'border-zinc-700' },
 ]
 
 export default function Kanban() {
@@ -23,6 +24,7 @@ export default function Kanban() {
   const navigate = useNavigate()
   const [project, setProject] = useState<Project | null>(null)
   const [milestones, setMilestones] = useState<Milestone[]>([])
+  const [history, setHistory] = useState<{ action: string; description: string; createdAt: string }[]>([])
   const [loading, setLoading] = useState(true)
 
   // Submit modal
@@ -40,10 +42,15 @@ export default function Kanban() {
       navigate('/dashboard', { replace: true })
       return
     }
-    Promise.all([projectsApi.getById(projectId), projectsApi.getMilestones(projectId)])
-      .then(([pRes, mRes]) => {
+    Promise.all([
+      projectsApi.getById(projectId),
+      projectsApi.getMilestones(projectId),
+      milestonesApi.getHistory(projectId).catch(() => ({ data: [] })),
+    ])
+      .then(([pRes, mRes, hRes]) => {
         setProject(pRes.data)
         setMilestones(mRes.data)
+        setHistory(((hRes as { data: unknown }).data ?? []) as { action: string; description: string; createdAt: string }[])
       })
       .finally(() => setLoading(false))
   }, [projectId])
@@ -121,7 +128,7 @@ export default function Kanban() {
   return (
     <div className="bg-dark-bg bg-grid h-screen text-zinc-300 antialiased overflow-hidden flex flex-col">
       <div className="scanline" />
-      <Navbar backUrl="/dashboard" projectTitle={project ? `${project.id} // DELIVERY_BOARD` : undefined} />
+      <Navbar backUrl="/dashboard" projectTitle={project ? `${project.id} // QUADRO_ENTREGAS` : undefined} />
 
       {/* Project Header */}
       <header className="shrink-0 bg-dark-card border-b border-dark-border px-4 sm:px-6 lg:px-8 py-4">
@@ -130,13 +137,13 @@ export default function Kanban() {
             <h1 className="text-xl font-bold text-white uppercase tracking-tight mb-1">{project?.title}</h1>
             <div className="flex flex-wrap items-center gap-3">
               <span className="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 tracking-widest flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />{project?.status}
+                <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />{projectStatusLabel[project?.status ?? ''] ?? project?.status}
               </span>
               <span className="font-mono text-[10px] text-zinc-400 border border-dark-border px-2 py-0.5 flex items-center gap-1">
                 <User className="w-3 h-3 text-brand-500" /> {project?.specialistId ?? 'Sem especialista'}
               </span>
               <span className="font-mono text-[10px] text-zinc-400 border border-dark-border px-2 py-0.5 flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-brand-500" /> Deadline: {project?.deadline}
+                <Calendar className="w-3 h-3 text-brand-500" /> Prazo: {project?.deadline}
               </span>
             </div>
           </div>
@@ -146,7 +153,7 @@ export default function Kanban() {
               <p className="font-mono font-bold text-brand-500">{project ? fmt(project.budget) : '—'}</p>
             </div>
             <button className="btn-sharp bg-dark-input hover:bg-dark-hover text-white font-mono text-xs px-4 py-2 border border-dark-border hover:border-brand-500 transition-colors flex items-center gap-1">
-              <Settings2 className="w-4 h-4" /> OPTIONS
+              <Settings2 className="w-4 h-4" /> OPÇÕES
             </button>
           </div>
         </div>
@@ -163,11 +170,11 @@ export default function Kanban() {
                   {col.key === 'IN_PROGRESS' && <div className="absolute inset-0 bg-brand-500/5" />}
                   <div className="flex items-center gap-2 relative z-10">
                     {col.key === 'APPROVED' ? <Check className="w-3 h-3 text-zinc-400" /> : (
-                      <div className={`w-2 h-2 ${col.key === 'IN_PROGRESS' ? 'bg-brand-500 animate-pulse' : col.key === 'SUBMITTED_REVIEW' ? 'bg-blue-500' : 'bg-zinc-600'}`} />
+                      <div className={`w-2 h-2 ${col.key === 'IN_PROGRESS' ? 'bg-brand-500 animate-pulse' : col.key === 'SUBMITTED' ? 'bg-blue-500' : 'bg-zinc-600'}`} />
                     )}
                     <h2 className={`font-mono font-bold text-xs ${col.color} ${col.key === 'APPROVED' ? 'line-through decoration-zinc-600' : ''}`}>{col.label}</h2>
                   </div>
-                  <span className={`font-mono text-xs bg-dark-input border ${col.key === 'IN_PROGRESS' ? 'border-brand-500/30 text-brand-500' : col.key === 'SUBMITTED_REVIEW' ? 'border-blue-500/30 text-blue-400' : 'border-dark-border text-zinc-500'} px-2 py-0.5 relative z-10`}>
+                  <span className={`font-mono text-xs bg-dark-input border ${col.key === 'IN_PROGRESS' ? 'border-brand-500/30 text-brand-500' : col.key === 'SUBMITTED' ? 'border-blue-500/30 text-blue-400' : 'border-dark-border text-zinc-500'} px-2 py-0.5 relative z-10`}>
                     {cards.length}
                   </span>
                 </div>
@@ -210,11 +217,13 @@ export default function Kanban() {
               <span className="text-brand-500">PROJECT_EVENT:</span>{' '}
               Board carregado para {project?.id ?? '...'}
             </div>
-            {milestones.filter(m => m.status !== 'PENDING').map(m => (
-              <div key={m.id} className="text-zinc-500">
-                <span className="text-zinc-600">[DELIVERY]</span>{' '}
-                <span className="text-brand-500">MILESTONE_EVENT:</span>{' '}
-                {m.title} → <span className="text-white">{m.status}</span>
+            {history.length === 0 ? (
+              <div className="text-zinc-600">[SYS] Sem eventos registados ainda.</div>
+            ) : history.map((h, i) => (
+              <div key={i} className="text-zinc-500">
+                <span className="text-zinc-600">[{new Date(h.createdAt).toLocaleTimeString('pt-BR')}]</span>{' '}
+                <span className="text-brand-500">{h.action}:</span>{' '}
+                <span className="text-white">{h.description}</span>
               </div>
             ))}
             <div className="text-brand-500 flex items-center mt-4">
@@ -245,18 +254,18 @@ export default function Kanban() {
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Repositório / URL</label>
-                <input type="text" value={repoUrl} onChange={e => setRepoUrl(e.target.value)}
+                <input type="text" data-testid="ms-submit-repo" value={repoUrl} onChange={e => setRepoUrl(e.target.value)}
                   className="w-full bg-[#000] border border-dark-border p-3 text-xs font-mono text-white focus:outline-none focus:border-blue-500" placeholder="https://github.com/..." />
               </div>
               <div>
                 <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Notas de Release</label>
-                <textarea value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)}
+                <textarea data-testid="ms-submit-notes" value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)}
                   className="w-full bg-[#000] border border-dark-border p-3 text-xs font-sans text-white focus:outline-none focus:border-blue-500 resize-none h-20" placeholder="Descreva o que foi entregue..." />
               </div>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setSubmitModal(false)} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
-              <button onClick={confirmSubmit} disabled={actionLoading} className="flex-1 btn-sharp bg-blue-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-blue-500 hover:bg-blue-400 transition-colors disabled:opacity-70">
+              <button data-testid="ms-submit-confirm" onClick={confirmSubmit} disabled={actionLoading} className="flex-1 btn-sharp bg-blue-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-blue-500 hover:bg-blue-400 transition-colors disabled:opacity-70">
                 {actionLoading ? 'Enviando...' : 'DEPLOY_SUBMIT()'}
               </button>
             </div>
@@ -286,7 +295,7 @@ export default function Kanban() {
             </div>
             <div className="flex gap-3">
               <button onClick={() => setApproveModal(false)} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
-              <button onClick={confirmApprove} disabled={actionLoading} className="flex-1 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-brand-500 hover:bg-brand-400 transition-colors disabled:opacity-70">
+              <button data-testid="ms-approve-confirm" onClick={confirmApprove} disabled={actionLoading} className="flex-1 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-brand-500 hover:bg-brand-400 transition-colors disabled:opacity-70">
                 {actionLoading ? 'Processando...' : 'CONFIRMAR_PAGAMENTO()'}
               </button>
             </div>
@@ -327,13 +336,13 @@ function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSu
         {isApproved ? (
           <button disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card py-1.5 text-zinc-500 cursor-not-allowed uppercase">PAGO E FINALIZADO</button>
         ) : !isCompany && m.status === 'PENDING' && canStart ? (
-          <button onClick={onStart} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase">INICIAR TRABALHO</button>
+          <button data-testid={`ms-start-${m.id}`} onClick={onStart} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase">INICIAR TRABALHO</button>
         ) : !isCompany && m.status === 'PENDING' && !canStart ? (
-          <button disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card text-zinc-600 py-1.5 cursor-not-allowed uppercase" title="Conclua a milestone anterior primeiro">BLOQUEADA</button>
+          <button data-testid={`ms-blocked-${m.id}`} disabled className="mt-3 w-full text-[10px] font-mono border border-dark-border bg-dark-card text-zinc-600 py-1.5 cursor-not-allowed uppercase" title="Conclua a milestone anterior primeiro">BLOQUEADA</button>
         ) : !isCompany && m.status === 'IN_PROGRESS' ? (
-          <button onClick={onSubmit} className="mt-3 w-full text-[10px] font-mono border border-blue-400 bg-blue-400/10 text-blue-400 py-1.5 hover:bg-blue-400 hover:text-dark-bg transition-colors uppercase">SUBMETER ENTREGA</button>
+          <button data-testid={`ms-submit-${m.id}`} onClick={onSubmit} className="mt-3 w-full text-[10px] font-mono border border-blue-400 bg-blue-400/10 text-blue-400 py-1.5 hover:bg-blue-400 hover:text-dark-bg transition-colors uppercase">SUBMETER ENTREGA</button>
         ) : isCompany && m.status === 'SUBMITTED' ? (
-          <button onClick={onApprove} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase flex justify-center items-center gap-2">
+          <button data-testid={`ms-approve-${m.id}`} onClick={onApprove} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase flex justify-center items-center gap-2">
             <Check className="w-3 h-3" /> APROVAR & PAGAR
           </button>
         ) : null}

@@ -133,7 +133,7 @@ export default function Navbar({ backUrl, projectTitle }: NavbarProps) {
                   <div className="absolute right-0 top-full mt-2 w-48 bg-dark-card border border-dark-border shadow-2xl py-2 z-50">
                     <button onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-[10px] font-mono text-zinc-400 hover:bg-red-500/10 hover:text-red-500 uppercase flex items-center gap-2">
-                      <LogOut className="w-3 h-3" /> Sair / Logout
+                      <LogOut className="w-3 h-3" /> Sair
                     </button>
                   </div>
                 </>
