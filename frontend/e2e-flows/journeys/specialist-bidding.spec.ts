@@ -48,4 +48,32 @@ test.describe('Jornada: Especialista descobre projeto e propõe (RF05)', () => {
     const myBids = await (await request.get(`${GATEWAY}/bids/my-bids`, auth(s.token))).json()
     expect(JSON.stringify(myBids), 'a proposta deveria constar em /bids/my-bids').toContain(P.id)
   })
+
+  test('RN02 — especialista não pode submeter segunda proposta ativa', async ({ page, request, rec }) => {
+    const company = makeCompany()
+    const c = await registerAndLogin(request, company)
+    const title = `RN02 Fluxo ${Date.now()}`
+    const P = await (await request.post(`${GATEWAY}/projects`, {
+      ...auth(c.token),
+      data: { title, description: 'projeto para validar a regra de proposta única', budget: 9000, deadline: '2027-12-31', requirements: ['NestJS'] },
+    })).json()
+
+    const s = await registerAndLogin(request, makeSpecialist())
+    const payload = (txt: string, v: number) => ({ ...auth(s.token), data: { proposal: txt, proposedBudget: v, estimatedDuration: 30 } })
+
+    // 1ª proposta — deve passar
+    const first = await request.post(`${GATEWAY}/bids/project/${P.id}`, payload('Primeira proposta com experiência sólida em NestJS e microsserviços.', 8000))
+    expect(first.ok(), `1ª proposta deveria passar: ${first.status()} ${await first.text()}`).toBeTruthy()
+
+    // 2ª proposta — RN02 deve bloquear (4xx)
+    const second = await request.post(`${GATEWAY}/bids/project/${P.id}`, payload('Segunda proposta — não deveria ser aceita pela RN02.', 8500))
+    expect(second.ok(), 'RN02: a segunda proposta deveria ser rejeitada').toBeFalsy()
+    expect(second.status(), 'RN02: esperado 4xx na segunda proposta').toBeGreaterThanOrEqual(400)
+
+    // UI: ao revisitar o bidding, o formulário fica bloqueado pelo overlay de proposta existente
+    await injectAuth(page, s.token, s.user)
+    await page.goto(`/bidding/${P.id}`)
+    await expect(page.getByText('PROPOSTA SUBMETIDA')).toBeVisible({ timeout: 15_000 })
+    await rec.shoot('rn02-proposta-existente')
+  })
 })
