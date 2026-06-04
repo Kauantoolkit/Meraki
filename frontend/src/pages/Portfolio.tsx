@@ -29,7 +29,7 @@ export default function Portfolio() {
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased">
       <div className="scanline" />
-      <Navbar projectTitle="WORKSPACE // PORTFÓLIO" />
+      <Navbar projectTitle="ÁREA DE TRABALHO // PORTFÓLIO" />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {!profile ? (
@@ -185,7 +185,7 @@ function SkillsTab({ profile, onUpdate, onEditOpen }: {
         </p>
         <button onClick={onEditOpen}
           className="font-mono text-[10px] text-brand-500 border border-brand-500/50 hover:border-brand-500 px-3 py-1.5 transition-colors flex items-center gap-1">
-          <Plus className="w-3 h-3" /> Gerenciar Skills
+          <Plus className="w-3 h-3" /> Gerenciar Habilidades
         </button>
       </div>
 
@@ -277,6 +277,7 @@ function EditProfileModal({ profile, onClose, onSave }: {
           <div className="space-y-2">
             <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Bio / Apresentação</label>
             <textarea
+              maxLength={1000}
               value={bio}
               onChange={e => setBio(e.target.value)}
               placeholder="Conte sobre sua experiência, especialidades e o que você pode oferecer..."
@@ -289,6 +290,7 @@ function EditProfileModal({ profile, onClose, onSave }: {
             <div className="flex gap-2">
               <input
                 type="text"
+                maxLength={40}
                 value={skillInput}
                 onChange={e => setSkillInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
