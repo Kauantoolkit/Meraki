@@ -44,7 +44,7 @@ export default function Signup() {
             <ShieldCheck className="text-brand-500 w-6 h-6" strokeWidth={1.5} />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white uppercase font-mono">Registo</h1>
-          <p className="text-xs text-zinc-500 mt-1 font-mono tracking-wider">SYS.ONBOARDING // INITIALIZE</p>
+          <p className="text-xs text-zinc-500 mt-1 font-mono tracking-wider">SISTEMA.CADASTRO // INICIAR</p>
         </div>
 
         {/* Type selector */}
@@ -78,7 +78,7 @@ export default function Signup() {
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <User className="h-4 w-4 text-zinc-600 group-focus-within:text-brand-500 transition-colors" strokeWidth={1.5} />
               </div>
-              <input type="text" required data-testid="signup-name" value={name} onChange={e => setName(e.target.value)}
+              <input type="text" required maxLength={80} data-testid="signup-name" value={name} onChange={e => setName(e.target.value)}
                 placeholder={type === 'company' ? 'Nova Corp S/A' : 'dev.username'}
                 className="w-full pl-11 pr-4 py-3 bg-dark-input border border-dark-border text-sm text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none" />
             </div>
@@ -90,7 +90,7 @@ export default function Signup() {
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Mail className="h-4 w-4 text-zinc-600 group-focus-within:text-brand-500 transition-colors" strokeWidth={1.5} />
               </div>
-              <input type="email" required data-testid="signup-email" value={email} onChange={e => setEmail(e.target.value)}
+              <input type="email" required maxLength={120} data-testid="signup-email" value={email} onChange={e => setEmail(e.target.value)}
                 placeholder={type === 'company' ? 'admin@empresa.com' : 'dev@especialista.com'}
                 className="w-full pl-11 pr-4 py-3 bg-dark-input border border-dark-border text-sm text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none" />
             </div>
@@ -103,7 +103,7 @@ export default function Signup() {
                 <Key className="h-4 w-4 text-zinc-600 group-focus-within:text-brand-500 transition-colors" strokeWidth={1.5} />
               </div>
               <input type="password" required data-testid="signup-password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="••••••••" minLength={6}
+                placeholder="••••••••" minLength={6} maxLength={64}
                 className="w-full pl-11 pr-4 py-3 bg-dark-input border border-dark-border text-sm text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all rounded-none" />
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function Signup() {
 
           <button type="submit" disabled={loading} data-testid="signup-submit"
             className="btn-sharp w-full bg-brand-500 text-dark-bg font-bold uppercase tracking-widest py-3.5 hover:bg-brand-400 border border-brand-500 transition-colors duration-200 flex justify-center items-center mt-6 shadow-[4px_4px_0px_rgba(85,202,124,0.2)] disabled:opacity-70 disabled:cursor-wait">
-            <span>{loading ? 'Criando Nodo...' : 'Criar Conta'}</span>
+            <span>{loading ? 'Criando Conta...' : 'Criar Conta'}</span>
             {!loading && <UserPlus className="w-4 h-4 ml-2" />}
           </button>
         </form>

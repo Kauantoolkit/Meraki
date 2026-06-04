@@ -5,6 +5,7 @@ import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { extractApiError } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
+import { projectStatusLabel } from '../lib/labels'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -101,7 +102,7 @@ export default function DashboardEmpresa() {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-white font-mono">{String(inProgress).padStart(2, '0')}</span>
-              <span className="text-xs text-brand-500 font-mono">/ IN_PROGRESS</span>
+              <span className="text-xs text-brand-500 font-mono">/ Em Andamento</span>
             </div>
           </div>
           <div className="bg-dark-card border border-dark-border p-5">
@@ -111,7 +112,7 @@ export default function DashboardEmpresa() {
             </div>
             <div className="flex items-baseline gap-2">
               <span className="text-3xl font-bold text-white font-mono">{String(open).padStart(2, '0')}</span>
-              <span className="text-xs text-blue-400 font-mono">/ OPEN</span>
+              <span className="text-xs text-blue-400 font-mono">/ Aberto</span>
             </div>
           </div>
           <div className="bg-dark-card border border-dark-border p-5">
@@ -130,7 +131,7 @@ export default function DashboardEmpresa() {
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6 bg-dark-card border border-dark-border p-2">
           <div className="flex overflow-x-auto w-full md:w-auto gap-1">
             {STATUS_FILTERS.map(s => {
-              const label = s === 'ALL' ? '[ ATIVOS ]' : s === 'CANCELLED' ? 'CANCELADOS' : s
+              const label = s === 'ALL' ? '[ ATIVOS ]' : (projectStatusLabel[s] ?? s)
               return (
                 <button
                   key={s}
@@ -154,6 +155,7 @@ export default function DashboardEmpresa() {
             </div>
             <input
               type="text"
+              maxLength={100}
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="BUSCAR PROJETO..."
@@ -169,7 +171,7 @@ export default function DashboardEmpresa() {
           <div className="col-span-2 text-center py-12 border border-zinc-800 border-dashed text-zinc-500 font-mono text-sm">
             {filter === 'ALL'
               ? 'Nenhum projeto ativo. Clique em "Novo Projeto" para começar.'
-              : `Nenhum projeto com status ${filter}.`}
+              : `Nenhum projeto com status ${(projectStatusLabel[filter] ?? filter).toLowerCase()}.`}
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -325,7 +327,7 @@ function EditProjectModal({ project, onClose, onSave }: {
           </div>
 
           <div className="space-y-2">
-            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Stack & Requisitos Técnicos</label>
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Tecnologias & Requisitos</label>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -439,7 +441,7 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit }:
         <div className="flex items-center gap-2 shrink-0">
           <span className={`font-mono text-[10px] ${statusColor} px-2 py-1 tracking-widest flex items-center gap-1.5`}>
             {p.status === 'IN_PROGRESS' && <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />}
-            {p.status}
+            {projectStatusLabel[p.status] ?? p.status}
           </span>
           {isOpen && (
             <button
@@ -501,12 +503,12 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit }:
               onClick={onOpenKanban}
               className="btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs px-4 py-2 border border-brand-500 transition-colors"
             >
-              OPEN_KANBAN()
+              ABRIR_KANBAN()
             </button>
           </div>
         ) : (
           <div className="border-t border-dark-border pt-4 mt-2">
-            <span className="font-mono text-[10px] text-zinc-500 uppercase">Projeto {p.status === 'COMPLETED' ? 'concluído' : p.status.toLowerCase()}</span>
+            <span className="font-mono text-[10px] text-zinc-500 uppercase">Projeto {(projectStatusLabel[p.status] ?? p.status).toLowerCase()}</span>
           </div>
         )
       )}

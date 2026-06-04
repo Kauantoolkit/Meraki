@@ -46,7 +46,7 @@ export default function Login() {
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white uppercase font-mono">Meraki</h1>
           <p className="text-xs text-zinc-500 mt-1 font-mono tracking-wider">
-            SYS.AUTH // {loginType === 'company' ? 'COMPANY' : 'SPECIALIST'}
+            SISTEMA.AUTENTICAÇÃO // {loginType === 'company' ? 'EMPRESA' : 'ESPECIALISTA'}
           </p>
         </div>
 
@@ -83,6 +83,7 @@ export default function Login() {
               <input
                 type="email"
                 required
+                maxLength={120}
                 data-testid="login-email"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
@@ -106,6 +107,7 @@ export default function Login() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 required
+                maxLength={64}
                 data-testid="login-password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
