@@ -245,18 +245,18 @@ export default function Kanban() {
             <div className="space-y-4 mb-6">
               <div>
                 <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Repositório / URL</label>
-                <input type="text" value={repoUrl} onChange={e => setRepoUrl(e.target.value)}
+                <input type="text" data-testid="ms-submit-repo" value={repoUrl} onChange={e => setRepoUrl(e.target.value)}
                   className="w-full bg-[#000] border border-dark-border p-3 text-xs font-mono text-white focus:outline-none focus:border-blue-500" placeholder="https://github.com/..." />
               </div>
               <div>
                 <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Notas de Release</label>
-                <textarea value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)}
+                <textarea data-testid="ms-submit-notes" value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)}
                   className="w-full bg-[#000] border border-dark-border p-3 text-xs font-sans text-white focus:outline-none focus:border-blue-500 resize-none h-20" placeholder="Descreva o que foi entregue..." />
               </div>
             </div>
             <div className="flex gap-3">
               <button onClick={() => setSubmitModal(false)} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
-              <button onClick={confirmSubmit} disabled={actionLoading} className="flex-1 btn-sharp bg-blue-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-blue-500 hover:bg-blue-400 transition-colors disabled:opacity-70">
+              <button data-testid="ms-submit-confirm" onClick={confirmSubmit} disabled={actionLoading} className="flex-1 btn-sharp bg-blue-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-blue-500 hover:bg-blue-400 transition-colors disabled:opacity-70">
                 {actionLoading ? 'Enviando...' : 'DEPLOY_SUBMIT()'}
               </button>
             </div>
@@ -286,7 +286,7 @@ export default function Kanban() {
             </div>
             <div className="flex gap-3">
               <button onClick={() => setApproveModal(false)} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
-              <button onClick={confirmApprove} disabled={actionLoading} className="flex-1 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-brand-500 hover:bg-brand-400 transition-colors disabled:opacity-70">
+              <button data-testid="ms-approve-confirm" onClick={confirmApprove} disabled={actionLoading} className="flex-1 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-brand-500 hover:bg-brand-400 transition-colors disabled:opacity-70">
                 {actionLoading ? 'Processando...' : 'CONFIRMAR_PAGAMENTO()'}
               </button>
             </div>
