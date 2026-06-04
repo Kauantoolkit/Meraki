@@ -125,7 +125,7 @@ export default function CreateProject() {
 
   const stepConfig = [
     { n: 1, label: 'Configuração Base' },
-    { n: 2, label: 'Stack & Requisitos' },
+    { n: 2, label: 'Tecnologias & Requisitos' },
     { n: 3, label: 'Milestones' },
     { n: 4, label: 'Orçamento & Prazo' },
   ]
@@ -224,7 +224,7 @@ export default function CreateProject() {
               {step === 2 && (
                 <div>
                   <div className="mb-6 border-b border-dark-border pb-4">
-                    <h2 className="text-xl font-bold text-white uppercase tracking-tight">Stack & Requisitos Técnicos</h2>
+                    <h2 className="text-xl font-bold text-white uppercase tracking-tight">Tecnologias & Requisitos Técnicos</h2>
                     <p className="font-mono text-xs text-zinc-500 mt-1">Defina as tecnologias e habilidades necessárias.</p>
                   </div>
                   <div className="space-y-5">
