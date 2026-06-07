@@ -342,8 +342,8 @@ test.describe('Bidding - Autenticação e Autorização', () => {
     // Garante que não há sessão ativa
     await page.goto('/')
     await page.evaluate(() => {
-      localStorage.removeItem('meraki_token')
-      localStorage.removeItem('meraki_user')
+      sessionStorage.removeItem('meraki_token')
+      sessionStorage.removeItem('meraki_user')
     })
 
     await page.goto('/bidding/00000000-0000-0000-0000-000000000000')

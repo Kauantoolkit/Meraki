@@ -11,7 +11,7 @@ export default function PerfilEmpresa() {
 
   useEffect(() => {
     if (!id) return
-    portfolioApi.getPublicProfile(id)
+    portfolioApi.getCompanyProfile(id)
       .then(res => setProfile(res.data))
       .finally(() => setLoading(false))
   }, [id])

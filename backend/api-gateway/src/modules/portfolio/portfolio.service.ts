@@ -41,4 +41,12 @@ export class PortfolioService {
   getSpecialistHistory(specialistId: string, token: string) {
     return this.proxy.get(`${PORTFOLIO_URL}/api/profiles/specialist/${specialistId}/history`, this.proxy.authHeaders(token));
   }
+
+  createReview(dto: Record<string, unknown>, token: string) {
+    return this.proxy.post(`${PORTFOLIO_URL}/api/reviews`, dto, this.proxy.authHeaders(token));
+  }
+
+  listReviews(specialistId: string, token: string) {
+    return this.proxy.get(`${PORTFOLIO_URL}/api/reviews/specialist/${specialistId}`, this.proxy.authHeaders(token));
+  }
 }

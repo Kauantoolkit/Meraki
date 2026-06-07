@@ -17,41 +17,54 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('meraki_token')
-    const storedUser = localStorage.getItem('meraki_user')
-    // Reject tokens that were incorrectly saved as the literal string "undefined"
-    if (storedToken && storedToken !== 'undefined' && storedUser && storedUser !== 'undefined') {
-      try {
-        setToken(storedToken)
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem('meraki_token')
-        localStorage.removeItem('meraki_user')
-      }
-    } else {
-      localStorage.removeItem('meraki_token')
-      localStorage.removeItem('meraki_user')
-    }
-    setIsLoading(false)
+    const storedToken = sessionStorage.getItem('meraki_token')
 
     const handleUnauthorized = () => {
       setToken(null)
       setUser(null)
     }
     window.addEventListener('meraki:unauthorized', handleUnauthorized)
+
+    if (!storedToken || storedToken === 'undefined') {
+      sessionStorage.removeItem('meraki_token')
+      sessionStorage.removeItem('meraki_user')
+      setIsLoading(false)
+      return () => window.removeEventListener('meraki:unauthorized', handleUnauthorized)
+    }
+
+    // Valida o token e puxa dados frescos do servidor
+    setToken(storedToken)
+    authApi.me()
+      .then(res => {
+        const user = {
+          ...res.data,
+          type: res.data.userType === 'COMPANY' ? 'company' as const : 'specialist' as const,
+        }
+        setUser(user)
+        sessionStorage.setItem('meraki_user', JSON.stringify(user))
+      })
+      .catch(() => {
+        // Token inválido ou expirado — força logout silencioso
+        sessionStorage.removeItem('meraki_token')
+        sessionStorage.removeItem('meraki_user')
+        setToken(null)
+        setUser(null)
+      })
+      .finally(() => setIsLoading(false))
+
     return () => window.removeEventListener('meraki:unauthorized', handleUnauthorized)
   }, [])
 
   function login(newToken: string, newUser: UserProfile) {
-    localStorage.setItem('meraki_token', newToken)
-    localStorage.setItem('meraki_user', JSON.stringify(newUser))
+    sessionStorage.setItem('meraki_token', newToken)
+    sessionStorage.setItem('meraki_user', JSON.stringify(newUser))
     setToken(newToken)
     setUser(newUser)
   }
 
   function logout() {
-    localStorage.removeItem('meraki_token')
-    localStorage.removeItem('meraki_user')
+    sessionStorage.removeItem('meraki_token')
+    sessionStorage.removeItem('meraki_user')
     setToken(null)
     setUser(null)
   }

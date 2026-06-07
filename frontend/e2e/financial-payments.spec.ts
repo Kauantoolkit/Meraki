@@ -27,7 +27,8 @@ test.beforeAll(async () => {
 test.describe('Financeiro - Company View (RF10, T10b)', () => {
   test('F85-render - renderiza página financeira', async ({ page }) => {
     await loginAs(page, 'company')
-    await page.goto('/financial')
+    await page.getByRole('link', { name: /FINANCEIRO/i }).first().click()
+    await page.waitForURL(/\/financial/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Header
@@ -40,7 +41,8 @@ test.describe('Financeiro - Company View (RF10, T10b)', () => {
 
   test('F85-ledger - exibe livro-razão de transações', async ({ page }) => {
     await loginAs(page, 'company')
-    await page.goto('/financial')
+    await page.getByRole('link', { name: /FINANCEIRO/i }).first().click()
+    await page.waitForURL(/\/financial/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     await expect(page.getByText(/Livro-Razão de Transações/i)).toBeVisible()
@@ -52,7 +54,8 @@ test.describe('Financeiro - Company View (RF10, T10b)', () => {
 
   test('F85-buttons - botões de exportar e aportar visíveis', async ({ page }) => {
     await loginAs(page, 'company')
-    await page.goto('/financial')
+    await page.getByRole('link', { name: /FINANCEIRO/i }).first().click()
+    await page.waitForURL(/\/financial/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     await expect(page.getByText('Exportar CSV')).toBeVisible()
@@ -61,7 +64,8 @@ test.describe('Financeiro - Company View (RF10, T10b)', () => {
 
   test('F85-pending - exibe seção ações pendentes', async ({ page }) => {
     await loginAs(page, 'company')
-    await page.goto('/financial')
+    await page.getByRole('link', { name: /FINANCEIRO/i }).first().click()
+    await page.waitForURL(/\/financial/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     await expect(page.getByText('Ações Pendentes')).toBeVisible()
@@ -74,7 +78,8 @@ test.describe('Financeiro - Company View (RF10, T10b)', () => {
 test.describe('Ganhos Especialista (RF10, T10b)', () => {
   test('F87-render - renderiza dashboard de ganhos', async ({ page }) => {
     await loginAs(page, 'specialist')
-    await page.goto('/earnings')
+    await page.getByRole('link', { name: /GANHOS/i }).first().click()
+    await page.waitForURL(/\/earnings/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     await expect(page.getByText('Dashboard de Ganhos')).toBeVisible({ timeout: 5_000 })
@@ -87,7 +92,8 @@ test.describe('Ganhos Especialista (RF10, T10b)', () => {
 
   test('F87-extrato - exibe extrato detalhado', async ({ page }) => {
     await loginAs(page, 'specialist')
-    await page.goto('/earnings')
+    await page.getByRole('link', { name: /GANHOS/i }).first().click()
+    await page.waitForURL(/\/earnings/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     await expect(page.getByText('Extrato Detalhado')).toBeVisible()
@@ -99,7 +105,8 @@ test.describe('Ganhos Especialista (RF10, T10b)', () => {
 
   test('F87-saque - botão solicitar saque visível', async ({ page }) => {
     await loginAs(page, 'specialist')
-    await page.goto('/earnings')
+    await page.getByRole('link', { name: /GANHOS/i }).first().click()
+    await page.waitForURL(/\/earnings/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     await expect(page.getByText('Solicitar Saque')).toBeVisible()

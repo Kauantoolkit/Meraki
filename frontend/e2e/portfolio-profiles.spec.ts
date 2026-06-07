@@ -16,7 +16,8 @@ test.beforeAll(async () => {
 test.describe('Portfolio - Meu Perfil (RF11/RF14, T12b)', () => {
   test('F77-render - renderiza perfil do especialista', async ({ page }) => {
     await loginAs(page, 'specialist')
-    await page.goto('/portfolio')
+    await page.getByRole('link', { name: /PORTFÓLIO/i }).first().click()
+    await page.waitForURL(/\/portfolio/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Nome do specialist deve aparecer (ou "Perfil ainda não configurado" se backend não criou portfolio)
@@ -29,8 +30,9 @@ test.describe('Portfolio - Meu Perfil (RF11/RF14, T12b)', () => {
 
   test('F77-loading - loading state exibe "Carregando perfil..."', async ({ page }) => {
     await loginAs(page, 'specialist')
-    // Go directly — catch loading state before API resolves
-    await page.goto('/portfolio')
+    // Go via navbar — catch loading state before API resolves
+    await page.getByRole('link', { name: /PORTFÓLIO/i }).first().click()
+    await page.waitForURL(/\/portfolio/, { timeout: 5_000 })
     // Loading text should appear briefly (may resolve quickly with local backend)
     const loadingVisible = await page.getByText('Carregando perfil...').isVisible({ timeout: 2_000 }).catch(() => false)
     // Even if too fast to catch, the page should eventually load
@@ -40,7 +42,8 @@ test.describe('Portfolio - Meu Perfil (RF11/RF14, T12b)', () => {
 
   test('F77-no-profile-or-data - portfolio exibe algum estado', async ({ page }) => {
     await loginAs(page, 'specialist')
-    await page.goto('/portfolio')
+    await page.getByRole('link', { name: /PORTFÓLIO/i }).first().click()
+    await page.waitForURL(/\/portfolio/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Deve ter ALGO visível: ou o perfil ou a mensagem de "não configurado"

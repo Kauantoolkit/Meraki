@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -55,5 +55,31 @@ export class PaymentsController {
   @ApiOperation({ summary: 'Detalhe do pagamento' })
   findOne(@Param('id') id: string, @Req() req: Request) {
     return this.paymentsService.findOne(id, this.token(req));
+  }
+}
+
+@ApiTags('Withdrawals')
+@Controller('withdrawals')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class WithdrawalsController {
+  constructor(private readonly paymentsService: PaymentsService) {}
+
+  private token(req: Request): string {
+    return req.headers.authorization?.split(' ')[1];
+  }
+
+  @Get('balance')
+  @Roles('SPECIALIST')
+  @ApiOperation({ summary: 'Consultar saldo disponível para saque' })
+  getBalance(@Req() req: Request) {
+    return this.paymentsService.getBalance(this.token(req));
+  }
+
+  @Post()
+  @Roles('SPECIALIST')
+  @ApiOperation({ summary: 'Solicitar saque' })
+  requestWithdrawal(@Body() body: Record<string, unknown>, @Req() req: Request) {
+    return this.paymentsService.requestWithdrawal(body, this.token(req));
   }
 }

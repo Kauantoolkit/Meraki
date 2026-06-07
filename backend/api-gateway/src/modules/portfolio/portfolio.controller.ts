@@ -72,3 +72,28 @@ export class PortfolioController {
     return this.portfolioService.getCompanyProfile(companyId, this.token(req));
   }
 }
+
+@ApiTags('Reviews')
+@Controller('reviews')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class ReviewsController {
+  constructor(private readonly portfolioService: PortfolioService) {}
+
+  private token(req: Request): string {
+    return req.headers.authorization?.split(' ')[1];
+  }
+
+  @Get('specialist/:specialistId')
+  @ApiOperation({ summary: 'Avaliações do especialista' })
+  listReviews(@Param('specialistId') specialistId: string, @Req() req: Request) {
+    return this.portfolioService.listReviews(specialistId, this.token(req));
+  }
+
+  @Post()
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Submeter avaliação (empresa)' })
+  createReview(@Body() body: Record<string, unknown>, @Req() req: Request) {
+    return this.portfolioService.createReview(body, this.token(req));
+  }
+}

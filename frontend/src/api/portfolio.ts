@@ -20,10 +20,24 @@ export interface WorkHistoryItem {
   amount: number
 }
 
+export interface Review {
+  id: string
+  specialistId: string
+  companyId: string
+  companyName?: string
+  rating: number
+  comment: string
+  createdAt: string
+}
+
 export const portfolioApi = {
   getMyProfile: () => api.get<PublicProfile>('/portfolio/me'),
   updateProfile: (data: { bio?: string; skills?: string[] }) => api.patch<PublicProfile>('/portfolio/me', data),
   getPublicProfile: (specialistId: string) => api.get<PublicProfile>(`/portfolio/specialist/${specialistId}`),
+  getCompanyProfile: (companyId: string) => api.get<PublicProfile>(`/portfolio/company/${companyId}`),
+  listReviews: (specialistId: string) => api.get<Review[]>(`/reviews/specialist/${specialistId}`),
+  createReview: (data: { specialistId: string; projectId: string; reviewerId: string; rating: number; comment: string }) =>
+    api.post<Review>('/reviews', data),
   listSpecialists: (search?: string, skills?: string) => {
     const params = new URLSearchParams()
     if (search) params.set('search', search)

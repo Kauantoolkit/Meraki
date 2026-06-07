@@ -71,4 +71,7 @@ export const bidsApi = {
   reject: (bidId: string) =>
     api.put<any>(`/bids/${bidId}/reject`)
       .then(res => ({ ...res, data: mapBid(res.data) })),
+
+  withdraw: (bidId: string) =>
+    api.put<void>(`/bids/${bidId}/withdraw`),
 }

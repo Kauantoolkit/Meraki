@@ -22,6 +22,7 @@ export default function DashboardEmpresa() {
   const [cancelling, setCancelling] = useState(false)
   const [cancelError, setCancelError] = useState('')
   const [editTarget, setEditTarget] = useState<Project | null>(null)
+  const [completing, setCompleting] = useState<string | null>(null)
 
   function loadProjects() {
     projectsApi.listByCompany()
@@ -37,6 +38,18 @@ export default function DashboardEmpresa() {
   }
 
   useEffect(() => { loadProjects() }, [user?.companyId])
+
+  async function handleComplete(id: string) {
+    setCompleting(id)
+    try {
+      await projectsApi.complete(id)
+      setProjects(prev => prev.map(p => p.id === id ? { ...p, status: 'COMPLETED' as const } : p))
+    } catch (err: unknown) {
+      alert(extractApiError(err, 'Não foi possível completar o projeto. Verifique se todos os milestones foram aprovados.'))
+    } finally {
+      setCompleting(null)
+    }
+  }
 
   async function handleCancel() {
     if (!cancelTarget) return
@@ -183,6 +196,8 @@ export default function DashboardEmpresa() {
                 onOpenKanban={() => navigate(`/kanban/${p.id}`)}
                 onCancel={() => { setCancelTarget(p); setCancelError('') }}
                 onEdit={() => setEditTarget(p)}
+                onComplete={() => handleComplete(p.id)}
+                completing={completing === p.id}
               />
             ))}
           </div>
@@ -403,12 +418,14 @@ function EditProjectModal({ project, onClose, onSave }: {
   )
 }
 
-function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit }: {
+function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit, onComplete, completing }: {
   project: Project
   onViewBids: () => void
   onOpenKanban: () => void
   onCancel: () => void
   onEdit: () => void
+  onComplete: () => void
+  completing: boolean
 }) {
   const isOpen      = p.status === 'OPEN'
   const isCancelled = p.status === 'CANCELLED'
@@ -454,6 +471,7 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit }:
           )}
           {canCancel && (
             <button
+              data-testid={`cancel-project-${p.id}`}
               onClick={e => { e.stopPropagation(); onCancel() }}
               title="Cancelar projeto"
               className="w-7 h-7 flex items-center justify-center text-zinc-600 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/30 transition-colors"
@@ -494,16 +512,26 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit }:
             </button>
           </div>
         ) : p.status === 'IN_PROGRESS' ? (
-          <div className="flex items-center justify-between border-t border-dark-border pt-4 mt-2">
-            <div>
-              <p className="font-mono text-[10px] text-zinc-500 uppercase">Especialista</p>
-              <p className="font-mono text-xs text-white">{p.specialistId ?? 'N/A'}</p>
+          <div className="flex flex-col gap-2 border-t border-dark-border pt-4 mt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-mono text-[10px] text-zinc-500 uppercase">Especialista</p>
+                <p className="font-mono text-xs text-white">{p.specialistId ?? 'N/A'}</p>
+              </div>
+              <button
+                onClick={onOpenKanban}
+                className="btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs px-4 py-2 border border-brand-500 transition-colors"
+              >
+                ABRIR_KANBAN()
+              </button>
             </div>
             <button
-              onClick={onOpenKanban}
-              className="btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs px-4 py-2 border border-brand-500 transition-colors"
+              data-testid={`complete-project-${p.id}`}
+              onClick={onComplete}
+              disabled={completing}
+              className="w-full btn-sharp bg-dark-input text-zinc-400 hover:text-white hover:border-brand-500 font-mono font-bold text-xs px-4 py-2 border border-dark-border transition-colors disabled:opacity-50 uppercase"
             >
-              ABRIR_KANBAN()
+              {completing ? 'Completando...' : 'MARCAR_COMPLETO()'}
             </button>
           </div>
         ) : (

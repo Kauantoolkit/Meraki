@@ -2,9 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PaymentFactory } from '../../domain/factories/payment.factory';
 import { PaymentRepository } from '../../infrastructure/repositories/payment.repository';
 import { EscrowAccountRepository } from '../../infrastructure/repositories/escrow-account.repository';
+import { SpecialistBalanceRepository } from '../../infrastructure/repositories/specialist-balance.repository';
 import { FeeCalculationDomainService } from '../../domain/services/fee-calculation.domain-service';
 import { PaymentReleasedEvent } from '../../domain/events/payment-released.event';
 import { EscrowAccount } from '../../domain/entities/escrow-account.entity';
+import { SpecialistBalance } from '../../domain/entities/specialist-balance.entity';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 
 export interface ReleasePaymentDto {
@@ -22,6 +24,7 @@ export class ReleasePaymentUseCase {
     private readonly paymentFactory: PaymentFactory,
     private readonly paymentRepo: PaymentRepository,
     private readonly escrowRepo: EscrowAccountRepository,
+    private readonly balanceRepo: SpecialistBalanceRepository,
     private readonly feeService: FeeCalculationDomainService,
     private readonly events: EventPublisherService,
   ) {}
@@ -48,7 +51,19 @@ export class ReleasePaymentUseCase {
     escrow.releasedAmount = Number(escrow.releasedAmount) + dto.amount;
     await this.escrowRepo.save(escrow);
 
-    // 4. Domain Event tipado → publica payment.released
+    // 4. Atualiza saldo do especialista (crédito após fee)
+    let balance = await this.balanceRepo.findBySpecialist(dto.specialistId);
+    if (!balance) {
+      balance = new SpecialistBalance();
+      balance.specialistId = dto.specialistId;
+      balance.totalEarned = 0;
+      balance.availableBalance = 0;
+      balance.totalWithdrawn = 0;
+    }
+    balance.credit(specialistAmount);
+    await this.balanceRepo.save(balance);
+
+    // 5. Domain Event tipado → publica payment.released
     const event = new PaymentReleasedEvent({
       paymentId: payment.id,
       milestoneId: dto.milestoneId,

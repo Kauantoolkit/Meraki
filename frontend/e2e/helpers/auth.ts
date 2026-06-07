@@ -5,7 +5,7 @@ type Role = 'company' | 'company2' | 'specialist' | 'specialist2'
 
 /**
  * Login with a real backend JWT.
- * Calls the API, gets a real token, sets it in localStorage, then navigates.
+ * Calls the API, gets a real token, sets it in sessionStorage, then navigates.
  */
 export async function loginAs(page: Page, role: Role): Promise<TestUser> {
   let testUser: TestUser
@@ -14,14 +14,14 @@ export async function loginAs(page: Page, role: Role): Promise<TestUser> {
   else if (role === 'specialist2') testUser = await getSpecialist2User()
   else testUser = await getSpecialistUser()
 
-  // Navigate to root first so we have a page context for localStorage
+  // Navigate to root first so we have a page context for sessionStorage
   await page.goto('/')
 
-  // Set real JWT + user in localStorage (same keys the frontend uses)
+  // Set real JWT + user in sessionStorage (same keys the frontend uses)
   await page.evaluate(
     ({ token, user }) => {
-      localStorage.setItem('meraki_token', token)
-      localStorage.setItem('meraki_user', JSON.stringify(user))
+      sessionStorage.setItem('meraki_token', token)
+      sessionStorage.setItem('meraki_user', JSON.stringify(user))
     },
     { token: testUser.token, user: testUser.user },
   )
