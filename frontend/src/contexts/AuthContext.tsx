@@ -32,25 +32,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return () => window.removeEventListener('meraki:unauthorized', handleUnauthorized)
     }
 
-    // Valida o token e puxa dados frescos do servidor
+    // Usa cached user para render imediato, depois valida com servidor
     setToken(storedToken)
+    const storedUser = sessionStorage.getItem('meraki_user')
+    if (storedUser) {
+      try {
+        const cached = JSON.parse(storedUser)
+        setUser(cached)
+      } catch {}
+    }
+    setIsLoading(false)
+
+    // Valida em background — em caso de 429 mantém o usuário cached
     authApi.me()
       .then(res => {
-        const user = {
+        const u = {
           ...res.data,
           type: res.data.userType === 'COMPANY' ? 'company' as const : 'specialist' as const,
         }
-        setUser(user)
-        sessionStorage.setItem('meraki_user', JSON.stringify(user))
+        setUser(u)
+        sessionStorage.setItem('meraki_user', JSON.stringify(u))
       })
-      .catch(() => {
-        // Token inválido ou expirado — força logout silencioso
+      .catch((err: any) => {
+        if (err?.response?.status === 429) return // mantém o usuário cached
+        // Token inválido ou expirado — logout silencioso
         sessionStorage.removeItem('meraki_token')
         sessionStorage.removeItem('meraki_user')
         setToken(null)
         setUser(null)
       })
-      .finally(() => setIsLoading(false))
 
     return () => window.removeEventListener('meraki:unauthorized', handleUnauthorized)
   }, [])

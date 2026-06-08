@@ -59,7 +59,7 @@ test.describe('UC: Especialista vê projetos abertos e acede ao bidding (RF05)',
 
   test('projeto OPEN aparece na seção Oportunidades do dashboard do especialista', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.getByRole('link', { name: /ESPECIALISTA/i }).first().click()
+    await page.getByRole('button', { name: /ESPECIALISTA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
 
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
@@ -71,7 +71,7 @@ test.describe('UC: Especialista vê projetos abertos e acede ao bidding (RF05)',
 
   test('botão APPLY_BID() navega para a tela de submissão de proposta do projeto correto', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.getByRole('link', { name: /ESPECIALISTA/i }).first().click()
+    await page.getByRole('button', { name: /ESPECIALISTA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
 
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })

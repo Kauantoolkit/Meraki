@@ -79,7 +79,7 @@ test.describe('UC: Completar Projeto (PUT /projects/:id/complete)', () => {
 
   test('botão MARCAR_COMPLETO() aparece no card do projeto IN_PROGRESS', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.getByRole('link', { name: /EMPRESA/i }).first().click()
+    await page.getByRole('button', { name: /EMPRESA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
 
     await expect(page.getByTestId(`complete-project-${projectId}`)).toBeVisible({ timeout: 10_000 })
@@ -87,7 +87,7 @@ test.describe('UC: Completar Projeto (PUT /projects/:id/complete)', () => {
 
   test('empresa clica MARCAR_COMPLETO() e projeto muda para COMPLETED no dashboard', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.getByRole('link', { name: /EMPRESA/i }).first().click()
+    await page.getByRole('button', { name: /EMPRESA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
 
     await page.getByTestId(`complete-project-${projectId}`).click()

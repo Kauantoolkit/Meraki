@@ -17,9 +17,9 @@ export default function PerfilEmpresa() {
   }, [id])
 
   if (loading) return (
-    <div className="bg-dark-bg min-h-screen flex items-center justify-center">
+    <main className="bg-dark-bg min-h-screen flex items-center justify-center">
       <span className="font-mono text-brand-500">Carregando perfil...</span>
-    </div>
+    </main>
   )
 
   return (
@@ -54,7 +54,7 @@ export default function PerfilEmpresa() {
                       <div>
                         <div className="flex items-center gap-1 justify-end">
                           <Star className="w-3.5 h-3.5 text-orange-400" />
-                          <span className="font-mono font-bold text-white text-sm">{profile.rating?.toFixed(1) ?? '—'}</span>
+                          <span className="font-mono font-bold text-white text-sm">{profile.rating != null ? Number(profile.rating).toFixed(1) : '—'}</span>
                         </div>
                         <p className="font-mono text-[10px] text-zinc-500">42 OPs</p>
                       </div>

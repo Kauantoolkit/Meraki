@@ -29,7 +29,7 @@ test.describe('Kanban Page', () => {
 test.describe('Financeiro (Company)', () => {
   test('renders financial page', async ({ page }) => {
     await loginAs(page, 'company')
-    await page.getByRole('link', { name: /FINANCEIRO/i }).first().click()
+    await page.getByRole('button', { name: /FINANCEIRO/i }).first().click()
     await page.waitForURL(/\/financial/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible()
   })
@@ -38,7 +38,7 @@ test.describe('Financeiro (Company)', () => {
 test.describe('Ganhos (Specialist)', () => {
   test('renders earnings page', async ({ page }) => {
     await loginAs(page, 'specialist')
-    await page.getByRole('link', { name: /GANHOS/i }).first().click()
+    await page.getByRole('button', { name: /GANHOS/i }).first().click()
     await page.waitForURL(/\/earnings/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible()
   })
@@ -47,7 +47,7 @@ test.describe('Ganhos (Specialist)', () => {
 test.describe('Portfolio (Specialist)', () => {
   test('renders portfolio page', async ({ page }) => {
     await loginAs(page, 'specialist')
-    await page.getByRole('link', { name: /PORTFÓLIO/i }).first().click()
+    await page.getByRole('button', { name: /PORTFÓLIO/i }).first().click()
     await page.waitForURL(/\/portfolio/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible()
   })

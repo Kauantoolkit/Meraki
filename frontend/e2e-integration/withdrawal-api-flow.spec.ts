@@ -124,7 +124,7 @@ test.describe('UC: Saque do Especialista (POST /withdrawals)', () => {
 
   test('tela de ganhos exibe saldo na página /earnings', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.getByRole('link', { name: /GANHOS/i }).first().click()
+    await page.getByRole('button', { name: /GANHOS/i }).first().click()
     await page.waitForURL(/\/earnings/, { timeout: 5_000 })
 
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })

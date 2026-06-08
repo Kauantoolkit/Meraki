@@ -22,7 +22,7 @@ test.describe('Jornada: Especialista descobre projeto e propõe (RF05)', () => {
     await injectAuth(page, s.token, s.user)
 
     // Etapa 1 — descoberta: o projeto OPEN aparece nas Oportunidades
-    await page.getByRole('link', { name: /ESPECIALISTA/i }).first().click()
+    await page.getByRole('button', { name: /ESPECIALISTA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
     await expect(page.getByText('Terminal do Especialista')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText(title)).toBeVisible({ timeout: 15_000 })

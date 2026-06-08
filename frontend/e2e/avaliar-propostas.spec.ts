@@ -66,7 +66,7 @@ test.describe('Avaliar Propostas — listagem (RF06)', () => {
     await expect(page.getByText('2 pendentes')).toBeVisible({ timeout: 5_000 })
 
     // Botões de ação presentes para propostas PENDING
-    await expect(page.getByRole('button', { name: /ACEITAR_BID/i }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /ACEITAR_PROPOSTA/i }).first()).toBeVisible()
     await expect(page.getByRole('button', { name: /REJEITAR/i }).first()).toBeVisible()
   })
 
@@ -130,7 +130,7 @@ test.describe('Avaliar Propostas — rejeição manual (RF07)', () => {
 
     // Botões de ação somem da bid rejeitada
     await expect(page.getByRole('button', { name: /REJEITAR/i })).not.toBeVisible()
-    await expect(page.getByRole('button', { name: /ACEITAR_BID/i })).not.toBeVisible()
+    await expect(page.getByRole('button', { name: /ACEITAR_PROPOSTA/i })).not.toBeVisible()
   })
 
   test('AP05 - cancelar modal de rejeição mantém bid PENDING', async ({ page }) => {
@@ -167,7 +167,7 @@ test.describe('Avaliar Propostas — aceitação e RN03 (RF06, RN03)', () => {
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Clica em Aceitar → modal aparece com aviso RN03
-    await page.getByRole('button', { name: /ACEITAR_BID/i }).first().click()
+    await page.getByRole('button', { name: /ACEITAR_PROPOSTA/i }).first().click()
     await expect(page.getByText(/Ação Irreversível/i).first()).toBeVisible({ timeout: 5_000 })
     await expect(page.getByText(/Ação Irreversível/i).first()).toBeVisible()
 
@@ -192,7 +192,7 @@ test.describe('Avaliar Propostas — aceitação e RN03 (RF06, RN03)', () => {
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Aceita a primeira bid
-    await page.getByRole('button', { name: /ACEITAR_BID/i }).first().click()
+    await page.getByRole('button', { name: /ACEITAR_PROPOSTA/i }).first().click()
     await expect(page.getByText(/Ação Irreversível/i)).toBeVisible({ timeout: 5_000 })
     await page.getByRole('button', { name: /CONFIRMAR_ACEITE/i }).click()
 
@@ -208,7 +208,7 @@ test.describe('Avaliar Propostas — aceitação e RN03 (RF06, RN03)', () => {
     await expect(page.getByText('REJEITADO', { exact: true })).toBeVisible({ timeout: 5_000 })
 
     // Não há mais botões de ação
-    await expect(page.getByRole('button', { name: /ACEITAR_BID/i })).not.toBeVisible()
+    await expect(page.getByRole('button', { name: /ACEITAR_PROPOSTA/i })).not.toBeVisible()
     await expect(page.getByRole('button', { name: /REJEITAR/i })).not.toBeVisible()
   })
 
@@ -227,7 +227,7 @@ test.describe('Avaliar Propostas — aceitação e RN03 (RF06, RN03)', () => {
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Aceita primeira bid
-    await page.getByRole('button', { name: /ACEITAR_BID/i }).first().click()
+    await page.getByRole('button', { name: /ACEITAR_PROPOSTA/i }).first().click()
     await page.getByRole('button', { name: /CONFIRMAR_ACEITE/i }).click()
     await expect(page).toHaveURL(new RegExp(`/kanban/${proj.id}`), { timeout: 10_000 })
 
@@ -235,7 +235,7 @@ test.describe('Avaliar Propostas — aceitação e RN03 (RF06, RN03)', () => {
     await page.goto(`/projects/${proj.id}/bids`)
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText('ESPECIALISTA SELECIONADO')).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByRole('button', { name: /ACEITAR_BID/i })).not.toBeVisible()
+    await expect(page.getByRole('button', { name: /ACEITAR_PROPOSTA/i })).not.toBeVisible()
   })
 })
 

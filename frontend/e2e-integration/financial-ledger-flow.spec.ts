@@ -91,7 +91,7 @@ test.describe('UC: Ledger Financeiro — pagamento liberado via Kanban aparece n
     await page.waitForTimeout(3000)
 
     // Navega para Financeiro
-    await page.getByRole('link', { name: /FINANCEIRO/i }).first().click()
+    await page.getByRole('button', { name: /FINANCEIRO/i }).first().click()
     await page.waitForURL(/\/financial/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
 
@@ -101,7 +101,7 @@ test.describe('UC: Ledger Financeiro — pagamento liberado via Kanban aparece n
 
   test('especialista vê pagamento RELEASED no extrato de ganhos', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.getByRole('link', { name: /GANHOS/i }).first().click()
+    await page.getByRole('button', { name: /GANHOS/i }).first().click()
     await page.waitForURL(/\/earnings/, { timeout: 5_000 })
 
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })

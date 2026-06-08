@@ -19,7 +19,7 @@ test.describe('UC: Pagamentos e Financeiro (RF10)', () => {
 
   test('company can view financial page', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.getByRole('link', { name: /FINANCEIRO/i }).first().click()
+    await page.getByRole('button', { name: /FINANCEIRO/i }).first().click()
     await page.waitForURL(/\/financial/, { timeout: 5_000 })
 
     await expect(page.locator('body')).toBeVisible()
@@ -42,7 +42,7 @@ test.describe('UC: Pagamentos e Financeiro (RF10)', () => {
 
   test('specialist can view earnings page', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.getByRole('link', { name: /GANHOS/i }).first().click()
+    await page.getByRole('button', { name: /GANHOS/i }).first().click()
     await page.waitForURL(/\/earnings/, { timeout: 5_000 })
 
     await expect(page.locator('body')).toBeVisible()

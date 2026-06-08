@@ -9,7 +9,7 @@ async function openProjectAction(
   title: string,
   btnName: RegExp,
 ) {
-  await page.getByRole('link', { name: /EMPRESA/i }).first().click()
+  await page.getByRole('button', { name: /EMPRESA/i }).first().click()
   await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
   await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
   await expect(page.locator('h3').filter({ hasText: title })).toBeVisible({ timeout: 10_000 })
@@ -30,7 +30,7 @@ async function createProjectViaWizard(
     deadline: string
   },
 ) {
-  await page.getByRole('link', { name: /EMPRESA/i }).first().click()
+  await page.getByRole('button', { name: /EMPRESA/i }).first().click()
   await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
   await page.getByRole('button', { name: /Novo Projeto/i }).click()
   await expect(page).toHaveURL(/\/projects\/new/, { timeout: 5_000 })
@@ -74,7 +74,7 @@ async function findAndBid(
   title: string,
   bid: { proposal: string; duration: string },
 ) {
-  await page.getByRole('link', { name: /PROJETOS/i }).first().click()
+  await page.getByRole('button', { name: /PROJETOS/i }).first().click()
   await page.waitForURL(/\/projects\/browse/, { timeout: 5_000 })
   await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
@@ -124,7 +124,7 @@ async function specialistSubmitDelivery(
   repo: string,
   notes: string,
 ) {
-  await page.getByRole('link', { name: /ESPECIALISTA/i }).first().click()
+  await page.getByRole('button', { name: /ESPECIALISTA/i }).first().click()
   await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
   await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
@@ -333,7 +333,7 @@ test.describe.serial('Jornada — Milestone Rejeitada e Corrigida', () => {
 
   test('3. Especialista volta ao dashboard, corrige e submete nova entrega', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.getByRole('link', { name: /ESPECIALISTA/i }).first().click()
+    await page.getByRole('button', { name: /ESPECIALISTA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
@@ -426,7 +426,7 @@ test.describe('Jornada — Empresa Cancela Projeto OPEN', () => {
 
   test('especialista não vê projeto cancelado em /projects/browse', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.getByRole('link', { name: /PROJETOS/i }).first().click()
+    await page.getByRole('button', { name: /PROJETOS/i }).first().click()
     await page.waitForURL(/\/projects\/browse/, { timeout: 5_000 })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 

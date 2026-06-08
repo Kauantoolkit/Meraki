@@ -40,7 +40,7 @@ test.describe('UC: Cancelar Projeto pela UI do Dashboard (DELETE /projects/:id)'
 
   test('botão de cancelar (lixeira) aparece no card do projeto OPEN', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.getByRole('link', { name: /EMPRESA/i }).first().click()
+    await page.getByRole('button', { name: /EMPRESA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
 
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
@@ -54,7 +54,7 @@ test.describe('UC: Cancelar Projeto pela UI do Dashboard (DELETE /projects/:id)'
 
   test('empresa cancela projeto via modal de confirmação', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.getByRole('link', { name: /EMPRESA/i }).first().click()
+    await page.getByRole('button', { name: /EMPRESA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
 
     await expect(page.getByText('Projeto Para Cancelar')).toBeVisible({ timeout: 10_000 })
@@ -95,7 +95,7 @@ test.describe('UC: Cancelar Projeto pela UI do Dashboard (DELETE /projects/:id)'
     const keepId = (await projRes.json()).id
 
     await registerAndLogin(page, company)
-    await page.getByRole('link', { name: /EMPRESA/i }).first().click()
+    await page.getByRole('button', { name: /EMPRESA/i }).first().click()
     await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
     await expect(page.getByText('Projeto Não Cancelar')).toBeVisible({ timeout: 10_000 })
 

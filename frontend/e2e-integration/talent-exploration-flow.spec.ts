@@ -32,7 +32,7 @@ test.describe('UC: Explorar Talentos e Perfis (RF12/RF13)', () => {
 
   test('company can explore talents page', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.getByRole('link', { name: /TALENTOS/i }).first().click()
+    await page.getByRole('button', { name: /TALENTOS/i }).first().click()
     await page.waitForURL(/\/talents/, { timeout: 5_000 })
 
     await expect(page.locator('body')).toBeVisible()
@@ -55,7 +55,7 @@ test.describe('UC: Explorar Talentos e Perfis (RF12/RF13)', () => {
 
   test('company can search specialists', async ({ page }) => {
     await registerAndLogin(page, company)
-    await page.getByRole('link', { name: /TALENTOS/i }).first().click()
+    await page.getByRole('button', { name: /TALENTOS/i }).first().click()
     await page.waitForURL(/\/talents/, { timeout: 5_000 })
 
     await expect(page.locator('body')).toBeVisible()

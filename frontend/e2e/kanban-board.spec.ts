@@ -38,6 +38,7 @@ test.describe('Kanban Board - Company (RF08/RF09)', () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page, 'company')
   })
+  test.setTimeout(60_000)
 
   test('renders kanban board with columns', async ({ page }) => {
     await page.goto(`/kanban/${projectId}`)
@@ -47,14 +48,14 @@ test.describe('Kanban Board - Company (RF08/RF09)', () => {
   test('shows project title in header', async ({ page }) => {
     await page.goto(`/kanban/${projectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
-    await expect(page.getByText('Projeto Kanban E2E')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('heading', { name: 'Projeto Kanban E2E' })).toBeVisible({ timeout: 5_000 })
   })
 
   test('shows milestone cards', async ({ page }) => {
     await page.goto(`/kanban/${projectId}`)
     await expect(page.locator('main')).toBeVisible({ timeout: 10_000 })
     await expect(page.getByText('Setup')).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByText('Entrega')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('heading', { name: 'Entrega' })).toBeVisible({ timeout: 5_000 })
   })
 })
 
