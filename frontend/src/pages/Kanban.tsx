@@ -30,9 +30,11 @@ export default function Kanban() {
   // Submit modal
   const [submitModal, setSubmitModal] = useState(false)
   const [approveModal, setApproveModal] = useState(false)
+  const [rejectModal, setRejectModal] = useState(false)
   const [pendingMilestoneId, setPendingMilestoneId] = useState<string | null>(null)
   const [repoUrl, setRepoUrl] = useState('')
   const [releaseNotes, setReleaseNotes] = useState('')
+  const [rejectReason, setRejectReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
 
   const isCompany = ((user?.userType ?? user?.type) as string)?.toUpperCase() === 'COMPANY'
@@ -94,12 +96,30 @@ export default function Kanban() {
     if (!pendingMilestoneId) return
     setActionLoading(true)
     try {
-      await milestonesApi.approve(pendingMilestoneId)
+      const milestone = milestones.find(m => m.id === pendingMilestoneId)
+      const amount = milestone?.amount != null ? Number(milestone.amount) : undefined
+      await milestonesApi.approve(pendingMilestoneId, amount)
       const updated = await projectsApi.getMilestones(projectId!)
       setMilestones(updated.data)
       setApproveModal(false)
     } catch {
       alert('Erro ao aprovar milestone.')
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  async function confirmReject() {
+    if (!pendingMilestoneId) return
+    setActionLoading(true)
+    try {
+      await milestonesApi.reject(pendingMilestoneId, rejectReason || 'Entrega rejeitada.')
+      const updated = await projectsApi.getMilestones(projectId!)
+      setMilestones(updated.data)
+      setRejectModal(false)
+      setRejectReason('')
+    } catch {
+      alert('Erro ao rejeitar milestone.')
     } finally {
       setActionLoading(false)
     }
@@ -194,6 +214,7 @@ export default function Kanban() {
                       onStart={() => startMilestone(m.id)}
                       onSubmit={() => { setPendingMilestoneId(m.id); setSubmitModal(true) }}
                       onApprove={() => { setPendingMilestoneId(m.id); setApproveModal(true) }}
+                      onReject={() => { setPendingMilestoneId(m.id); setRejectModal(true) }}
                     />
                   ))}
                 </div>
@@ -273,6 +294,34 @@ export default function Kanban() {
         </div>
       )}
 
+      {/* Reject Modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-dark-card border border-red-500 w-full max-w-md p-6 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+            <h2 className="text-lg font-bold text-white uppercase tracking-tight mb-2 flex items-center gap-2">
+              Rejeitar Entrega
+            </h2>
+            <p className="text-xs font-mono text-zinc-400 mb-4">A milestone voltará ao estado <span className="text-orange-400">Em Andamento</span> para correção pelo especialista.</p>
+            <div className="mb-6">
+              <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Motivo da Rejeição</label>
+              <textarea
+                data-testid="ms-reject-reason"
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                className="w-full bg-[#000] border border-dark-border p-3 text-xs font-sans text-white focus:outline-none focus:border-red-500 resize-none h-20"
+                placeholder="Descreva o que precisa ser corrigido..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { setRejectModal(false); setRejectReason('') }} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
+              <button data-testid="ms-reject-confirm" onClick={confirmReject} disabled={actionLoading} className="flex-1 btn-sharp bg-red-500 text-white font-bold font-mono text-xs px-4 py-3 border border-red-500 hover:bg-red-400 transition-colors disabled:opacity-70">
+                {actionLoading ? 'Rejeitando...' : 'REJEITAR_ENTREGA()'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Approve Modal */}
       {approveModal && (
         <div className="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -306,7 +355,7 @@ export default function Kanban() {
   )
 }
 
-function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSubmit, onApprove }: {
+function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSubmit, onApprove, onReject }: {
   milestone: Milestone
   index: number
   isCompany: boolean
@@ -314,6 +363,7 @@ function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSu
   onStart: () => void
   onSubmit: () => void
   onApprove: () => void
+  onReject: () => void
 }) {
   const isActive = m.status === 'IN_PROGRESS'
   const isApproved = m.status === 'APPROVED'
@@ -342,9 +392,14 @@ function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSu
         ) : !isCompany && m.status === 'IN_PROGRESS' ? (
           <button data-testid={`ms-submit-${m.id}`} onClick={onSubmit} className="mt-3 w-full text-[10px] font-mono border border-blue-400 bg-blue-400/10 text-blue-400 py-1.5 hover:bg-blue-400 hover:text-dark-bg transition-colors uppercase">SUBMETER ENTREGA</button>
         ) : isCompany && m.status === 'SUBMITTED' ? (
-          <button data-testid={`ms-approve-${m.id}`} onClick={onApprove} className="mt-3 w-full text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase flex justify-center items-center gap-2">
-            <Check className="w-3 h-3" /> APROVAR & PAGAR
-          </button>
+          <div className="mt-3 flex gap-2">
+            <button data-testid={`ms-reject-${m.id}`} onClick={onReject} className="flex-1 text-[10px] font-mono border border-red-500/50 bg-red-500/10 text-red-400 py-1.5 hover:bg-red-500 hover:text-white transition-colors uppercase">
+              REJEITAR
+            </button>
+            <button data-testid={`ms-approve-${m.id}`} onClick={onApprove} className="flex-1 text-[10px] font-mono border border-brand-500 bg-brand-500/10 text-brand-500 py-1.5 hover:bg-brand-500 hover:text-dark-bg transition-colors uppercase flex justify-center items-center gap-2">
+              <Check className="w-3 h-3" /> APROVAR
+            </button>
+          </div>
         ) : null}
       </div>
     </div>

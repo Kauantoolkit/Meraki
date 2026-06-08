@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { registerAndLogin } from './helpers/api'
+import { registerAndLogin, loginWithRetry } from './helpers/api'
 
 const API_URL = 'http://localhost:3000/api'
 
@@ -37,11 +37,7 @@ test.describe('UC: RN04 — Sequência Obrigatória de Milestones (RF08/RF09/RN0
 
     // Empresa
     await page.request.post(`${API_URL}/auth/register`, { data: company })
-    const companyLogin = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: company.email, password: company.password },
-    })
-    if (!companyLogin.ok()) throw new Error('Falha ao logar empresa')
-    companyToken = (await companyLogin.json()).accessToken
+    companyToken = await loginWithRetry(page, company.email, company.password)
 
     // Cria projeto com 2 milestones
     const projRes = await page.request.post(`${API_URL}/projects`, {
@@ -71,11 +67,7 @@ test.describe('UC: RN04 — Sequência Obrigatória de Milestones (RF08/RF09/RN0
 
     // Especialista
     await page.request.post(`${API_URL}/auth/register`, { data: specialist })
-    const specLogin = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: specialist.email, password: specialist.password },
-    })
-    if (!specLogin.ok()) throw new Error('Falha ao logar especialista')
-    specialistToken = (await specLogin.json()).accessToken
+    specialistToken = await loginWithRetry(page, specialist.email, specialist.password)
 
     // Submete proposta e empresa aceita
     const bidRes = await page.request.post(`${API_URL}/bids/project/${projectId}`, {
@@ -131,11 +123,11 @@ test.describe('UC: RN04 — Sequência Obrigatória de Milestones (RF08/RF09/RN0
     await page.goto(`/kanban/${projectId}`, { waitUntil: 'networkidle' })
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
-    const approveBtn = page.getByRole('button', { name: /APROVAR.*PAGAR/i })
+    const approveBtn = page.getByRole('button', { name: /APROVAR/i }).first()
     await expect(approveBtn).toBeVisible({ timeout: 5_000 })
     await approveBtn.click()
     await expect(page.getByText('Aprovar Milestone')).toBeVisible({ timeout: 3_000 })
-    await page.getByRole('button', { name: /CONFIRMAR_PAGAMENTO/i }).click()
+    await page.getByTestId('ms-approve-confirm').click()
     await expect(page.getByText('PAGO E FINALIZADO')).toBeVisible({ timeout: 10_000 })
 
     // Fase 3: especialista vê Beta disponível (não mais BLOQUEADA)

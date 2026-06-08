@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { registerAndLogin } from './helpers/api'
+import { registerAndLogin, loginWithRetry } from './helpers/api'
 
 const API_URL = 'http://localhost:3000/api'
 
@@ -29,11 +29,7 @@ test.describe('UC: Avaliar Propostas e Selecionar Vencedor (RF06/RF07/RN03)', ()
 
     // Registra e faz login da empresa
     await page.request.post(`${API_URL}/auth/register`, { data: company })
-    const companyLogin = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: company.email, password: company.password },
-    })
-    if (!companyLogin.ok()) throw new Error('Falha ao logar empresa no beforeAll')
-    companyToken = (await companyLogin.json()).accessToken
+    companyToken = await loginWithRetry(page, company.email, company.password)
 
     // Cria projeto
     const projRes = await page.request.post(`${API_URL}/projects`, {
@@ -51,11 +47,7 @@ test.describe('UC: Avaliar Propostas e Selecionar Vencedor (RF06/RF07/RN03)', ()
 
     // Registra e faz login do especialista
     await page.request.post(`${API_URL}/auth/register`, { data: specialist })
-    const specLogin = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: specialist.email, password: specialist.password },
-    })
-    if (!specLogin.ok()) throw new Error('Falha ao logar especialista no beforeAll')
-    specialistToken = (await specLogin.json()).accessToken
+    specialistToken = await loginWithRetry(page, specialist.email, specialist.password)
 
     // Especialista submete proposta via API (setup)
     const bidRes = await page.request.post(`${API_URL}/bids/project/${projectId}`, {
@@ -80,7 +72,7 @@ test.describe('UC: Avaliar Propostas e Selecionar Vencedor (RF06/RF07/RN03)', ()
     // Proposta deve estar visível com dados reais do backend
     await expect(page.getByText(/Especialista|Eval Dev/i).first()).toBeVisible({ timeout: 5_000 })
     await expect(page.getByText(/12\.?000|R\$\s*12/i)).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByRole('button', { name: /ACEITAR_BID/i })).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('button', { name: /ACEITAR_PROPOSTA/i })).toBeVisible({ timeout: 5_000 })
     await expect(page.getByRole('button', { name: /REJEITAR/i })).toBeVisible({ timeout: 5_000 })
   })
 
@@ -91,11 +83,11 @@ test.describe('UC: Avaliar Propostas e Selecionar Vencedor (RF06/RF07/RN03)', ()
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Clica em aceitar
-    await page.getByRole('button', { name: /ACEITAR_BID/i }).first().click()
+    await page.getByRole('button', { name: /ACEITAR_PROPOSTA/i }).first().click()
 
     // Modal de confirmação
-    await expect(page.getByText(/Confirmar/i)).toBeVisible({ timeout: 3_000 })
-    await page.getByRole('button', { name: /CONFIRMAR/i }).click()
+    await expect(page.getByText(/Aceitar Proposta/i)).toBeVisible({ timeout: 3_000 })
+    await page.getByRole('button', { name: /CONFIRMAR_ACEITE/i }).click()
 
     // RN03: ao aceitar, redireciona para o kanban do projeto
     await expect(page).toHaveURL(/\/kanban\//, { timeout: 10_000 })

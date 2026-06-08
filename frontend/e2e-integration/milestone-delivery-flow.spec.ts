@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { registerAndLogin } from './helpers/api'
+import { registerAndLogin, loginWithRetry } from './helpers/api'
 
 const API_URL = 'http://localhost:3000/api'
 
@@ -29,11 +29,7 @@ test.describe('UC: Kanban + Milestone Delivery (RF08/RF09/RN04)', () => {
 
     // Registra e faz login da empresa
     await page.request.post(`${API_URL}/auth/register`, { data: company })
-    const companyLogin = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: company.email, password: company.password },
-    })
-    if (!companyLogin.ok()) throw new Error('Falha ao logar empresa no beforeAll')
-    companyToken = (await companyLogin.json()).accessToken
+    companyToken = await loginWithRetry(page, company.email, company.password)
 
     // Cria projeto com milestone
     const projRes = await page.request.post(`${API_URL}/projects`, {
@@ -57,11 +53,7 @@ test.describe('UC: Kanban + Milestone Delivery (RF08/RF09/RN04)', () => {
 
     // Registra e faz login do especialista
     await page.request.post(`${API_URL}/auth/register`, { data: specialist })
-    const specLogin = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: specialist.email, password: specialist.password },
-    })
-    if (!specLogin.ok()) throw new Error('Falha ao logar especialista no beforeAll')
-    specialistToken = (await specLogin.json()).accessToken
+    specialistToken = await loginWithRetry(page, specialist.email, specialist.password)
 
     // Especialista submete proposta
     const bidRes = await page.request.post(`${API_URL}/bids/project/${projectId}`, {
@@ -87,7 +79,7 @@ test.describe('UC: Kanban + Milestone Delivery (RF08/RF09/RN04)', () => {
     await page.goto(`/kanban/${projectId}`, { waitUntil: 'networkidle' })
 
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByText('Projeto Kanban E2E')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('Projeto Kanban E2E').first()).toBeVisible({ timeout: 5_000 })
     await expect(page.getByText('Fase Alpha')).toBeVisible({ timeout: 5_000 })
   })
 
@@ -137,8 +129,8 @@ test.describe('UC: Kanban + Milestone Delivery (RF08/RF09/RN04)', () => {
 
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
-    // Clica em APROVAR & PAGAR
-    const approveBtn = page.getByRole('button', { name: /APROVAR.*PAGAR/i })
+    // Clica em APROVAR
+    const approveBtn = page.getByRole('button', { name: /APROVAR/i }).first()
     await expect(approveBtn).toBeVisible({ timeout: 5_000 })
     await approveBtn.click()
 
@@ -146,7 +138,7 @@ test.describe('UC: Kanban + Milestone Delivery (RF08/RF09/RN04)', () => {
     await expect(page.getByText('Aprovar Milestone')).toBeVisible({ timeout: 3_000 })
     await expect(page.getByText(/Ação Irreversível/i)).toBeVisible()
 
-    await page.getByRole('button', { name: /CONFIRMAR_PAGAMENTO/i }).click()
+    await page.getByTestId('ms-approve-confirm').click()
 
     // Modal fecha — milestone vai para APPROVED
     await expect(page.getByText('Aprovar Milestone')).not.toBeVisible({ timeout: 10_000 })

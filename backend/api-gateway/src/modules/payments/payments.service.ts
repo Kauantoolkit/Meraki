@@ -31,4 +31,12 @@ export class PaymentsService {
   findOne(id: string, token: string) {
     return this.proxy.get(`${PAYMENT_URL}/api/payments/${id}`, this.proxy.authHeaders(token));
   }
+
+  requestWithdrawal(dto: Record<string, unknown>, token: string) {
+    return this.proxy.post(`${PAYMENT_URL}/api/withdrawals`, dto, this.proxy.authHeaders(token));
+  }
+
+  getBalance(token: string) {
+    return this.proxy.get(`${PAYMENT_URL}/api/withdrawals/balance`, this.proxy.authHeaders(token));
+  }
 }

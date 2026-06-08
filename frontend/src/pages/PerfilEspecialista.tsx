@@ -2,23 +2,30 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Star, Briefcase, User, Award, ChevronRight, ExternalLink, GitBranch, ArrowLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { portfolioApi, PublicProfile, WorkHistoryItem } from '../api/portfolio'
+import { portfolioApi, PublicProfile, WorkHistoryItem, Review } from '../api/portfolio'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
-type Tab = 'history' | 'repos'
+type Tab = 'history' | 'reviews' | 'repos'
 
 export default function PerfilEspecialista() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [profile, setProfile] = useState<PublicProfile | null>(null)
+  const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('history')
 
   useEffect(() => {
     if (!id) return
-    portfolioApi.getPublicProfile(id)
-      .then(res => setProfile(res.data))
+    Promise.all([
+      portfolioApi.getPublicProfile(id),
+      portfolioApi.listReviews(id).catch(() => ({ data: [] as Review[] })),
+    ])
+      .then(([pRes, rRes]) => {
+        setProfile(pRes.data)
+        setReviews(rRes.data)
+      })
       .finally(() => setLoading(false))
   }, [id])
 
@@ -149,6 +156,16 @@ export default function PerfilEspecialista() {
                   Histórico de Projetos
                 </button>
                 <button
+                  onClick={() => setTab('reviews')}
+                  className={`px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider transition-colors border-b-2 -mb-px ${
+                    tab === 'reviews'
+                      ? 'text-brand-500 border-brand-500'
+                      : 'text-zinc-500 border-transparent hover:text-zinc-300'
+                  }`}
+                >
+                  Avaliações ({reviews.length})
+                </button>
+                <button
                   onClick={() => setTab('repos')}
                   className={`px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider transition-colors border-b-2 -mb-px ${
                     tab === 'repos'
@@ -160,7 +177,29 @@ export default function PerfilEspecialista() {
                 </button>
               </div>
 
-              {tab === 'history' ? (
+              {tab === 'reviews' ? (
+                <div className="space-y-4" data-testid="reviews-section">
+                  {reviews.length === 0 ? (
+                    <div className="py-12 text-center border border-dashed border-zinc-700 font-mono text-zinc-600">
+                      Nenhuma avaliação ainda.
+                    </div>
+                  ) : reviews.map(r => (
+                    <div key={r.id} className="bg-dark-card border border-dark-border p-5">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-mono text-xs font-bold text-white">{r.companyName ?? 'Empresa'}</span>
+                        <div className="flex items-center gap-1">
+                          {[1,2,3,4,5].map(n => (
+                            <Star key={n} className={`w-3 h-3 ${n <= r.rating ? 'text-orange-400 fill-orange-400' : 'text-zinc-700'}`} />
+                          ))}
+                          <span className="font-mono text-[10px] text-zinc-500 ml-1">{r.rating.toFixed(1)}</span>
+                        </div>
+                      </div>
+                      <p className="font-mono text-[10px] text-zinc-400 leading-relaxed">{r.comment}</p>
+                      <p className="font-mono text-[9px] text-zinc-600 mt-2">{new Date(r.createdAt).toLocaleDateString('pt-BR')}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : tab === 'history' ? (
                 <div className="space-y-4">
                   {!profile.workHistory || profile.workHistory.length === 0 ? (
                     <div className="py-12 text-center border border-dashed border-zinc-700 font-mono text-zinc-600">

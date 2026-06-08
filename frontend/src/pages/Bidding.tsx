@@ -35,6 +35,7 @@ export default function Bidding() {
   const [editMilestoneProposals, setEditMilestoneProposals] = useState<BidMilestoneProposal[]>([])
   const [editError, setEditError] = useState('')
   const [updating, setUpdating] = useState(false)
+  const [withdrawing, setWithdrawing] = useState(false)
 
   useEffect(() => {
     if (!projectId) return
@@ -153,6 +154,20 @@ export default function Bidding() {
     }
   }
 
+  async function handleWithdraw() {
+    if (!existingBid) return
+    if (!window.confirm('Retirar a proposta? Esta ação não pode ser desfeita.')) return
+    setWithdrawing(true)
+    try {
+      await bidsApi.withdraw(existingBid.id)
+      setExistingBid({ ...existingBid, status: 'WITHDRAWN' })
+    } catch {
+      alert('Erro ao retirar proposta.')
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
   if (loading) return (
     <div className="bg-dark-bg min-h-screen flex items-center justify-center">
       <span className="font-mono text-brand-500">Carregando projeto...</span>
@@ -200,7 +215,7 @@ export default function Bidding() {
               </div>
 
               <h1 className="text-xl font-bold text-white mb-3">{project?.title}</h1>
-              <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{project?.description}</p>
+              <p className="text-sm text-zinc-400 mb-6 leading-relaxed break-words">{project?.description}</p>
 
               {project?.skills && project.skills.length > 0 && (
                 <div className="mb-6">
@@ -461,10 +476,19 @@ export default function Bidding() {
                   </div>
                   <div className="flex gap-3">
                     {existingBid.status === 'PENDING' && (
-                      <button onClick={openEdit}
-                        className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-5 py-2 border border-brand-500 hover:bg-brand-400 transition-colors flex items-center gap-2">
-                        <Pencil className="w-3.5 h-3.5" /> Editar Proposta
-                      </button>
+                      <>
+                        <button onClick={openEdit}
+                          className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-5 py-2 border border-brand-500 hover:bg-brand-400 transition-colors flex items-center gap-2">
+                          <Pencil className="w-3.5 h-3.5" /> Editar Proposta
+                        </button>
+                        <button
+                          data-testid="bid-withdraw-btn"
+                          onClick={handleWithdraw}
+                          disabled={withdrawing}
+                          className="btn-sharp bg-transparent text-red-400 font-mono font-bold text-xs px-5 py-2 border border-red-500/50 hover:bg-red-500/10 hover:border-red-400 transition-colors disabled:opacity-50">
+                          {withdrawing ? 'Retirando...' : 'Retirar Proposta'}
+                        </button>
+                      </>
                     )}
                     <button onClick={() => navigate('/dashboard')}
                       className="btn-sharp bg-transparent text-white font-mono text-xs px-5 py-2 border border-dark-border hover:border-brand-500 hover:text-brand-500 transition-colors">

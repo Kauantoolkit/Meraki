@@ -16,14 +16,18 @@ test.describe('Jornada: Portfolio, perfis e talentos (RF12/RF13)', () => {
 
     // UI: empresa explora talentos (o recorder falha em qualquer 5xx que a página disparar)
     await injectAuth(page, c.token, c.user)
-    await page.goto('/talents')
+    await page.goto('/')
+    await page.getByRole('button', { name: /TALENTOS/i }).first().click()
+    await page.waitForURL(/\/talents/, { timeout: 5_000 })
     await page.waitForLoadState('networkidle').catch(() => {})
     await expect(page.locator('body')).toBeVisible()
     await rec.shoot('explorar-talentos')
 
     // UI: especialista vê o próprio portfolio
     await injectAuth(page, s.token, s.user)
-    await page.goto('/portfolio')
+    await page.goto('/')
+    await page.getByRole('button', { name: /PORTFÓLIO/i }).first().click()
+    await page.waitForURL(/\/portfolio/, { timeout: 5_000 })
     await page.waitForLoadState('networkidle').catch(() => {})
     await expect(page.locator('body')).toBeVisible()
     await rec.shoot('portfolio-especialista')

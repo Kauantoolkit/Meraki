@@ -18,8 +18,8 @@ export const milestonesApi = {
       deliveredFiles: data.deliveredFiles,
     }),
 
-  approve: (milestoneId: string) =>
-    api.put(`/milestones/${milestoneId}/approve`),
+  approve: (milestoneId: string, amount?: number) =>
+    api.put(`/milestones/${milestoneId}/approve`, amount != null ? { amount } : {}),
 
   reject: (milestoneId: string, reason: string) =>
     api.put(`/milestones/${milestoneId}/reject`, { reason }),

@@ -44,5 +44,5 @@ export const authApi = {
     const loginRes = await api.post<AuthResponse>('/auth/login', { email: data.email, password: data.password })
     return { token: loginRes.data.accessToken, user: normalizeUser(loginRes.data.user) }
   },
-  me: () => api.get<UserProfile>('/auth/me'),
+  me: () => api.get<UserProfile>('/users/me'),
 }

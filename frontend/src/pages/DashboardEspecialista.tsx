@@ -17,6 +17,9 @@ export default function DashboardEspecialista() {
   const [myBids, setMyBids] = useState<Bid[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Habilidades do especialista logado (vêm de GET /users/me → profile.skills)
+  const mySkills: string[] = ((user as any)?.profile?.skills ?? []).map((s: string) => s.toLowerCase())
+
   useEffect(() => {
     Promise.all([
       projectsApi.listOpen(),
@@ -30,6 +33,10 @@ export default function DashboardEspecialista() {
       // handled by the 401 interceptor — user will be redirected to login
     }).finally(() => setLoading(false))
   }, [])
+
+  const recommended = mySkills.length > 0
+    ? openProjects.filter(p => (p.skills ?? []).some(s => mySkills.includes(s.toLowerCase())))
+    : openProjects
 
   const bidStatusColor = (status: string) => {
     if (status === 'ACCEPTED') return 'text-brand-500'
@@ -96,15 +103,28 @@ export default function DashboardEspecialista() {
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-dark-border pb-2">
               <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Zap className="w-4 h-4 text-brand-500" /> Oportunidades & Convites
+                <Zap className="w-4 h-4 text-brand-500" />
+                {mySkills.length > 0 ? 'Recomendados para Você' : 'Oportunidades & Convites'}
               </h2>
+              <button
+                onClick={() => navigate('/projects/browse')}
+                className="font-mono text-[10px] text-brand-500 hover:text-brand-400 border border-brand-500/30 hover:border-brand-500 px-2 py-1 transition-colors uppercase"
+              >
+                Ver todos →
+              </button>
             </div>
 
             {loading ? (
               <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">Carregando...</div>
-            ) : openProjects.length === 0 ? (
-              <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">Nenhum projeto OPEN disponível.</div>
-            ) : openProjects.map(p => (
+            ) : recommended.length === 0 ? (
+              <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">
+                {mySkills.length > 0 ? (
+                  <>Nenhum projeto com as suas tecnologias no momento.{' '}
+                    <button onClick={() => navigate('/projects/browse')} className="text-brand-500 hover:underline">Ver todos os projetos.</button>
+                  </>
+                ) : 'Nenhum projeto OPEN disponível.'}
+              </div>
+            ) : recommended.map(p => (
               <div key={p.id} className="bg-dark-card border border-brand-500/50 p-5 hover:border-brand-500 transition-colors">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="font-mono text-[10px] text-blue-400 border border-blue-400/30 bg-blue-400/10 px-2 py-0.5 tracking-widest flex items-center gap-1">

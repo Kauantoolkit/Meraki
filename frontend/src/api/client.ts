@@ -9,7 +9,7 @@ export const api = axios.create({
 
 // Injeta JWT em toda requisição
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('meraki_token')
+  const token = sessionStorage.getItem('meraki_token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
@@ -30,8 +30,8 @@ api.interceptors.response.use(
     const url: string = error.config?.url ?? ''
     const isAuthRoute = url.includes('/auth/')
     if (error.response?.status === 401 && !isAuthRoute) {
-      localStorage.removeItem('meraki_token')
-      localStorage.removeItem('meraki_user')
+      sessionStorage.removeItem('meraki_token')
+      sessionStorage.removeItem('meraki_user')
       window.dispatchEvent(new CustomEvent('meraki:unauthorized'))
     }
     return Promise.reject(error)
