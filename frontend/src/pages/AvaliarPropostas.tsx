@@ -92,7 +92,7 @@ export default function AvaliarPropostas() {
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased">
       <div className="scanline" />
-      <Navbar backUrl="/dashboard" projectTitle={`${project?.id ?? '...'} // BIDDING_REVIEW`} />
+      <Navbar backUrl="/dashboard" projectTitle={project?.title ? `${project.title} // BIDDING_REVIEW` : 'BIDDING_REVIEW'} />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
@@ -111,7 +111,7 @@ export default function AvaliarPropostas() {
                 }`}>
                   {hasAccepted ? 'ESPECIALISTA SELECIONADO' : `STATUS: ${projectStatusLabel[project?.status ?? ''] ?? project?.status ?? ''}`}
                 </span>
-                <span className="font-mono text-[10px] text-zinc-600">{project?.id}</span>
+                <span className="font-mono text-[10px] text-zinc-600 truncate max-w-[200px]">{project?.id?.slice(0, 12)}</span>
               </div>
               <h1 className="text-xl font-bold text-white">{project?.title}</h1>
               <p className="text-sm text-zinc-400 font-mono mt-1 line-clamp-2">{project?.description}</p>
@@ -273,7 +273,7 @@ export default function AvaliarPropostas() {
 
                     {/* Milestone proposals */}
                     {bid.milestoneProposals && bid.milestoneProposals.length > 0 && (
-                      <div className="bg-dark-input border border-dark-border">
+                      <div className="mt-4 bg-dark-input border border-dark-border">
                         <div className="px-4 py-2.5 border-b border-dark-border">
                           <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
                             Observações por Marco
