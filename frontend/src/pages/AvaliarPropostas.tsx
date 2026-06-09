@@ -102,18 +102,18 @@ export default function AvaliarPropostas() {
           <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`font-mono text-[9px] border px-2 py-0.5 tracking-widest uppercase ${
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className={`font-mono text-[9px] border px-2 py-0.5 tracking-widest uppercase shrink-0 ${
                   hasAccepted
                     ? 'text-brand-500 border-brand-500/30 bg-brand-500/10'
                     : 'text-blue-400 border-blue-400/30 bg-blue-400/10'
                 }`}>
                   {hasAccepted ? 'ESPECIALISTA SELECIONADO' : `STATUS: ${projectStatusLabel[project?.status ?? ''] ?? project?.status ?? ''}`}
                 </span>
-                <span className="font-mono text-[10px] text-zinc-600 truncate max-w-[200px]">{project?.id?.slice(0, 12)}</span>
+                <span className="font-mono text-[10px] text-zinc-600 truncate">{project?.id?.slice(0, 12)}</span>
               </div>
-              <h1 className="text-xl font-bold text-white">{project?.title}</h1>
+              <h1 className="text-xl font-bold text-white truncate">{project?.title}</h1>
               <p className="text-sm text-zinc-400 font-mono mt-1 line-clamp-2">{project?.description}</p>
             </div>
             <div className="grid grid-cols-3 gap-px bg-dark-border shrink-0">
