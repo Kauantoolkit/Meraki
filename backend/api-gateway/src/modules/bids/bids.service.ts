@@ -3,8 +3,9 @@ import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { SubmitBidDto } from './dto/submit-bid.dto';
 import { UpdateBidDto } from './dto/update-bid.dto';
 
-const BIDDING_URL = process.env.BIDDING_SERVICE_URL as string;
+const BIDDING_URL  = process.env.BIDDING_SERVICE_URL  as string;
 const PROJECT_URL  = process.env.PROJECT_SERVICE_URL  as string;
+const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL as string;
 
 @Injectable()
 export class BidsService {
@@ -32,7 +33,21 @@ export class BidsService {
     if (project.companyId !== requestorCompanyId) {
       throw new ForbiddenException('Acesso negado: você não é o dono deste projeto');
     }
-    return this.proxy.get(`${BIDDING_URL}/api/bids?projectId=${projectId}`, this.proxy.authHeaders(token));
+    const bids: any[] = await this.proxy.get(`${BIDDING_URL}/api/bids?projectId=${projectId}`, this.proxy.authHeaders(token));
+
+    // Enrich bids with specialist names (identity-service lookup)
+    const uniqueIds = [...new Set(bids.map((b: any) => b.specialistId).filter(Boolean))] as string[];
+    const nameMap = new Map<string, string>();
+    await Promise.all(
+      uniqueIds.map(async (id) => {
+        try {
+          const user = await this.proxy.get<any>(`${IDENTITY_URL}/api/users/${id}`, this.proxy.authHeaders(token));
+          if (user?.name) nameMap.set(id, user.name);
+        } catch {}
+      })
+    );
+
+    return bids.map((b: any) => ({ ...b, specialistName: nameMap.get(b.specialistId) ?? null }));
   }
 
   findMyBids(token: string) {
