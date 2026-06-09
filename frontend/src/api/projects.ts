@@ -74,16 +74,8 @@ export const projectsApi = {
   update: (id: string, data: Partial<Pick<CreateProjectPayload, 'title' | 'description' | 'requirements' | 'budget' | 'deadline'>>) =>
     api.put<any>(`/projects/${id}`, data).then(r => ({ ...r, data: mapProject(r.data) })),
 
-  create: async (data: CreateProjectPayload) => {
-    const { milestones, ...projectData } = data
-    const res = await api.post<any>('/projects', projectData)
-    if (milestones && milestones.length > 0) {
-      for (const m of milestones) {
-        await api.post(`/projects/${res.data.id}/milestones`, m)
-      }
-    }
-    return { ...res, data: mapProject(res.data) }
-  },
+  create: async (data: CreateProjectPayload) =>
+    api.post<any>('/projects', data).then(r => ({ ...r, data: mapProject(r.data) })),
 
   getMilestones: (projectId: string) => api.get<Milestone[]>(`/projects/${projectId}/milestones`),
 }
