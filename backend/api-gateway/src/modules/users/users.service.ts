@@ -8,6 +8,10 @@ const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL as string;
 export class UsersService {
   constructor(private readonly proxy: HttpProxyService) {}
 
+  getSkills() {
+    return this.proxy.get(`${IDENTITY_URL}/api/skills`);
+  }
+
   getMe(token: string) {
     return this.proxy.get(`${IDENTITY_URL}/api/users/me`, this.proxy.authHeaders(token));
   }

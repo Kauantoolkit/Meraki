@@ -20,6 +20,9 @@ export interface IUserRepository {
   createCompanyProfile(data: Partial<CompanyProfile>): Promise<CompanyProfile>;
   findCompanyProfileByUserId(userId: string): Promise<CompanyProfile | null>;
   updateCompanyProfile(id: string, data: Partial<CompanyProfile>): Promise<CompanyProfile>;
+
+  // Skills Catalog
+  getAllSkills(): Promise<string[]>;
 }
 
 export interface IRefreshTokenRepository {

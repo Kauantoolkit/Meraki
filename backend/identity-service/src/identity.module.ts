@@ -34,10 +34,12 @@ import { UpdateUserProfileUseCase } from './application/use-cases/update-user-pr
 import { RefreshTokenUseCase } from './application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from './application/use-cases/logout.use-case';
 import { DeleteUserUseCase } from './application/use-cases/delete-user.use-case';
+import { GetSkillsCatalogUseCase } from './application/use-cases/get-skills-catalog.use-case';
 
 // Controllers
 import { AuthController } from './interfaces/controllers/auth.controller';
 import { UserController } from './interfaces/controllers/user.controller';
+import { SkillsController } from './interfaces/controllers/skills.controller';
 
 // Guards
 import { RolesGuard } from './interfaces/guards/roles.guard';
@@ -63,7 +65,7 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
     ]),
     RabbitMQModule,
   ],
-  controllers: [AuthController, UserController],
+  controllers: [AuthController, UserController, SkillsController],
   providers: [
     // Repository implementations + tokens de injeção
     UserRepository,
@@ -98,6 +100,7 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
     RefreshTokenUseCase,
     LogoutUseCase,
     DeleteUserUseCase,
+    GetSkillsCatalogUseCase,
   ],
 })
 export class IdentityModule {}

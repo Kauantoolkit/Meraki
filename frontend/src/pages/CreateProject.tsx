@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Info, Plus, Trash2, ArrowRight, ArrowLeft, Send, Terminal, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi } from '../api/projects'
+import { usersApi } from '../api/auth'
 import { extractApiError } from '../api/client'
 
 interface MilestoneInput { title: string; description: string; amount: string }
@@ -26,8 +27,13 @@ export default function CreateProject() {
   const [published, setPublished] = useState(false)
   const [publishError, setPublishError] = useState('')
   const [stepError, setStepError] = useState('')
+  const [skillsCatalog, setSkillsCatalog] = useState<string[]>([])
 
   const milestonesTotal = milestones.reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0)
+
+  useEffect(() => {
+    usersApi.getSkillsCatalog().then(res => setSkillsCatalog(res.data)).catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (step === 4 && milestonesTotal > 0) {
@@ -241,7 +247,10 @@ export default function CreateProject() {
                     <div className="space-y-2">
                       <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">Adicionar Tecnologia / Habilidade</label>
                       <div className="flex gap-2">
-                        <input type="text" maxLength={40} data-testid="cp-skill-input" value={skillInput} onChange={e => setSkillInput(e.target.value)}
+                        <datalist id="skills-catalog">
+                          {skillsCatalog.map(s => <option key={s} value={s} />)}
+                        </datalist>
+                        <input type="text" list="skills-catalog" maxLength={40} data-testid="cp-skill-input" value={skillInput} onChange={e => setSkillInput(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                           placeholder="Ex: NestJS, RabbitMQ, Flutter..."
                           className="flex-1 px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none" />

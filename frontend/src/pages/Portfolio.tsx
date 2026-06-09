@@ -241,6 +241,11 @@ function EditProfileModal({ profile, onClose, onSave }: {
   const [skillInput, setSkillInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [skillsCatalog, setSkillsCatalog] = useState<string[]>([])
+
+  useEffect(() => {
+    usersApi.getSkillsCatalog().then(res => setSkillsCatalog(res.data)).catch(() => {})
+  }, [])
 
   function addSkill() {
     const v = skillInput.trim()
@@ -296,8 +301,12 @@ function EditProfileModal({ profile, onClose, onSave }: {
           <div className="space-y-2">
             <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Habilidades</label>
             <div className="flex gap-2">
+              <datalist id="portfolio-skills-catalog">
+                {skillsCatalog.map(s => <option key={s} value={s} />)}
+              </datalist>
               <input
                 type="text"
+                list="portfolio-skills-catalog"
                 maxLength={40}
                 value={skillInput}
                 onChange={e => setSkillInput(e.target.value)}

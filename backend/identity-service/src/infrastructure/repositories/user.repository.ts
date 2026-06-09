@@ -85,6 +85,22 @@ export class UserRepository implements IUserRepository {
     await this.companyRepo.update(id, data);
     return this.companyRepo.findOne({ where: { id } });
   }
+
+  async getAllSkills(): Promise<string[]> {
+    const profiles = await this.specialistRepo.find({ select: ['skills'] });
+    const fromProfiles = profiles.flatMap(p => p.skills ?? []);
+    const seed = [
+      'javascript', 'typescript', 'python', 'java', 'kotlin', 'swift', 'go', 'rust', 'c#', 'c++',
+      'react', 'vue', 'angular', 'nextjs', 'nestjs', 'nodejs', 'express', 'fastapi', 'django', 'spring boot',
+      'flutter', 'react native', 'android', 'ios',
+      'postgresql', 'mysql', 'mongodb', 'redis', 'elasticsearch',
+      'docker', 'kubernetes', 'aws', 'gcp', 'azure', 'terraform',
+      'graphql', 'rest api', 'grpc', 'rabbitmq', 'kafka',
+      'git', 'ci/cd', 'linux', 'figma', 'tailwindcss',
+    ];
+    const all = [...new Set([...seed, ...fromProfiles.map(s => s.toLowerCase().trim())])];
+    return all.filter(Boolean).sort();
+  }
 }
 
 @Injectable()

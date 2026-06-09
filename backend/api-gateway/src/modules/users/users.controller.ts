@@ -7,11 +7,17 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @ApiTags('Users')
 @Controller('users')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  @Get('skills')
+  @ApiOperation({ summary: 'Catálogo de skills disponíveis (público)' })
+  getSkills() {
+    return this.usersService.getSkills();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get('me')
   @ApiOperation({ summary: 'Perfil do usuário autenticado' })
   getMe(@Req() req: Request) {
@@ -19,6 +25,8 @@ export class UsersController {
     return this.usersService.getMe(token);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOperation({ summary: 'Buscar usuário por ID' })
   getById(@Param('id') id: string, @Req() req: Request) {
@@ -26,6 +34,8 @@ export class UsersController {
     return this.usersService.getById(id, token);
   }
 
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
   @Put('me/profile')
   @ApiOperation({ summary: 'Atualizar perfil do usuário autenticado' })
   updateProfile(@Body() body: UpdateProfileDto, @Req() req: Request) {
