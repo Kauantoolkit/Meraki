@@ -41,6 +41,28 @@ export default function Financeiro() {
   const released = payments.filter(p => p.status === 'RELEASED').reduce((acc, p) => acc + p.netAmount, 0)
   const awaiting = Math.max(0, totalBudget - escrow - released)
 
+  function exportCsv() {
+    const header = 'ID,Projeto,Milestone,Valor Bruto,Taxa (10%),Valor Líquido,Status,Data'
+    const rows = payments.map(p => [
+      p.id,
+      p.projectId,
+      p.milestoneId,
+      p.amount.toFixed(2),
+      p.fee.toFixed(2),
+      p.netAmount.toFixed(2),
+      p.status,
+      new Date(p.createdAt).toLocaleDateString('pt-BR'),
+    ].join(','))
+    const csv = [header, ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `meraki-financeiro-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   async function handleApprove(milestoneId: string) {
     setApproving(milestoneId)
     try {
@@ -80,11 +102,12 @@ export default function Financeiro() {
             </p>
           </div>
           <div className="flex gap-3">
-            <button className="flex items-center gap-2 px-4 py-2 bg-dark-input border border-dark-border hover:border-zinc-600 text-zinc-400 hover:text-white font-mono text-xs font-bold uppercase tracking-wider transition-colors">
+            <button
+              onClick={exportCsv}
+              disabled={payments.length === 0}
+              className="flex items-center gap-2 px-4 py-2 bg-dark-input border border-dark-border hover:border-zinc-600 text-zinc-400 hover:text-white font-mono text-xs font-bold uppercase tracking-wider transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            >
               <Download className="w-3.5 h-3.5" /> Exportar CSV
-            </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-orange-500 border border-orange-500 text-dark-bg hover:bg-orange-400 font-mono text-xs font-bold uppercase tracking-wider transition-colors shadow-[4px_4px_0px_rgba(249,115,22,0.2)]">
-              APORTAR FUNDOS
             </button>
           </div>
         </div>
