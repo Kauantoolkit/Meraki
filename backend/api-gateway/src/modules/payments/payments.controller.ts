@@ -39,6 +39,13 @@ export class PaymentsController {
     return this.paymentsService.findMine(this.token(req));
   }
 
+  @Get('company')
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Pagamentos dos projetos da empresa logada' })
+  findByCompany(@Req() req: Request) {
+    return this.paymentsService.findByCompany(this.token(req));
+  }
+
   @Get('project/:projectId')
   @ApiOperation({ summary: 'Pagamentos do projeto' })
   findByProject(@Param('projectId') projectId: string, @Req() req: Request) {

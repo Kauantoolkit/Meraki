@@ -14,7 +14,8 @@ export class PaymentController {
   @Get('my')
   @ApiOperation({ summary: 'Pagamentos do especialista logado' })
   findMine(@Req() req: Request & { user: any }) {
-    const specialistId = req.user?.specialistId ?? req.user?.sub;
+    const specialistId = req.user?.specialistId;
+    if (!specialistId) return [];
     return this.getPaymentsUseCase.findBySpecialist(specialistId);
   }
 

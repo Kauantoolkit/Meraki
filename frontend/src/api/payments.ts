@@ -14,6 +14,7 @@ export interface Payment {
 export const paymentsApi = {
   list: () => api.get<Payment[]>('/payments/my'),
   listMine: () => api.get<Payment[]>('/payments/my'),
+  listByCompany: () => api.get<{ data: Payment[] }>('/payments/company'),
   listByProject: (projectId: string) => api.get<Payment[]>(`/payments/project/${projectId}`),
   releaseMilestone: (milestoneId: string) => api.post<Payment>('/payments/release', { milestoneId }),
 }
