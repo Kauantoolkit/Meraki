@@ -362,7 +362,7 @@ export default function Kanban() {
               <Lock className="w-4 h-4 text-zinc-500" />
               <div>
                 <p className="text-[10px] font-mono text-zinc-500 uppercase">Milestone a Aprovar</p>
-                <p className="text-sm font-bold text-white font-mono">
+                <p className="text-sm font-bold text-white font-mono truncate">
                   {milestones.find(m => m.id === pendingMilestoneId)?.title ?? '—'}
                 </p>
               </div>
@@ -424,7 +424,7 @@ function MilestoneCard({ milestone: m, index, isCompany, canStart, onStart, onSu
         <span className={`font-mono text-[10px] ${isActive ? 'text-brand-500' : 'text-zinc-500'} bg-dark-input px-1.5 py-0.5 border border-dark-border`}>M{index}</span>
         {isApproved && <ShieldCheck className="w-4 h-4 text-brand-600" />}
       </div>
-      <h3 className={`font-semibold text-sm ${isApproved ? 'text-zinc-400 line-through' : 'text-white'} mb-2 ${isActive ? 'pl-2' : ''}`}>{m.title}</h3>
+      <h3 className={`font-semibold text-sm ${isApproved ? 'text-zinc-400 line-through' : 'text-white'} mb-2 ${isActive ? 'pl-2' : ''} line-clamp-2 break-words`}>{m.title}</h3>
 
       <div className={`border-t border-dark-border pt-3 mt-auto ${isActive ? 'ml-2' : ''}`}>
         <div className="flex justify-between items-center bg-dark-input p-2 border border-dark-border">

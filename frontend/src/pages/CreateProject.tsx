@@ -314,7 +314,7 @@ export default function CreateProject() {
                               className="w-full pl-6 bg-transparent border-b border-dashed border-dark-border text-sm font-mono text-white focus:outline-none focus:border-brand-500 pb-1" />
                           </div>
                         </div>
-                        <textarea value={m.description} onChange={e => updateMilestone(i, 'description', e.target.value)}
+                        <textarea maxLength={500} value={m.description} onChange={e => updateMilestone(i, 'description', e.target.value)}
                           placeholder="O que será entregue nesta etapa?"
                           className="w-full bg-dark-input border border-dark-border p-2 text-xs font-mono text-zinc-400 focus:outline-none focus:border-brand-500 resize-none h-16" />
                       </div>

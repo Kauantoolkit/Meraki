@@ -369,6 +369,7 @@ export default function Bidding() {
                                 </div>
                                 <input
                                   type="text"
+                                  maxLength={200}
                                   value={mp.note ?? ''}
                                   onChange={e => updateMilestoneProposal(m.id, 'note', e.target.value)}
                                   placeholder="Observação (opcional)"
@@ -580,6 +581,7 @@ export default function Bidding() {
                                     </div>
                                     <input
                                       type="text"
+                                      maxLength={200}
                                       value={mp.note ?? ''}
                                       onChange={e => updateEditMilestoneProposal(m.id, 'note', e.target.value)}
                                       placeholder="Observação (opcional)"
