@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Star, Briefcase, User, Filter, ChevronRight } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile } from '../api/portfolio'
+import { skillsApi } from '../api/skills'
 
 export default function ExplorarTalentos() {
   const navigate = useNavigate()
@@ -14,6 +15,16 @@ export default function ExplorarTalentos() {
   const [hasSearched, setHasSearched] = useState(false)
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set())
 
+  // Load canonical skills from catalog on mount for filter chips
+  useEffect(() => {
+    skillsApi.listAll()
+      .then(res => {
+        const names = res.data.map(s => s.displayName).sort()
+        setAvailableSkills(names)
+      })
+      .catch(() => {})
+  }, [])
+
   async function fetchAndFilter(searchVal: string, skills: Set<string>) {
     setLoading(true)
     try {
@@ -22,9 +33,12 @@ export default function ExplorarTalentos() {
         const res = await portfolioApi.listSpecialists()
         pool = res.data
         setAllSpecialists(pool)
-        const skillSet = new Set<string>()
-        pool.forEach(s => s.skills?.forEach(sk => skillSet.add(sk)))
-        setAvailableSkills(Array.from(skillSet).sort())
+        // If catalog didn't load, fall back to specialist data skills
+        if (availableSkills.length === 0) {
+          const skillSet = new Set<string>()
+          pool.forEach(s => s.skills?.forEach(sk => skillSet.add(sk)))
+          setAvailableSkills(Array.from(skillSet).sort())
+        }
       }
       let result = pool
       if (searchVal.trim()) {
@@ -32,7 +46,11 @@ export default function ExplorarTalentos() {
         result = result.filter(s => s.name.toLowerCase().includes(q) || s.bio?.toLowerCase().includes(q))
       }
       if (skills.size > 0) {
-        result = result.filter(s => Array.from(skills).every(sk => s.skills?.includes(sk)))
+        result = result.filter(s =>
+          Array.from(skills).every(sk =>
+            s.skills?.some(ss => ss.toLowerCase() === sk.toLowerCase()),
+          ),
+        )
       }
       setSpecialists(result)
       setHasSearched(true)
@@ -136,7 +154,7 @@ export default function ExplorarTalentos() {
                   onClick={() => {
                     const empty = new Set<string>()
                     setSelectedSkills(empty)
-                    applyFilters(search, empty)
+                    fetchAndFilter(search, empty)
                   }}
                   className="w-full font-mono text-[10px] text-zinc-500 hover:text-zinc-300 py-1.5 border border-transparent hover:border-dark-border transition-colors uppercase tracking-widest"
                 >

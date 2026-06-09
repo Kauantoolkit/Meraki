@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Star, Briefcase, User, GitBranch, ExternalLink, ChevronRight, Plus, X, Pencil, CheckCircle, Clock } from 'lucide-react'
+import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Clock, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile } from '../api/portfolio'
 import { usersApi } from '../api/auth'
 import { extractApiError } from '../api/client'
+import { skillsApi, Skill, SkillValidation, SkillQuestion } from '../api/skills'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -14,11 +15,20 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('history')
   const [editOpen, setEditOpen] = useState(false)
+  const [skillCatalog, setSkillCatalog] = useState<Skill[]>([])
+  const [myValidations, setMyValidations] = useState<SkillValidation[]>([])
+  const [quizSkill, setQuizSkill] = useState<Skill | null>(null)
+
+  function reloadValidations() {
+    skillsApi.getMyValidations().then(res => setMyValidations(res.data)).catch(() => {})
+  }
 
   useEffect(() => {
     portfolioApi.getMyProfile()
       .then(res => setProfile(res.data))
       .finally(() => setLoading(false))
+    skillsApi.listAll().then(res => setSkillCatalog(res.data)).catch(() => {})
+    reloadValidations()
   }, [])
 
   if (loading) return (
@@ -151,7 +161,14 @@ export default function Portfolio() {
                   ))}
                 </div>
               ) : (
-                <SkillsTab profile={profile} onUpdate={setProfile} onEditOpen={() => setEditOpen(true)} />
+                <SkillsTab
+                  profile={profile}
+                  onUpdate={setProfile}
+                  onEditOpen={() => setEditOpen(true)}
+                  catalog={skillCatalog}
+                  validations={myValidations}
+                  onStartQuiz={setQuizSkill}
+                />
               )}
             </div>
           </div>
@@ -161,20 +178,43 @@ export default function Portfolio() {
       {editOpen && (
         <EditProfileModal
           profile={profile}
+          catalog={skillCatalog}
           onClose={() => setEditOpen(false)}
           onSave={updated => { setProfile(updated); setEditOpen(false) }}
+        />
+      )}
+
+      {quizSkill && (
+        <SkillQuizModal
+          skill={quizSkill}
+          onClose={() => setQuizSkill(null)}
+          onFinished={() => { reloadValidations(); setQuizSkill(null) }}
         />
       )}
     </div>
   )
 }
 
-function SkillsTab({ profile, onUpdate, onEditOpen }: {
+function SkillsTab({ profile, onEditOpen, catalog, validations, onStartQuiz }: {
   profile: PublicProfile
   onUpdate: (p: PublicProfile) => void
   onEditOpen: () => void
+  catalog: Skill[]
+  validations: SkillValidation[]
+  onStartQuiz: (skill: Skill) => void
 }) {
   const skills = profile.skills ?? []
+
+  // Latest validation per skillName
+  const latestValidation = (skillName: string): SkillValidation | undefined => {
+    const lower = skillName.toLowerCase()
+    return validations
+      .filter(v => v.skillName.toLowerCase() === lower)
+      .sort((a, b) => new Date(b.attemptedAt).getTime() - new Date(a.attemptedAt).getTime())[0]
+  }
+
+  const getCatalogSkill = (skillName: string): Skill | undefined =>
+    catalog.find(s => s.name === skillName.toLowerCase() || s.displayName.toLowerCase() === skillName.toLowerCase())
 
   return (
     <div className="space-y-4">
@@ -200,19 +240,50 @@ function SkillsTab({ profile, onUpdate, onEditOpen }: {
         </div>
       ) : (
         <div className="space-y-2">
-          {skills.map(skill => (
-            <div key={skill} className="bg-dark-card border border-dark-border p-4 flex items-center justify-between hover:border-brand-500/30 transition-colors">
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-sm text-white font-bold">{skill}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 bg-dark-input border border-orange-400/30 px-2 py-1">
-                  <Clock className="w-3 h-3 text-orange-400" />
-                  <span className="font-mono text-[10px] text-orange-400">Validação em breve</span>
+          {skills.map(skill => {
+            const validation = latestValidation(skill)
+            const catalogSkill = getCatalogSkill(skill)
+            const canValidate = !!catalogSkill && (!validation || !validation.passed)
+
+            return (
+              <div key={skill} className="bg-dark-card border border-dark-border p-4 flex items-center justify-between hover:border-brand-500/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-sm text-white font-bold">{skill}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  {validation?.passed ? (
+                    <div className="flex items-center gap-1.5 bg-dark-input border border-green-500/30 px-2 py-1">
+                      <CheckCircle className="w-3 h-3 text-green-400" />
+                      <span className="font-mono text-[10px] text-green-400">Validada ({validation.score}%)</span>
+                    </div>
+                  ) : validation && !validation.passed ? (
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 bg-dark-input border border-orange-400/30 px-2 py-1">
+                        <AlertCircle className="w-3 h-3 text-orange-400" />
+                        <span className="font-mono text-[10px] text-orange-400">Não aprovada ({validation.score}%)</span>
+                      </div>
+                      {canValidate && catalogSkill && (
+                        <button onClick={() => onStartQuiz(catalogSkill)}
+                          className="font-mono text-[10px] text-brand-500 border border-brand-500/50 hover:border-brand-500 px-2 py-1 transition-colors">
+                          Tentar novamente
+                        </button>
+                      )}
+                    </div>
+                  ) : canValidate && catalogSkill ? (
+                    <button onClick={() => onStartQuiz(catalogSkill)}
+                      className="font-mono text-[10px] text-brand-500 border border-brand-500/50 hover:border-brand-500 px-3 py-1.5 transition-colors flex items-center gap-1">
+                      Validar skill
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-1.5 bg-dark-input border border-zinc-700 px-2 py-1">
+                      <Clock className="w-3 h-3 text-zinc-500" />
+                      <span className="font-mono text-[10px] text-zinc-500">Sem quiz disponível</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -222,7 +293,7 @@ function SkillsTab({ profile, onUpdate, onEditOpen }: {
           <div>
             <p className="font-mono text-xs text-white font-bold mb-1">Sistema de Validação por Provas</p>
             <p className="font-mono text-[10px] text-zinc-500 leading-relaxed">
-              Em breve, cada habilidade poderá ser validada através de um teste técnico. Especialistas aprovados recebem um badge de verificação, aumentando a visibilidade nas buscas.
+              Cada habilidade pode ser validada por um teste técnico criado pelas empresas. Especialistas aprovados (≥70%) recebem um badge de verificação, aumentando a visibilidade nas buscas.
             </p>
           </div>
         </div>
@@ -231,8 +302,9 @@ function SkillsTab({ profile, onUpdate, onEditOpen }: {
   )
 }
 
-function EditProfileModal({ profile, onClose, onSave }: {
+function EditProfileModal({ profile, catalog, onClose, onSave }: {
   profile: PublicProfile | null
+  catalog: Skill[]
   onClose: () => void
   onSave: (updated: PublicProfile) => void
 }) {
@@ -298,13 +370,19 @@ function EditProfileModal({ profile, onClose, onSave }: {
             <div className="flex gap-2">
               <input
                 type="text"
-                maxLength={40}
+                list="edit-skills-catalog"
+                maxLength={80}
                 value={skillInput}
                 onChange={e => setSkillInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
                 placeholder="Ex: React, NestJS, Docker..."
                 className="flex-1 px-4 py-2 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
               />
+              <datalist id="edit-skills-catalog">
+                {catalog.map(s => (
+                  <option key={s.id} value={s.displayName} />
+                ))}
+              </datalist>
               <button type="button" onClick={addSkill}
                 className="bg-dark-input text-white font-mono text-xs px-4 py-2 border border-dark-border hover:border-brand-500 transition-colors">
                 <Plus className="w-4 h-4" />
@@ -340,6 +418,161 @@ function EditProfileModal({ profile, onClose, onSave }: {
             <ChevronRight className="w-3.5 h-3.5" />
             {saving ? 'Salvando...' : 'Salvar Perfil'}
           </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── SkillQuizModal ──────────────────────────────────────────────────────────
+
+function SkillQuizModal({ skill, onClose, onFinished }: {
+  skill: Skill
+  onClose: () => void
+  onFinished: () => void
+}) {
+  const [questions, setQuestions] = useState<SkillQuestion[]>([])
+  const [loading, setLoading] = useState(true)
+  const [answers, setAnswers] = useState<number[]>([])
+  const [submitting, setSubmitting] = useState(false)
+  const [result, setResult] = useState<{ passed: boolean; score: number; correctAnswers: number; totalQuestions: number } | null>(null)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    skillsApi.getQuestions(skill.id)
+      .then(res => {
+        setQuestions(res.data)
+        setAnswers(new Array(res.data.length).fill(-1))
+      })
+      .catch(() => setError('Erro ao carregar questões.'))
+      .finally(() => setLoading(false))
+  }, [skill.id])
+
+  function setAnswer(qIdx: number, answerIdx: number) {
+    setAnswers(prev => prev.map((a, i) => i === qIdx ? answerIdx : a))
+  }
+
+  async function handleSubmit() {
+    if (answers.some(a => a === -1)) {
+      setError('Responda todas as questões antes de enviar.')
+      return
+    }
+    setError('')
+    setSubmitting(true)
+    try {
+      const res = await skillsApi.attemptQuiz(skill.id, { answers })
+      setResult(res.data)
+    } catch (err: unknown) {
+      setError(extractApiError(err, 'Erro ao enviar respostas.'))
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-card border border-dark-border w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl z-10">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
+
+        <div className="sticky top-0 bg-dark-card border-b border-dark-border px-6 py-4 flex items-center justify-between z-10">
+          <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">
+            Quiz: {skill.displayName}
+          </h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {loading ? (
+            <p className="font-mono text-xs text-zinc-500 text-center py-8">Carregando questões...</p>
+          ) : result ? (
+            <div className="text-center py-8 space-y-4">
+              <div className={`w-16 h-16 mx-auto flex items-center justify-center border-2 ${result.passed ? 'border-green-500' : 'border-orange-400'}`}>
+                {result.passed
+                  ? <CheckCircle className="w-8 h-8 text-green-400" />
+                  : <AlertCircle className="w-8 h-8 text-orange-400" />
+                }
+              </div>
+              <div>
+                <p className={`font-mono text-xl font-bold ${result.passed ? 'text-green-400' : 'text-orange-400'}`}>
+                  {result.passed ? 'Aprovado!' : 'Não aprovado'}
+                </p>
+                <p className="font-mono text-sm text-zinc-400 mt-1">
+                  Pontuação: <span className="text-white font-bold">{result.score}%</span> ({result.correctAnswers}/{result.totalQuestions} corretas)
+                </p>
+                {!result.passed && (
+                  <p className="font-mono text-[10px] text-zinc-500 mt-2">Nota mínima: 70%. Você pode tentar novamente.</p>
+                )}
+              </div>
+              <button
+                onClick={onFinished}
+                className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors uppercase"
+              >
+                Fechar
+              </button>
+            </div>
+          ) : questions.length === 0 ? (
+            <p className="font-mono text-xs text-zinc-500 text-center py-8">
+              Esta skill ainda não tem questões cadastradas.
+            </p>
+          ) : (
+            <div className="space-y-6">
+              <p className="font-mono text-[10px] text-zinc-500">
+                {questions.length} questão(ões) • Nota mínima: 70%
+              </p>
+              {questions.map((q, qi) => (
+                <div key={q.id} className="bg-[#000] border border-dark-border p-4 space-y-3">
+                  <p className="font-mono text-xs text-white font-bold">
+                    <span className="text-zinc-500 mr-2">Q{qi + 1}.</span>{q.text}
+                  </p>
+                  <div className="space-y-2">
+                    {q.options.map((opt, oi) => (
+                      <label key={oi} className="flex items-center gap-3 cursor-pointer group">
+                        <div
+                          onClick={() => setAnswer(qi, oi)}
+                          className={`w-4 h-4 border flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
+                            answers[qi] === oi
+                              ? 'bg-brand-500 border-brand-500'
+                              : 'bg-dark-input border-zinc-700 group-hover:border-zinc-400'
+                          }`}
+                        >
+                          {answers[qi] === oi && (
+                            <svg className="w-3 h-3 text-dark-bg" fill="currentColor" viewBox="0 0 12 12">
+                              <path d="M10 3L5 8.5L2 5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                            </svg>
+                          )}
+                        </div>
+                        <span className={`font-mono text-xs transition-colors ${answers[qi] === oi ? 'text-white' : 'text-zinc-400 group-hover:text-zinc-200'}`}>
+                          {opt}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {error && (
+                <p className="font-mono text-xs text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2">{error}</p>
+              )}
+
+              <div className="flex justify-end gap-3 pt-4 border-t border-dark-border">
+                <button onClick={onClose}
+                  className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase">
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors uppercase disabled:opacity-60 flex items-center gap-2"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                  {submitting ? 'Enviando...' : 'Enviar Respostas'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
