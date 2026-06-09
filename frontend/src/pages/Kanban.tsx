@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Terminal, Settings2, UploadCloud, ShieldCheck, Check, User, Calendar, Lock } from 'lucide-react'
+import { Terminal, UploadCloud, ShieldCheck, Check, User, Calendar, Lock } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
 import { projectStatusLabel } from '../lib/labels'
@@ -179,9 +179,6 @@ export default function Kanban() {
               <p className="font-mono text-[10px] text-zinc-500 uppercase">Orçamento em Escrow</p>
               <p className="font-mono font-bold text-brand-500">{project ? fmt(project.budget) : '—'}</p>
             </div>
-            <button className="btn-sharp bg-dark-input hover:bg-dark-hover text-white font-mono text-xs px-4 py-2 border border-dark-border hover:border-brand-500 transition-colors flex items-center gap-1">
-              <Settings2 className="w-4 h-4" /> OPÇÕES
-            </button>
           </div>
         </div>
       </header>
