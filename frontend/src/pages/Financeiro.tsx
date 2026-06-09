@@ -10,19 +10,36 @@ const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', c
 export default function Financeiro() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [pendingMilestones, setPendingMilestones] = useState<Milestone[]>([])
-  const [escrow] = useState(0)
+  const [totalBudget, setTotalBudget] = useState(0)
   const [loading, setLoading] = useState(true)
   const [approving, setApproving] = useState<string | null>(null)
 
   useEffect(() => {
-    paymentsApi.listByCompany()
-      .then(res => setPayments(res.data.data))
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    Promise.all([
+      paymentsApi.listByCompany(),
+      projectsApi.listByCompany(),
+    ]).then(async ([paymentsRes, projectsRes]) => {
+      const pyms = paymentsRes.data.data
+      setPayments(pyms)
+
+      const projects = projectsRes.data.data.filter(p => p.status === 'IN_PROGRESS')
+      setTotalBudget(projects.reduce((acc, p) => acc + p.budget, 0))
+
+      const milestoneArrays = await Promise.all(
+        projects.map(p =>
+          projectsApi.getMilestones(p.id)
+            .then(r => (r.data ?? []) as Milestone[])
+            .catch(() => [] as Milestone[])
+        )
+      )
+      setPendingMilestones(milestoneArrays.flat().filter(m => m.status === 'SUBMITTED'))
+    }).catch(() => {})
+    .finally(() => setLoading(false))
   }, [])
 
+  const escrow = payments.filter(p => p.status === 'PENDING').reduce((acc, p) => acc + p.amount, 0)
   const released = payments.filter(p => p.status === 'RELEASED').reduce((acc, p) => acc + p.netAmount, 0)
-  const totalFund = payments.filter(p => p.status === 'RELEASED').reduce((acc, p) => acc + p.amount, 0)
+  const awaiting = Math.max(0, totalBudget - escrow - released)
 
   async function handleApprove(milestoneId: string) {
     setApproving(milestoneId)
@@ -96,7 +113,7 @@ export default function Financeiro() {
               <span className="font-mono text-xs text-zinc-500 uppercase">Aguardando Utilização</span>
               <Clock className="w-4 h-4 text-zinc-400" />
             </div>
-            <span className="text-2xl font-bold text-white font-mono">{fmt(totalFund - released)}</span>
+            <span className="text-2xl font-bold text-white font-mono">{fmt(awaiting)}</span>
             <p className="font-mono text-[10px] text-zinc-600 mt-1 uppercase">A aguardar milestone</p>
           </div>
         </div>
@@ -161,30 +178,6 @@ export default function Financeiro() {
                     <ShieldCheck className="w-6 h-6 text-zinc-700 mx-auto mb-2" />
                     <p className="font-mono text-[10px] text-zinc-600 uppercase">Nenhuma ação pendente</p>
                     <p className="font-mono text-[10px] text-zinc-700 mt-1">Todas as milestones estão em dia.</p>
-                  </div>
-                  {/* Demo card */}
-                  <div className="mt-4 border border-orange-400/30 bg-orange-400/5 p-4">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="font-mono text-[9px] text-orange-400 border border-orange-400/30 bg-orange-400/10 px-2 py-0.5 uppercase">PRÉ-VISUALIZAÇÃO</span>
-                    </div>
-                    <p className="font-mono text-xs font-bold text-white mb-1">Autorizar Pagamento: Módulo de Rastreamento</p>
-                    <div className="space-y-1 mb-3">
-                      <div className="flex justify-between font-mono text-[10px]">
-                        <span className="text-zinc-500">Especialista:</span>
-                        <span className="text-white">Kauan Silva</span>
-                      </div>
-                      <div className="flex justify-between font-mono text-[10px]">
-                        <span className="text-zinc-500">Valor:</span>
-                        <span className="text-orange-400 font-bold">R$ 8.000,00</span>
-                      </div>
-                      <div className="flex justify-between font-mono text-[10px]">
-                        <span className="text-zinc-500">Taxa (M1):</span>
-                        <span className="text-zinc-400">R$ 400,00</span>
-                      </div>
-                    </div>
-                    <button disabled className="w-full btn-sharp bg-orange-500/50 text-dark-bg font-bold font-mono text-[10px] py-2.5 border border-orange-500/50 uppercase cursor-not-allowed opacity-50">
-                      APROVAR PAGAMENTO
-                    </button>
                   </div>
                 </div>
               ) : (
