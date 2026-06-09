@@ -24,12 +24,14 @@ export function extractApiError(err: unknown, fallback = 'Verifique os dados e t
 
 // Notifica o AuthContext quando o token expirar (sem hard reload)
 // Ignora rotas de auth para não interferir com credenciais inválidas
+// Só faz logout em 401 quando há token armazenado (evita logout em flash de boot)
 api.interceptors.response.use(
   (res) => res,
   (error) => {
     const url: string = error.config?.url ?? ''
     const isAuthRoute = url.includes('/auth/')
-    if (error.response?.status === 401 && !isAuthRoute) {
+    const hasToken = !!sessionStorage.getItem('meraki_token')
+    if (error.response?.status === 401 && !isAuthRoute && hasToken) {
       sessionStorage.removeItem('meraki_token')
       sessionStorage.removeItem('meraki_user')
       window.dispatchEvent(new CustomEvent('meraki:unauthorized'))
