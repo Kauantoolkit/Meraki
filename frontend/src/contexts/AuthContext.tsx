@@ -43,7 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setIsLoading(false)
 
-    // Valida em background — em caso de 429 mantém o usuário cached
+    // Valida em background — só faz logout em 401 (token inválido/expirado)
+    // Erros de rede, 5xx ou 429 mantêm o usuário cached para não derrubar sessão por instabilidade
     authApi.me()
       .then(res => {
         const u = {
@@ -54,12 +55,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         sessionStorage.setItem('meraki_user', JSON.stringify(u))
       })
       .catch((err: any) => {
-        if (err?.response?.status === 429) return // mantém o usuário cached
-        // Token inválido ou expirado — logout silencioso
-        sessionStorage.removeItem('meraki_token')
-        sessionStorage.removeItem('meraki_user')
-        setToken(null)
-        setUser(null)
+        const status = err?.response?.status
+        if (status === 401) {
+          // Token inválido ou expirado — o interceptor do client.ts já limpou o storage
+          setToken(null)
+          setUser(null)
+        }
+        // Qualquer outro erro (rede, 5xx, 429, timeout) — mantém sessão cached
       })
 
     return () => window.removeEventListener('meraki:unauthorized', handleUnauthorized)
