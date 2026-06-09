@@ -35,6 +35,7 @@ export default function Kanban() {
   const [repoUrl, setRepoUrl] = useState('')
   const [releaseNotes, setReleaseNotes] = useState('')
   const [rejectReason, setRejectReason] = useState('')
+  const [submitError, setSubmitError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [delivery, setDelivery] = useState<DeliveryData | null>(null)
 
@@ -73,13 +74,18 @@ export default function Kanban() {
 
   async function confirmSubmit() {
     if (!pendingMilestoneId || !projectId) return
+    if (!repoUrl.trim()) {
+      setSubmitError('O link do repositório/PR é obrigatório para submeter a entrega.')
+      return
+    }
+    setSubmitError('')
     setActionLoading(true)
     try {
       await milestonesApi.submit({
         milestoneId: pendingMilestoneId,
         projectId,
         deliveryNotes: releaseNotes || undefined,
-        deliveredFiles: repoUrl ? [repoUrl] : undefined,
+        deliveredFiles: [repoUrl.trim()],
       })
       const updated = await projectsApi.getMilestones(projectId)
       setMilestones(updated.data)
@@ -213,7 +219,7 @@ export default function Kanban() {
                       isCompany={isCompany}
                       canStart={m.id === nextStartableId}
                       onStart={() => startMilestone(m.id)}
-                      onSubmit={() => { setPendingMilestoneId(m.id); setSubmitModal(true) }}
+                      onSubmit={() => { setPendingMilestoneId(m.id); setSubmitError(''); setSubmitModal(true) }}
                       onApprove={() => {
                         setPendingMilestoneId(m.id)
                         setDelivery(null)
@@ -276,9 +282,16 @@ export default function Kanban() {
             <p className="text-xs font-mono text-zinc-400 mb-6">Os fundos em <span className="text-brand-500">Escrow</span> ficarão pendentes da aprovação do cliente.</p>
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Repositório / URL</label>
-                <input type="text" data-testid="ms-submit-repo" value={repoUrl} onChange={e => setRepoUrl(e.target.value)}
-                  className="w-full bg-[#000] border border-dark-border p-3 text-xs font-mono text-white focus:outline-none focus:border-blue-500" placeholder="https://github.com/..." />
+                <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">
+                  Repositório / URL <span className="text-red-400">*</span>
+                </label>
+                <input type="text" data-testid="ms-submit-repo" value={repoUrl}
+                  onChange={e => { setRepoUrl(e.target.value); setSubmitError('') }}
+                  className={`w-full bg-[#000] border p-3 text-xs font-mono text-white focus:outline-none focus:border-blue-500 ${submitError ? 'border-red-500' : 'border-dark-border'}`}
+                  placeholder="https://github.com/..." />
+                {submitError && (
+                  <p className="font-mono text-[10px] text-red-400 mt-1">{submitError}</p>
+                )}
               </div>
               <div>
                 <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Notas de Release</label>
