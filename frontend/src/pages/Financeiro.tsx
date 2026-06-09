@@ -15,8 +15,8 @@ export default function Financeiro() {
   const [approving, setApproving] = useState<string | null>(null)
 
   useEffect(() => {
-    paymentsApi.list()
-      .then(res => setPayments(res.data))
+    paymentsApi.listByCompany()
+      .then(res => setPayments(res.data.data))
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
@@ -28,8 +28,8 @@ export default function Financeiro() {
     setApproving(milestoneId)
     try {
       await paymentsApi.releaseMilestone(milestoneId)
-      const updated = await paymentsApi.list()
-      setPayments(updated.data)
+      const updated = await paymentsApi.listByCompany()
+      setPayments(updated.data.data)
       setPendingMilestones(prev => prev.filter(m => m.id !== milestoneId))
     } catch {
       alert('Erro ao aprovar pagamento.')
