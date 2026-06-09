@@ -4,7 +4,7 @@ import { Terminal, Settings2, UploadCloud, ShieldCheck, Check, Send, User, Calen
 import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
 import { projectStatusLabel } from '../lib/labels'
-import { milestonesApi } from '../api/milestones'
+import { milestonesApi, DeliveryData } from '../api/milestones'
 import { useAuth } from '../contexts/AuthContext'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
@@ -36,6 +36,7 @@ export default function Kanban() {
   const [releaseNotes, setReleaseNotes] = useState('')
   const [rejectReason, setRejectReason] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [delivery, setDelivery] = useState<DeliveryData | null>(null)
 
   const isCompany = ((user?.userType ?? user?.type) as string)?.toUpperCase() === 'COMPANY'
 
@@ -213,8 +214,18 @@ export default function Kanban() {
                       canStart={m.id === nextStartableId}
                       onStart={() => startMilestone(m.id)}
                       onSubmit={() => { setPendingMilestoneId(m.id); setSubmitModal(true) }}
-                      onApprove={() => { setPendingMilestoneId(m.id); setApproveModal(true) }}
-                      onReject={() => { setPendingMilestoneId(m.id); setRejectModal(true) }}
+                      onApprove={() => {
+                        setPendingMilestoneId(m.id)
+                        setDelivery(null)
+                        milestonesApi.getDelivery(m.id).then(r => setDelivery(r.data)).catch(() => {})
+                        setApproveModal(true)
+                      }}
+                      onReject={() => {
+                        setPendingMilestoneId(m.id)
+                        setDelivery(null)
+                        milestonesApi.getDelivery(m.id).then(r => setDelivery(r.data)).catch(() => {})
+                        setRejectModal(true)
+                      }}
                     />
                   ))}
                 </div>
@@ -302,6 +313,29 @@ export default function Kanban() {
               Rejeitar Entrega
             </h2>
             <p className="text-xs font-mono text-zinc-400 mb-4">A milestone voltará ao estado <span className="text-orange-400">Em Andamento</span> para correção pelo especialista.</p>
+            {delivery && (
+              <div className="mb-4 bg-dark-input border border-dark-border p-3 space-y-2">
+                <p className="font-mono text-[10px] text-zinc-500 uppercase mb-2">Entregáveis Submetidos</p>
+                {delivery.deliveredFiles && delivery.deliveredFiles.length > 0 ? (
+                  <div className="space-y-1">
+                    {delivery.deliveredFiles.map((f, i) => (
+                      <a key={i} href={f} target="_blank" rel="noopener noreferrer"
+                        className="block font-mono text-xs text-blue-400 hover:text-blue-300 underline truncate">
+                        {f}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="font-mono text-[10px] text-zinc-600 italic">Nenhum link submetido.</p>
+                )}
+                {delivery.deliveryNotes && (
+                  <div className="border-t border-dark-border pt-2 mt-2">
+                    <p className="font-mono text-[10px] text-zinc-500 uppercase mb-1">Notas</p>
+                    <p className="font-mono text-xs text-zinc-300 whitespace-pre-wrap">{delivery.deliveryNotes}</p>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="mb-6">
               <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Motivo da Rejeição</label>
               <textarea
@@ -333,7 +367,7 @@ export default function Kanban() {
               <p className="text-[10px] font-mono text-brand-500 uppercase">Warning: Ação Irreversível</p>
               <p className="text-xs text-zinc-300 mt-1">Ao aprovar, o valor estipulado no Escrow será transferido para o especialista.</p>
             </div>
-            <div className="flex items-center gap-3 mb-6 bg-dark-input p-3 border border-dark-border">
+            <div className="flex items-center gap-3 mb-4 bg-dark-input p-3 border border-dark-border">
               <Lock className="w-4 h-4 text-zinc-500" />
               <div>
                 <p className="text-[10px] font-mono text-zinc-500 uppercase">Milestone a Aprovar</p>
@@ -342,6 +376,29 @@ export default function Kanban() {
                 </p>
               </div>
             </div>
+            {delivery && (
+              <div className="mb-6 bg-dark-input border border-dark-border p-3 space-y-2">
+                <p className="font-mono text-[10px] text-zinc-500 uppercase mb-2">Entregáveis Submetidos</p>
+                {delivery.deliveredFiles && delivery.deliveredFiles.length > 0 ? (
+                  <div className="space-y-1">
+                    {delivery.deliveredFiles.map((f, i) => (
+                      <a key={i} href={f} target="_blank" rel="noopener noreferrer"
+                        className="block font-mono text-xs text-blue-400 hover:text-blue-300 underline truncate">
+                        {f}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="font-mono text-[10px] text-zinc-600 italic">Nenhum link submetido.</p>
+                )}
+                {delivery.deliveryNotes && (
+                  <div className="border-t border-dark-border pt-2 mt-2">
+                    <p className="font-mono text-[10px] text-zinc-500 uppercase mb-1">Notas</p>
+                    <p className="font-mono text-xs text-zinc-300 whitespace-pre-wrap">{delivery.deliveryNotes}</p>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="flex gap-3">
               <button onClick={() => setApproveModal(false)} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
               <button data-testid="ms-approve-confirm" onClick={confirmApprove} disabled={actionLoading} className="flex-1 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-brand-500 hover:bg-brand-400 transition-colors disabled:opacity-70">

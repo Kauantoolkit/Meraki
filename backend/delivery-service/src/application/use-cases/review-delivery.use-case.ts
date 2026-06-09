@@ -71,6 +71,10 @@ export class ReviewDeliveryUseCase {
     return saved;
   }
 
+  async getByMilestone(milestoneId: string): Promise<Delivery | null> {
+    return this.deliveryRepo.findByMilestone(milestoneId);
+  }
+
   private async findSubmitted(milestoneId: string): Promise<Delivery> {
     const delivery = await this.deliveryRepo.findByMilestoneAndStatus(
       milestoneId,

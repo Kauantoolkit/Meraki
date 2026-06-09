@@ -7,9 +7,23 @@ export interface DeliveryPayload {
   deliveredFiles?: string[]
 }
 
+export interface DeliveryData {
+  id: string
+  milestoneId: string
+  projectId: string
+  specialistId: string
+  deliveredFiles: string[]
+  deliveryNotes: string | null
+  status: string
+  createdAt: string
+}
+
 export const milestonesApi = {
   start: (milestoneId: string) =>
     api.put(`/milestones/${milestoneId}/start`),
+
+  getDelivery: (milestoneId: string) =>
+    api.get<DeliveryData | null>(`/milestones/${milestoneId}/delivery`),
 
   submit: (data: DeliveryPayload) =>
     api.post('/milestones/' + data.milestoneId + '/submit', {
