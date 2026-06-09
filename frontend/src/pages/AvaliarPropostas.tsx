@@ -94,7 +94,7 @@ export default function AvaliarPropostas() {
       <div className="scanline" />
       <Navbar backUrl="/dashboard" projectTitle={project?.title ? `${project.title} // BIDDING_REVIEW` : 'BIDDING_REVIEW'} />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
 
         {/* Project summary */}
         <div className="bg-dark-card border border-dark-border p-5 mb-8 relative">
@@ -205,17 +205,17 @@ export default function AvaliarPropostas() {
                   }`}
                 >
                   {/* Bid header */}
-                  <div className="p-5">
+                  <div className="p-5 w-full min-w-0">
                     <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 bg-dark-input border border-dark-border flex items-center justify-center shrink-0">
                           <User className="w-4 h-4 text-zinc-500" />
                         </div>
-                        <div>
-                          <p className="font-mono text-sm font-bold text-white truncate max-w-[220px]">
+                        <div className="min-w-0">
+                          <p className="font-mono text-sm font-bold text-white truncate">
                             {bid.specialistName ?? `Especialista #${idx + 1}`}
                           </p>
-                          <p className="font-mono text-[10px] text-zinc-600">
+                          <p className="font-mono text-[10px] text-zinc-600 truncate">
                             BID_ID: {bid.id.slice(0, 12)} · {new Date(bid.createdAt).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
@@ -258,14 +258,14 @@ export default function AvaliarPropostas() {
                         }
                       </button>
                       {isExpanded && (
-                        <div className="px-4 pb-4 pt-1 border-t border-dark-border">
-                          <p className="font-mono text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
+                        <div className="px-4 pb-4 pt-1 border-t border-dark-border w-full overflow-hidden">
+                          <p className="font-mono text-xs text-zinc-300 leading-relaxed break-all whitespace-pre-wrap">
                             {bid.proposalText || 'Sem texto de proposta.'}
                           </p>
                         </div>
                       )}
                       {!isExpanded && bid.proposalText && (
-                        <p className="px-4 pb-3 font-mono text-[10px] text-zinc-600 line-clamp-1 break-words border-t border-dark-border pt-2">
+                        <p className="px-4 pb-3 font-mono text-[10px] text-zinc-600 line-clamp-1 border-t border-dark-border pt-2 break-all">
                           {bid.proposalText}
                         </p>
                       )}
