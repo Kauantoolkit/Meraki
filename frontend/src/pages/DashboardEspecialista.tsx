@@ -22,21 +22,25 @@ export default function DashboardEspecialista() {
 
   useEffect(() => {
     Promise.all([
-      projectsApi.listOpen(),
       projectsApi.listBySpecialist(),
       bidsApi.myBids(),
-    ]).then(([open, mine, bids]) => {
-      setOpenProjects(open.data.data)
-      setMyProjects(mine.data.data.filter(p => p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
+      // Só busca projetos abertos se o especialista tiver skills para filtrar
+      mySkills.length > 0 ? projectsApi.listOpen() : Promise.resolve(null),
+    ]).then(([mine, bids, open]) => {
+      setMyProjects(mine.data.data.filter((p: Project) => p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
       setMyBids(bids.data)
+      if (open) setOpenProjects(open.data.data)
     }).catch(() => {
       // handled by the 401 interceptor — user will be redirected to login
     }).finally(() => setLoading(false))
   }, [])
 
+  // Recomendações só existem se há skills cadastradas — sem fallback "mostra tudo"
   const recommended = mySkills.length > 0
-    ? openProjects.filter(p => (p.skills ?? []).some(s => mySkills.includes(s.toLowerCase())))
-    : openProjects
+    ? openProjects
+        .filter(p => (p.skills ?? []).some(s => mySkills.includes(s.toLowerCase())))
+        .slice(0, 5)
+    : []
 
   const bidStatusColor = (status: string) => {
     if (status === 'ACCEPTED') return 'text-brand-500'
@@ -104,7 +108,7 @@ export default function DashboardEspecialista() {
             <div className="flex items-center justify-between border-b border-dark-border pb-2">
               <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Zap className="w-4 h-4 text-brand-500" />
-                {mySkills.length > 0 ? 'Recomendados para Você' : 'Oportunidades & Convites'}
+                Recomendados para Você
               </h2>
               <button
                 onClick={() => navigate('/projects/browse')}
@@ -116,13 +120,20 @@ export default function DashboardEspecialista() {
 
             {loading ? (
               <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">Carregando...</div>
+            ) : mySkills.length === 0 ? (
+              <div className="p-6 border border-zinc-800 border-dashed flex flex-col items-center gap-3 text-center">
+                <span className="font-mono text-xs text-zinc-500">Sem skills cadastradas — não é possível gerar recomendações.</span>
+                <button
+                  onClick={() => navigate('/projects/browse')}
+                  className="font-mono text-xs text-brand-500 border border-brand-500/40 px-3 py-1.5 hover:border-brand-500 transition-colors"
+                >
+                  Explorar projetos disponíveis →
+                </button>
+              </div>
             ) : recommended.length === 0 ? (
               <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">
-                {mySkills.length > 0 ? (
-                  <>Nenhum projeto com as suas tecnologias no momento.{' '}
-                    <button onClick={() => navigate('/projects/browse')} className="text-brand-500 hover:underline">Ver todos os projetos.</button>
-                  </>
-                ) : 'Nenhum projeto OPEN disponível.'}
+                Nenhum projeto com as suas tecnologias no momento.{' '}
+                <button onClick={() => navigate('/projects/browse')} className="text-brand-500 hover:underline">Ver todos os projetos.</button>
               </div>
             ) : recommended.map(p => (
               <div key={p.id} className="bg-dark-card border border-brand-500/50 p-5 hover:border-brand-500 transition-colors">
