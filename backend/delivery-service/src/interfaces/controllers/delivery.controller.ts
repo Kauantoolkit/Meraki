@@ -28,6 +28,12 @@ export class DeliveryController {
     return this.submitDelivery.execute(body, specialistId);
   }
 
+  @Get(':milestoneId')
+  @ApiOperation({ summary: 'Buscar entrega por milestone' })
+  findByMilestone(@Param('milestoneId') milestoneId: string) {
+    return this.reviewDelivery.getByMilestone(milestoneId);
+  }
+
   @Put(':milestoneId/approve')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Aprovar entrega — dispara milestone.validated → payment-service' })
