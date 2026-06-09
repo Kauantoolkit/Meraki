@@ -28,6 +28,7 @@ export default function Bidding() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState<Bid | null>(null)
   const [existingBid, setExistingBid] = useState<Bid | null>(null)
+  const [submitError, setSubmitError] = useState('')
   const [editing, setEditing] = useState(false)
   const [editAmount, setEditAmount] = useState('')
   const [editDuration, setEditDuration] = useState('')
@@ -81,24 +82,25 @@ export default function Bidding() {
     e.preventDefault()
     if (!project) return
     setSubmitting(true)
+    setSubmitError('')
     try {
       const hasMilestones = milestoneProposals.length > 0
       const res = await bidsApi.submit({
         projectId: project.id,
         amount: Number(amount),
-        durationDays: Number(duration),
+        durationDays: Math.round(Number(duration)),
         proposalText: coverLetter,
         milestoneProposals: hasMilestones ? milestoneProposals : undefined,
       })
       setSubmitted(res.data)
-    } catch (e: unknown) {
-      const status = (e as any)?.response?.status
+    } catch (err: unknown) {
+      const status = (err as any)?.response?.status
       if (status === 422) {
-        alert('Este projeto não está a aceitar novas propostas.')
+        setSubmitError('Este projeto não está a aceitar novas propostas.')
       } else if (status === 409) {
-        alert('Já tem uma proposta ativa neste projeto.')
+        setSubmitError('Já tens uma proposta ativa neste projeto.')
       } else {
-        alert(`Erro ao submeter proposta: ${extractApiError(e)}`)
+        setSubmitError(extractApiError(err, 'Erro ao submeter proposta. Verifique os campos e tente novamente.'))
       }
     } finally {
       setSubmitting(false)
@@ -391,12 +393,19 @@ export default function Bidding() {
                     <div className="absolute left-0 top-0 bottom-0 w-8 border-r border-dark-border bg-dark-input flex flex-col items-center py-2 select-none">
                       {[1,2,3,4,5,6,7,8].map(n => <span key={n} className="text-[10px] font-mono text-zinc-700">{n}</span>)}
                     </div>
-                    <textarea data-testid="bid-cover" required minLength={20} maxLength={2000} value={coverLetter} onChange={e => setCoverLetter(e.target.value)}
+                    <textarea data-testid="bid-cover" required minLength={20} maxLength={2000} value={coverLetter} onChange={e => { setCoverLetter(e.target.value); setSubmitError('') }}
                       placeholder="Apresente a sua proposta técnica..."
                       className="editor-textarea w-full pl-10 pr-2 py-2 bg-transparent text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none h-64" />
                   </div>
                   <label className="text-[10px] font-mono text-brand-500 block">{'}'}</label>
                 </div>
+
+                {submitError && (
+                  <div className="flex items-start gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs">
+                    <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+                    <span data-testid="bid-error">{submitError}</span>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-4 border-t border-dark-border">
                   <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500">
