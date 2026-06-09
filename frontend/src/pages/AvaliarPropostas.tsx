@@ -271,6 +271,35 @@ export default function AvaliarPropostas() {
                       )}
                     </div>
 
+                    {/* Milestone proposals */}
+                    {bid.milestoneProposals && bid.milestoneProposals.length > 0 && (
+                      <div className="bg-dark-input border border-dark-border">
+                        <div className="px-4 py-2.5 border-b border-dark-border">
+                          <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
+                            Observações por Marco
+                          </span>
+                        </div>
+                        <div className="divide-y divide-dark-border">
+                          {bid.milestoneProposals.map((mp) => {
+                            const milestone = project?.milestones?.find(m => m.id === mp.milestoneId)
+                            return (
+                              <div key={mp.milestoneId} className="px-4 py-3 flex flex-col gap-1">
+                                <p className="font-mono text-[10px] text-brand-500 uppercase tracking-wider">
+                                  {milestone?.title ?? `Marco ${mp.milestoneId.slice(0, 8)}`}
+                                </p>
+                                <div className="flex items-center justify-between">
+                                  <p className="font-mono text-xs text-white font-bold">{fmt(mp.proposedAmount)}</p>
+                                  {mp.note && (
+                                    <p className="font-mono text-[10px] text-zinc-400 italic max-w-[60%] text-right">{mp.note}</p>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Actions */}
                     {isPending && (
                       <div className="flex items-center justify-between mt-4 pt-4 border-t border-dark-border">
