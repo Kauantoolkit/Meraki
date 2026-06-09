@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { Search, Filter, Calendar, Wallet, Tag, ArrowRight, ListChecks } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
+import { bidsApi, Bid } from '../api/bids'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
 export default function BuscarProjetos() {
   const navigate = useNavigate()
   const [projects, setProjects] = useState<Project[]>([])
+  const [bidMap, setBidMap] = useState<Map<string, Bid>>(new Map())
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [minBudget, setMinBudget] = useState('')
@@ -16,9 +18,15 @@ export default function BuscarProjetos() {
   const [skillFilter, setSkillFilter] = useState('')
 
   useEffect(() => {
-    projectsApi.listOpen()
-      .then(res => setProjects(res.data.data))
-      .finally(() => setLoading(false))
+    Promise.all([
+      projectsApi.listOpen(),
+      bidsApi.myBids().catch(() => ({ data: [] as Bid[] })),
+    ]).then(([projectsRes, bidsRes]) => {
+      setProjects(projectsRes.data.data)
+      const map = new Map<string, Bid>()
+      bidsRes.data.forEach(b => map.set(b.projectId, b))
+      setBidMap(map)
+    }).finally(() => setLoading(false))
   }, [])
 
   const filtered = projects.filter(p => {
@@ -135,7 +143,7 @@ export default function BuscarProjetos() {
             ) : (
               <div className="space-y-4">
                 {filtered.map(p => (
-                  <ProjectCard key={p.id} project={p} onApply={() => navigate(`/bidding/${p.id}`)} />
+                  <ProjectCard key={p.id} project={p} myBid={bidMap.get(p.id)} onApply={() => navigate(`/bidding/${p.id}`)} />
                 ))}
               </div>
             )}
@@ -146,7 +154,16 @@ export default function BuscarProjetos() {
   )
 }
 
-function ProjectCard({ project: p, onApply }: { project: Project; onApply: () => void }) {
+const BID_BADGE: Record<string, { label: string; cls: string }> = {
+  PENDING:   { label: 'PROPOSTA ENVIADA', cls: 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10' },
+  ACCEPTED:  { label: 'ACEITE',           cls: 'text-brand-500 border-brand-500/30 bg-brand-500/10' },
+  REJECTED:  { label: 'REJEITADA',        cls: 'text-red-400 border-red-400/30 bg-red-400/10' },
+  WITHDRAWN: { label: 'RETIRADA',         cls: 'text-zinc-400 border-zinc-600/30 bg-zinc-600/10' },
+}
+
+function ProjectCard({ project: p, myBid, onApply }: { project: Project; myBid?: Bid; onApply: () => void }) {
+  const hasPending = myBid?.status === 'PENDING'
+
   return (
     <div className="bg-dark-card border border-dark-border p-6 hover:border-brand-500/50 transition-colors relative group">
       <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -154,17 +171,26 @@ function ProjectCard({ project: p, onApply }: { project: Project; onApply: () =>
 
       <div className="flex items-start justify-between gap-4 mb-3">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <span className="font-mono text-[10px] text-blue-400 border border-blue-400/30 bg-blue-400/10 px-2 py-0.5">ABERTO</span>
+            {myBid && BID_BADGE[myBid.status] && (
+              <span className={`font-mono text-[10px] border px-2 py-0.5 ${BID_BADGE[myBid.status].cls}`}>
+                {BID_BADGE[myBid.status].label}
+              </span>
+            )}
             <span className="font-mono text-[10px] text-zinc-600 truncate">{p.id.slice(0, 8)}</span>
           </div>
           <h3 className="text-lg font-bold text-white">{p.title}</h3>
         </div>
         <button
           onClick={onApply}
-          className="shrink-0 btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-5 py-2.5 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2"
+          className={`shrink-0 btn-sharp font-bold font-mono text-xs px-5 py-2.5 border transition-colors flex items-center gap-2 ${
+            hasPending
+              ? 'bg-yellow-400/10 text-yellow-400 border-yellow-400/40 hover:bg-yellow-400/20'
+              : 'bg-brand-500 text-dark-bg border-brand-500 hover:bg-brand-400'
+          }`}
         >
-          CANDIDATAR <ArrowRight className="w-3.5 h-3.5" />
+          {hasPending ? 'VER PROPOSTA' : 'CANDIDATAR'} <ArrowRight className="w-3.5 h-3.5" />
         </button>
       </div>
 
