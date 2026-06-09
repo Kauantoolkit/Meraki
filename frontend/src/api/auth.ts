@@ -33,6 +33,11 @@ function normalizeUser(raw: AuthResponse['user']): UserProfile {
   }
 }
 
+export const usersApi = {
+  updateProfile: (data: { bio?: string; skills?: string[] }) =>
+    api.put<void>('/users/me/profile', data),
+}
+
 export const authApi = {
   login: async (data: LoginPayload) => {
     const res = await api.post<AuthResponse>('/auth/login', data)
