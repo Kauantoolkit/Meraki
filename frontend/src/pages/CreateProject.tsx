@@ -116,10 +116,20 @@ export default function CreateProject() {
       ])
       setTimeout(() => setPublished(true), 600)
     } catch (err: unknown) {
+      const status = (err as any)?.response?.status
       const msg = extractApiError(err)
       setLogs(prev => [...prev, { text: `> ERRO: ${msg}`, color: 'text-red-400' }])
-      setPublishError(msg)
-      submittingRef.current = false
+      // Erros de validação (400/422): nada foi criado no backend, pode retentar
+      // Erros de servidor/rede (5xx, timeout, sem status): pode ter criado — não libera retry
+      if (status === 400 || status === 422) {
+        setPublishError(msg)
+        submittingRef.current = false
+      } else {
+        setPublishError(
+          msg + '\n\nVerifique o painel antes de tentar novamente — o projeto pode ter sido criado.',
+        )
+        // submittingRef permanece true: botão fica bloqueado nesta instância da página
+      }
     }
   }
 
@@ -422,12 +432,19 @@ export default function CreateProject() {
                   <div className="mt-6 pt-6 border-t border-red-500/30">
                     <div className="flex items-start gap-2 text-red-400 bg-red-500/10 border border-red-500/30 px-3 py-2 mb-4 font-mono text-xs">
                       <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                      <span data-testid="cp-error">{publishError}</span>
+                      <span data-testid="cp-error" className="whitespace-pre-line">{publishError}</span>
                     </div>
-                    <button onClick={() => { setPublishing(false); setPublishError('') }}
-                      className="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-red-500 hover:text-red-400 transition-colors">
-                      &lt; Corrigir e tentar novamente
-                    </button>
+                    {!submittingRef.current ? (
+                      <button onClick={() => { setPublishing(false); setPublishError('') }}
+                        className="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-red-500 hover:text-red-400 transition-colors">
+                        &lt; Corrigir e tentar novamente
+                      </button>
+                    ) : (
+                      <button onClick={() => navigate('/dashboard')}
+                        className="btn-sharp bg-transparent text-white font-mono text-xs px-6 py-2 border border-dark-border hover:border-brand-500 hover:text-brand-500 transition-colors">
+                        &lt; Verificar no painel
+                      </button>
+                    )}
                   </div>
                 )}
                 {published && (
