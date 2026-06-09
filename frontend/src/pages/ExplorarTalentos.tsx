@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Star, Briefcase, User, Filter, ChevronRight } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -10,36 +10,39 @@ export default function ExplorarTalentos() {
   const [specialists, setSpecialists] = useState<PublicProfile[]>([])
   const [availableSkills, setAvailableSkills] = useState<string[]>([])
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set())
 
-  useEffect(() => {
-    portfolioApi.listSpecialists()
-      .then(res => {
-        const data = res.data
-        setAllSpecialists(data)
-        setSpecialists(data)
+  async function fetchAndFilter(searchVal: string, skills: Set<string>) {
+    setLoading(true)
+    try {
+      let pool = allSpecialists
+      if (pool.length === 0) {
+        const res = await portfolioApi.listSpecialists()
+        pool = res.data
+        setAllSpecialists(pool)
         const skillSet = new Set<string>()
-        data.forEach(s => s.skills?.forEach(sk => skillSet.add(sk)))
+        pool.forEach(s => s.skills?.forEach(sk => skillSet.add(sk)))
         setAvailableSkills(Array.from(skillSet).sort())
-      })
-      .finally(() => setLoading(false))
-  }, [])
-
-  function applyFilters(searchVal: string, skills: Set<string>) {
-    let result = allSpecialists
-    if (searchVal.trim()) {
-      const q = searchVal.toLowerCase()
-      result = result.filter(s => s.name.toLowerCase().includes(q) || s.bio?.toLowerCase().includes(q))
+      }
+      let result = pool
+      if (searchVal.trim()) {
+        const q = searchVal.toLowerCase()
+        result = result.filter(s => s.name.toLowerCase().includes(q) || s.bio?.toLowerCase().includes(q))
+      }
+      if (skills.size > 0) {
+        result = result.filter(s => Array.from(skills).every(sk => s.skills?.includes(sk)))
+      }
+      setSpecialists(result)
+      setHasSearched(true)
+    } finally {
+      setLoading(false)
     }
-    if (skills.size > 0) {
-      result = result.filter(s => Array.from(skills).every(sk => s.skills?.includes(sk)))
-    }
-    setSpecialists(result)
   }
 
   function handleSearch() {
-    applyFilters(search, selectedSkills)
+    fetchAndFilter(search, selectedSkills)
   }
 
   function toggleSkill(skill: string) {
@@ -47,7 +50,7 @@ export default function ExplorarTalentos() {
       const next = new Set(prev)
       if (next.has(skill)) next.delete(skill)
       else next.add(skill)
-      applyFilters(search, next)
+      fetchAndFilter(search, next)
       return next
     })
   }
@@ -147,9 +150,15 @@ export default function ExplorarTalentos() {
           <div className="flex-1 min-w-0">
             {loading ? (
               <div className="text-center py-16 font-mono text-zinc-500">Carregando especialistas...</div>
+            ) : !hasSearched ? (
+              <div className="text-center py-16 border border-zinc-800 border-dashed font-mono">
+                <Search className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
+                <p className="text-zinc-400 text-sm mb-1">Encontre o especialista certo para o seu projeto.</p>
+                <p className="text-zinc-600 text-[10px] uppercase tracking-widest">Digite um nome ou selecione uma habilidade para buscar</p>
+              </div>
             ) : specialists.length === 0 ? (
               <div className="text-center py-16 border border-zinc-800 border-dashed font-mono text-zinc-500">
-                Nenhum especialista encontrado.
+                Nenhum especialista encontrado para os filtros aplicados.
               </div>
             ) : (
               <>
