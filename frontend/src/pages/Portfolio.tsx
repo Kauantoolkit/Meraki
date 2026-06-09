@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Star, Briefcase, User, GitBranch, ExternalLink, ChevronRight, Plus, X, Pencil, CheckCircle, Clock } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile } from '../api/portfolio'
+import { usersApi } from '../api/auth'
 import { extractApiError } from '../api/client'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
@@ -251,8 +252,15 @@ function EditProfileModal({ profile, onClose, onSave }: {
     setSaving(true)
     setError('')
     try {
-      const res = await portfolioApi.updateProfile({ bio, skills })
-      onSave(res.data)
+      // Atualiza portfolio-service e identity-service em paralelo
+      await Promise.all([
+        portfolioApi.updateProfile({ bio, skills }),
+        usersApi.updateProfile({ bio, skills }),
+      ])
+      // Re-busca o perfil completo: a API retorna apenas a entidade parcial do banco
+      // (sem 'name', 'userId', etc.), o que causaria tela preta ao usá-la diretamente
+      const fresh = await portfolioApi.getMyProfile()
+      onSave(fresh.data)
     } catch (err: unknown) {
       setError(extractApiError(err, 'Erro ao salvar. Tente novamente.'))
       setSaving(false)
