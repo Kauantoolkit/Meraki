@@ -47,7 +47,8 @@ export default function AvaliarPropostas() {
         if (pResult.status === 'fulfilled') {
           const p = pResult.value.data
           // ACL frontend: redireciona se a empresa logada não for dona do projeto
-          if (p.companyId !== user.companyId) {
+          // Só aplica se user.companyId já carregou (evita redirect falso-positivo)
+          if (user.companyId && p.companyId !== user.companyId) {
             navigate('/dashboard', { replace: true })
             return
           }
