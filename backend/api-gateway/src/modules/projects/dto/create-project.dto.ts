@@ -1,5 +1,7 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { ArrayMaxSize, IsArray, IsDateString, IsNumber, IsPositive, IsString, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ArrayMaxSize, IsArray, IsDateString, IsNumber, IsOptional, IsPositive, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { CreateMilestoneDto } from './create-milestone.dto';
 
 export class CreateProjectDto {
   @ApiProperty({ example: 'Sistema de Agendamento' })
@@ -28,4 +30,12 @@ export class CreateProjectDto {
   @ApiProperty({ example: '2026-06-30' })
   @IsDateString()
   deadline: string;
+
+  @ApiPropertyOptional({ type: [CreateMilestoneDto], description: 'Milestones criados junto com o projeto (atômico)' })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(20)
+  @ValidateNested({ each: true })
+  @Type(() => CreateMilestoneDto)
+  milestones?: CreateMilestoneDto[];
 }
