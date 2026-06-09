@@ -196,7 +196,7 @@ export default function AvaliarPropostas() {
               return (
                 <div
                   key={bid.id}
-                  className={`bg-dark-card border transition-colors ${
+                  className={`bg-dark-card border transition-colors overflow-hidden ${
                     bid.status === 'ACCEPTED'
                       ? 'border-brand-500/40'
                       : bid.status === 'REJECTED'
@@ -212,7 +212,7 @@ export default function AvaliarPropostas() {
                           <User className="w-4 h-4 text-zinc-500" />
                         </div>
                         <div>
-                          <p className="font-mono text-sm font-bold text-white">
+                          <p className="font-mono text-sm font-bold text-white truncate max-w-[220px]">
                             {bid.specialistName ?? `Especialista #${idx + 1}`}
                           </p>
                           <p className="font-mono text-[10px] text-zinc-600">
@@ -259,13 +259,13 @@ export default function AvaliarPropostas() {
                       </button>
                       {isExpanded && (
                         <div className="px-4 pb-4 pt-1 border-t border-dark-border">
-                          <p className="font-mono text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                          <p className="font-mono text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
                             {bid.proposalText || 'Sem texto de proposta.'}
                           </p>
                         </div>
                       )}
                       {!isExpanded && bid.proposalText && (
-                        <p className="px-4 pb-3 font-mono text-[10px] text-zinc-600 line-clamp-1 border-t border-dark-border pt-2">
+                        <p className="px-4 pb-3 font-mono text-[10px] text-zinc-600 line-clamp-1 break-words border-t border-dark-border pt-2">
                           {bid.proposalText}
                         </p>
                       )}
