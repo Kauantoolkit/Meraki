@@ -5,6 +5,7 @@ export class SpecialistProfile {
   userId: string;
   bio: string;
   skills: string[];
+  skillBadges: Record<string, 'yellow' | 'green'>; // skillName → badge
   experience: number;
   hourlyRate: number;
   rating: number;

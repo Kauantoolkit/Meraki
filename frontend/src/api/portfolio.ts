@@ -7,6 +7,7 @@ export interface PublicProfile {
   type: 'specialist' | 'company'
   bio?: string
   skills?: string[]
+  skillBadges?: Record<string, 'yellow' | 'green'>
   rating?: number
   completedProjects?: number
   workHistory?: WorkHistoryItem[]

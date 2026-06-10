@@ -23,6 +23,11 @@ export const SpecialistProfileSchema = new EntitySchema<SpecialistProfile>({
       nullable: true,
       default: '',
     },
+    skillBadges: {
+      type: 'simple-json',
+      nullable: true,
+      default: '{}',
+    },
     experience: {
       type: 'decimal',
       precision: 5,

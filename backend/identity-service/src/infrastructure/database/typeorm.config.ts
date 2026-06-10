@@ -4,6 +4,9 @@ import { SpecialistProfileSchema } from '../database/schemas/specialist-profile.
 import { CompanyProfileSchema } from '../database/schemas/company-profile.schema';
 import { AuditLog } from '../../domain/entities/audit-log.entity';
 import { RefreshTokenSchema } from '../database/schemas/refresh-token.schema';
+import { SkillSchema } from '../database/schemas/skill.schema';
+import { SkillQuestionSchema } from '../database/schemas/skill-question.schema';
+import { SkillValidationSchema } from '../database/schemas/skill-validation.schema';
 
 export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   type: 'postgres',
@@ -12,7 +15,7 @@ export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASS || 'postgres',
   database: process.env.DB_NAME || 'identity_db',
-  entities: [UserSchema, SpecialistProfileSchema, CompanyProfileSchema, AuditLog, RefreshTokenSchema],
+  entities: [UserSchema, SpecialistProfileSchema, CompanyProfileSchema, AuditLog, RefreshTokenSchema, SkillSchema, SkillQuestionSchema, SkillValidationSchema],
   synchronize: process.env.NODE_ENV !== 'production',
   logging: process.env.NODE_ENV === 'development',
 });

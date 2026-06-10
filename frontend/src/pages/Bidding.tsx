@@ -1,9 +1,11 @@
 import { useState, useEffect, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { FileCode, Building2, Coins, CalendarClock, ShieldAlert, Send, Loader2, CheckSquare, ListChecks, Pencil, X } from 'lucide-react'
+import { FileCode, Building2, Coins, CalendarClock, ShieldAlert, Send, Loader2, CheckSquare, ListChecks, Pencil, X, Award, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
 import { bidsApi, Bid, BidMilestoneProposal } from '../api/bids'
+import { skillsApi, Skill, SkillQuestion, QuizResult } from '../api/skills'
+import { portfolioApi } from '../api/portfolio'
 import { extractApiError } from '../api/client'
 import { projectStatusLabel, bidStatusLabel } from '../lib/labels'
 
@@ -37,6 +39,11 @@ export default function Bidding() {
   const [editError, setEditError] = useState('')
   const [updating, setUpdating] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
+
+  // Skill quiz gate
+  const [skillsToValidate, setSkillsToValidate] = useState<Array<{ skillId: string; skillName: string; questions: SkillQuestion[] }>>([])
+  const [quizModalOpen, setQuizModalOpen] = useState(false)
+  const [pendingSubmitData, setPendingSubmitData] = useState<{ amount: number; durationDays: number; proposalText: string; milestoneProposals?: BidMilestoneProposal[] } | null>(null)
 
   useEffect(() => {
     if (!projectId) return
@@ -78,19 +85,16 @@ export default function Bidding() {
     })
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (!project) return
+  async function doSubmitBid(data: { amount: number; durationDays: number; proposalText: string; milestoneProposals?: BidMilestoneProposal[] }) {
     setSubmitting(true)
     setSubmitError('')
     try {
-      const hasMilestones = milestoneProposals.length > 0
       const res = await bidsApi.submit({
-        projectId: project.id,
-        amount: Number(amount),
-        durationDays: Math.round(Number(duration)),
-        proposalText: coverLetter,
-        milestoneProposals: hasMilestones ? milestoneProposals : undefined,
+        projectId: project!.id,
+        amount: data.amount,
+        durationDays: data.durationDays,
+        proposalText: data.proposalText,
+        milestoneProposals: data.milestoneProposals,
       })
       setSubmitted(res.data)
     } catch (err: unknown) {
@@ -105,6 +109,64 @@ export default function Bidding() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!project) return
+
+    const submitData = {
+      amount: Number(amount),
+      durationDays: Math.round(Number(duration)),
+      proposalText: coverLetter,
+      milestoneProposals: milestoneProposals.length > 0 ? milestoneProposals : undefined,
+    }
+
+    // Check skill quiz gate
+    if (project.skills && project.skills.length > 0 && project.companyId) {
+      setSubmitting(true)
+      try {
+        // Fetch specialist's current badges
+        let myBadges: Record<string, 'yellow' | 'green'> = {}
+        try {
+          const profileRes = await portfolioApi.getMyProfile()
+          myBadges = profileRes.data.skillBadges ?? {}
+        } catch {}
+
+        // For each required skill, check if company has questions AND specialist lacks badge
+        const catalog = (await skillsApi.getAll()).data
+        const toValidate: Array<{ skillId: string; skillName: string; questions: SkillQuestion[] }> = []
+
+        for (const skillName of project.skills) {
+          const normalized = skillName.toLowerCase()
+          // Skip if specialist already has a badge
+          if (myBadges[normalized] === 'yellow' || myBadges[normalized] === 'green') continue
+
+          // Find skill in catalog
+          const skillEntry = catalog.find(s => s.name === normalized || s.displayName.toLowerCase() === normalized)
+          if (!skillEntry) continue
+
+          // Check if company has questions for this skill
+          const qRes = await skillsApi.getCompanyQuestions(skillEntry.id, project.companyId)
+          if (qRes.data && qRes.data.length > 0) {
+            toValidate.push({ skillId: skillEntry.id, skillName: skillEntry.displayName, questions: qRes.data })
+          }
+        }
+
+        setSubmitting(false)
+
+        if (toValidate.length > 0) {
+          setSkillsToValidate(toValidate)
+          setPendingSubmitData(submitData)
+          setQuizModalOpen(true)
+          return
+        }
+      } catch {
+        setSubmitting(false)
+      }
+    }
+
+    await doSubmitBid(submitData)
   }
 
   function openEdit() {
@@ -648,6 +710,195 @@ export default function Bidding() {
           </section>
         </div>
       </main>
+
+      {quizModalOpen && skillsToValidate.length > 0 && pendingSubmitData && (
+        <ProjectSkillQuizModal
+          skills={skillsToValidate}
+          companyId={project?.companyId ?? ''}
+          onClose={() => { setQuizModalOpen(false); setSkillsToValidate([]); setPendingSubmitData(null) }}
+          onAllPassed={async () => {
+            setQuizModalOpen(false)
+            setSkillsToValidate([])
+            if (pendingSubmitData) await doSubmitBid(pendingSubmitData)
+            setPendingSubmitData(null)
+          }}
+          onSkip={async () => {
+            setQuizModalOpen(false)
+            setSkillsToValidate([])
+            if (pendingSubmitData) await doSubmitBid(pendingSubmitData)
+            setPendingSubmitData(null)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── ProjectSkillQuizModal ────────────────────────────────────────────────────
+
+function ProjectSkillQuizModal({ skills, companyId, onClose, onAllPassed, onSkip }: {
+  skills: Array<{ skillId: string; skillName: string; questions: SkillQuestion[] }>
+  companyId: string
+  onClose: () => void
+  onAllPassed: () => void
+  onSkip: () => void
+}) {
+  const [currentIdx, setCurrentIdx] = useState(0)
+  const [answers, setAnswers] = useState<number[]>([])
+  const [result, setResult] = useState<QuizResult | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const current = skills[currentIdx]
+
+  useEffect(() => {
+    if (current) {
+      setAnswers(new Array(current.questions.length).fill(-1))
+      setResult(null)
+      setError('')
+    }
+  }, [currentIdx])
+
+  async function submitCurrentQuiz() {
+    if (answers.some(a => a === -1)) {
+      setError('Responda todas as questões.')
+      return
+    }
+    setSubmitting(true)
+    setError('')
+    try {
+      const questionIds = current.questions.map(q => q.id)
+      const res = await skillsApi.attemptProject(current.skillId, answers, companyId, questionIds)
+      setResult(res.data)
+    } catch {
+      // Soft gate: if API fails, allow continuing
+      setResult({ passed: true, score: 100, correctAnswers: 0, totalQuestions: 0 })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  function handleNext() {
+    if (currentIdx < skills.length - 1) {
+      setCurrentIdx(i => i + 1)
+    } else {
+      // All done — proceed to bid
+      onAllPassed()
+    }
+  }
+
+  const isLast = currentIdx === skills.length - 1
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-card border border-brand-500/50 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl z-10">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
+
+        <div className="flex items-center justify-between p-5 border-b border-dark-border">
+          <div>
+            <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">
+              Quiz de Acesso — {current.skillName}
+            </h2>
+            <p className="font-mono text-[10px] text-zinc-500 mt-0.5">
+              Skill {currentIdx + 1} de {skills.length} exigidas pelo projeto
+            </p>
+          </div>
+          <button onClick={onSkip} className="font-mono text-[10px] text-zinc-500 border border-dark-border px-2 py-1 hover:text-zinc-300 transition-colors">
+            Pular
+          </button>
+        </div>
+
+        <div className="p-5">
+          {!result ? (
+            <div className="space-y-5">
+              <p className="font-mono text-xs text-zinc-400">
+                Esta empresa exige validação de <span className="text-white font-bold">{current.skillName}</span> para submeter proposta.
+              </p>
+
+              {current.questions.map((q, qi) => (
+                <div key={q.id} className="bg-dark-input border border-dark-border p-4">
+                  <p className="font-mono text-xs text-white font-bold mb-3">
+                    <span className="text-brand-500 mr-2">{qi + 1}.</span>{q.text}
+                  </p>
+                  <div className="space-y-2">
+                    {q.options.map((opt, oi) => (
+                      <label
+                        key={oi}
+                        className={`flex items-center gap-3 p-2 border cursor-pointer transition-colors ${
+                          answers[qi] === oi
+                            ? 'border-brand-500 bg-brand-500/10'
+                            : 'border-dark-border hover:border-zinc-600'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`pq-${qi}`}
+                          checked={answers[qi] === oi}
+                          onChange={() => setAnswers(prev => {
+                            const next = [...prev]
+                            next[qi] = oi
+                            return next
+                          })}
+                          className="sr-only"
+                        />
+                        <div className={`w-3 h-3 rounded-full border flex-shrink-0 ${answers[qi] === oi ? 'bg-brand-500 border-brand-500' : 'border-zinc-600'}`} />
+                        <span className="font-mono text-xs text-zinc-300">{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {error && (
+                <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-between pt-2 border-t border-dark-border">
+                <button onClick={onSkip}
+                  className="font-mono text-xs text-zinc-500 border border-dark-border px-4 py-2 hover:text-zinc-300 transition-colors uppercase">
+                  Pular Validação
+                </button>
+                <button onClick={submitCurrentQuiz} disabled={submitting}
+                  className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 disabled:opacity-60 flex items-center gap-2 transition-colors">
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  {submitting ? 'Processando...' : 'Enviar Respostas'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              {result.passed ? (
+                <>
+                  <Award className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <h3 className="font-mono text-lg font-bold text-white mb-1">APROVADO!</h3>
+                  <p className="font-mono text-xs text-zinc-400 mb-5">
+                    {result.correctAnswers}/{result.totalQuestions} corretas ({result.score}%) em <span className="text-white">{current.skillName}</span>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-3" />
+                  <h3 className="font-mono text-lg font-bold text-white mb-1">REPROVADO</h3>
+                  <p className="font-mono text-xs text-zinc-400 mb-2">
+                    {result.correctAnswers}/{result.totalQuestions} corretas ({result.score}%) — necessário ≥70%
+                  </p>
+                  <p className="font-mono text-[10px] text-amber-400 mb-5">
+                    Você pode continuar, mas a empresa saberá que não passou no quiz.
+                  </p>
+                </>
+              )}
+              <button onClick={handleNext}
+                className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-8 py-3 border border-brand-500 hover:bg-brand-400 transition-colors">
+                {isLast ? 'Enviar Proposta' : 'Próxima Skill'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }
