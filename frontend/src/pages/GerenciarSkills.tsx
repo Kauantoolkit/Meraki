@@ -301,17 +301,9 @@ function QuestionFormModal({
           )}
 
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider">
-                Questões ({questions.length}/10)
-              </label>
-              <button
-                type="button" onClick={onAddQuestion} disabled={questions.length >= 10}
-                className="font-mono text-[10px] text-brand-500 border border-brand-500/40 px-3 py-1 hover:bg-brand-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
-              >
-                <Plus className="w-3 h-3" /> Adicionar
-              </button>
-            </div>
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">
+              Questões ({questions.length}/10)
+            </label>
 
             {questions.map((q, qi) => (
               <div key={qi} className="bg-dark-input border border-dark-border p-4 space-y-3">
@@ -352,6 +344,13 @@ function QuestionFormModal({
               </div>
             ))}
           </div>
+
+          <button
+            type="button" onClick={onAddQuestion} disabled={questions.length >= 10}
+            className="w-full font-mono text-[10px] text-brand-500 border border-dashed border-brand-500/40 py-2 hover:bg-brand-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1"
+          >
+            <Plus className="w-3 h-3" /> Adicionar Questão {questions.length >= 10 ? '(máximo atingido)' : ''}
+          </button>
 
           {error && (
             <p className="font-mono text-xs text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2">{error}</p>
