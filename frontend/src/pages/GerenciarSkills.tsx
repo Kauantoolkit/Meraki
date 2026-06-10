@@ -15,13 +15,36 @@ function emptyQuestion(): QuestionInput {
   return { text: '', options: ['', '', '', ''], correctIndex: 0 }
 }
 
+interface SkillQuestionFull {
+  id: string
+  text: string
+  options: string[]
+  correctIndex: number
+}
+
 export default function GerenciarSkills() {
   const navigate = useNavigate()
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
   const [createOpen, setCreateOpen] = useState(false)
   const [expandedSkill, setExpandedSkill] = useState<string | null>(null)
+  const [expandedQuestions, setExpandedQuestions] = useState<Record<string, SkillQuestionFull[]>>({})
+  const [loadingQuestions, setLoadingQuestions] = useState<string | null>(null)
   const [addQuestionsSkillId, setAddQuestionsSkillId] = useState<string | null>(null)
+
+  function toggleExpand(skillId: string) {
+    if (expandedSkill === skillId) {
+      setExpandedSkill(null)
+      return
+    }
+    setExpandedSkill(skillId)
+    if (!expandedQuestions[skillId]) {
+      setLoadingQuestions(skillId)
+      skillsApi.getQuestions(skillId)
+        .then(r => setExpandedQuestions(prev => ({ ...prev, [skillId]: r.data })))
+        .finally(() => setLoadingQuestions(null))
+    }
+  }
 
   useEffect(() => {
     skillsApi.getAll()
@@ -61,7 +84,7 @@ export default function GerenciarSkills() {
               <div key={skill.id} className="bg-dark-card border border-dark-border">
                 <div
                   className="flex items-center justify-between p-4 cursor-pointer hover:border-brand-500/30 transition-colors"
-                  onClick={() => setExpandedSkill(expandedSkill === skill.id ? null : skill.id)}
+                  onClick={() => toggleExpand(skill.id)}
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-2 h-2 bg-brand-500" />
@@ -78,6 +101,27 @@ export default function GerenciarSkills() {
                     {expandedSkill === skill.id ? <ChevronUp className="w-4 h-4 text-zinc-500" /> : <ChevronDown className="w-4 h-4 text-zinc-500" />}
                   </div>
                 </div>
+
+                {expandedSkill === skill.id && (
+                  <div className="border-t border-dark-border px-4 pb-4 pt-3 space-y-3">
+                    {loadingQuestions === skill.id ? (
+                      <p className="font-mono text-xs text-zinc-500">Carregando questões...</p>
+                    ) : (expandedQuestions[skill.id] ?? []).length === 0 ? (
+                      <p className="font-mono text-xs text-zinc-600">Nenhuma questão cadastrada.</p>
+                    ) : (expandedQuestions[skill.id] ?? []).map((q, i) => (
+                      <div key={q.id} className="bg-dark-input border border-dark-border p-3 space-y-2">
+                        <p className="font-mono text-xs text-white"><span className="text-zinc-500">{i + 1}. </span>{q.text}</p>
+                        <div className="grid grid-cols-2 gap-1">
+                          {q.options.map((opt, oi) => (
+                            <span key={oi} className={`font-mono text-[10px] px-2 py-1 border ${oi === q.correctIndex ? 'border-brand-500 text-brand-400 bg-brand-500/10' : 'border-zinc-700 text-zinc-500'}`}>
+                              {String.fromCharCode(65 + oi)}) {opt}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>

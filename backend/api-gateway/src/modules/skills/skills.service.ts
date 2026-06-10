@@ -19,6 +19,13 @@ export class SkillsService {
     return this.proxy.post(`${IDENTITY_URL}/api/skills/${skillId}/questions`, body, this.proxy.authHeaders(token));
   }
 
+  getQuestions(skillId: string, token: string) {
+    return this.proxy.get(
+      `${IDENTITY_URL}/api/skills/${skillId}/questions`,
+      this.proxy.authHeaders(token),
+    );
+  }
+
   getRandomQuestions(skillId: string, token: string) {
     return this.proxy.get(
       `${IDENTITY_URL}/api/skills/${skillId}/questions/random`,

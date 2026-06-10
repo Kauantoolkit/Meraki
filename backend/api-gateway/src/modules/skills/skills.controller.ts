@@ -61,6 +61,15 @@ export class SkillsController {
     return this.skillsService.addQuestions(skillId, body, this.token(req));
   }
 
+  @Get(':skillId/questions')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Listar todas as questões de uma skill (empresa)' })
+  getQuestions(@Param('skillId') skillId: string, @Req() req: Request) {
+    return this.skillsService.getQuestions(skillId, this.token(req));
+  }
+
   @Get(':skillId/questions/random')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)

@@ -46,6 +46,9 @@ export const skillsApi = {
   addQuestions: (skillId: string, questions: CreateQuestionDto[]) =>
     api.post(`/skills/${skillId}/questions`, { questions }),
 
+  getQuestions: (skillId: string) =>
+    api.get<(SkillQuestion & { correctIndex: number })[]>(`/skills/${skillId}/questions`),
+
   getRandomQuestions: (skillId: string) =>
     api.get<SkillQuestion[]>(`/skills/${skillId}/questions/random`),
 

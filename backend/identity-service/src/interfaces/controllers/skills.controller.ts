@@ -84,6 +84,15 @@ export class SkillsController {
     return this.addQuestionsUseCase.execute(skillId, body.questions, user.companyId ?? user.id);
   }
 
+  @Get(':skillId/questions')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.COMPANY)
+  @ApiOperation({ summary: 'Listar todas as questões de uma skill (empresa)' })
+  async getQuestions(@Param('skillId', ParseUUIDPipe) skillId: string) {
+    return this.skillRepo.getQuestionsBySkillId(skillId);
+  }
+
   @Get(':skillId/questions/random')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
