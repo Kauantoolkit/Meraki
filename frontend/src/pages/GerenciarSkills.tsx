@@ -113,7 +113,7 @@ function CreateSkillModal({ onClose, onCreated }: {
   onCreated: (skill: Skill) => void
 }) {
   const [displayName, setDisplayName] = useState('')
-  const [questions, setQuestions] = useState<QuestionInput[]>([emptyQuestion(), emptyQuestion(), emptyQuestion()])
+  const [questions, setQuestions] = useState<QuestionInput[]>(Array.from({ length: 10 }, emptyQuestion))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -123,7 +123,7 @@ function CreateSkillModal({ onClose, onCreated }: {
   }
 
   function removeQuestion(i: number) {
-    if (questions.length <= 3) return
+    if (questions.length <= 10) return
     setQuestions(prev => prev.filter((_, idx) => idx !== i))
   }
 
@@ -142,7 +142,7 @@ function CreateSkillModal({ onClose, onCreated }: {
 
   async function handleSave() {
     if (!displayName.trim()) { setError('Nome da skill é obrigatório.'); return }
-    if (questions.length < 3) { setError('Mínimo de 3 questões.'); return }
+    if (questions.length < 10) { setError('Mínimo de 10 questões.'); return }
     for (const q of questions) {
       if (!q.text.trim()) { setError('Todas as questões devem ter enunciado.'); return }
       if (q.options.some(o => !o.trim())) { setError('Todas as opções devem ser preenchidas.'); return }
@@ -311,7 +311,7 @@ function QuestionFormModal({
                   <span className="font-mono text-[10px] text-zinc-500 uppercase">Questão {qi + 1}</span>
                   <button
                     type="button" onClick={() => onRemoveQuestion(qi)}
-                    disabled={questions.length <= (showNameField ? 3 : 1)}
+                    disabled={questions.length <= (showNameField ? 10 : 1)}
                     className="text-zinc-600 hover:text-red-400 transition-colors disabled:opacity-20 disabled:cursor-not-allowed"
                   >
                     <X className="w-3 h-3" />

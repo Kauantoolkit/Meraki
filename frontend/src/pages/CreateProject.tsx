@@ -533,7 +533,7 @@ function CreateSkillModal({ initialName, onClose, onCreated }: {
   onCreated: (skillName: string) => void
 }) {
   const [displayName, setDisplayName] = useState(initialName)
-  const [questions, setQuestions] = useState<QuestionInput[]>([emptyQuestion(), emptyQuestion(), emptyQuestion()])
+  const [questions, setQuestions] = useState<QuestionInput[]>(Array.from({ length: 10 }, emptyQuestion))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -543,7 +543,7 @@ function CreateSkillModal({ initialName, onClose, onCreated }: {
   }
 
   function removeQuestion(i: number) {
-    if (questions.length <= 3) return
+    if (questions.length <= 10) return
     setQuestions(prev => prev.filter((_, idx) => idx !== i))
   }
 
@@ -562,7 +562,7 @@ function CreateSkillModal({ initialName, onClose, onCreated }: {
 
   async function handleSave() {
     if (!displayName.trim()) { setError('Nome da skill é obrigatório.'); return }
-    if (questions.length < 3) { setError('Mínimo de 3 questões.'); return }
+    if (questions.length < 10) { setError('Mínimo de 10 questões.'); return }
     for (const q of questions) {
       if (!q.text.trim()) { setError('Todas as questões devem ter enunciado.'); return }
       if (q.options.some(o => !o.trim())) { setError('Todas as opções devem ser preenchidas.'); return }

@@ -24,8 +24,8 @@ export class CreateSkillUseCase {
     if (!dto.displayName || dto.displayName.trim().length < 2) {
       throw new BadRequestException('Nome da skill deve ter pelo menos 2 caracteres');
     }
-    if (!dto.questions || dto.questions.length < 3) {
-      throw new BadRequestException('Mínimo de 3 questões para criar uma skill');
+    if (!dto.questions || dto.questions.length < 10) {
+      throw new BadRequestException('Mínimo de 10 questões para criar uma skill');
     }
     for (const q of dto.questions) {
       if (!q.text || q.text.trim().length === 0) {
