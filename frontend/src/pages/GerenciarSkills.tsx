@@ -118,7 +118,7 @@ function CreateSkillModal({ onClose, onCreated }: {
   const [error, setError] = useState('')
 
   function addQuestion() {
-    if (questions.length >= 10) return
+    if (questions.length >= 20) return
     setQuestions(prev => [...prev, emptyQuestion()])
   }
 
@@ -194,7 +194,7 @@ function AddQuestionsModal({ skillId, skillName, onClose, onAdded }: {
   const [error, setError] = useState('')
 
   function addQuestion() {
-    if (questions.length >= 10) return
+    if (questions.length >= 20) return
     setQuestions(prev => [...prev, emptyQuestion()])
   }
 
@@ -302,7 +302,7 @@ function QuestionFormModal({
 
           <div className="space-y-4">
             <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">
-              Questões ({questions.length}/10)
+              Questões ({questions.length}/20)
             </label>
 
             {questions.map((q, qi) => (
@@ -346,10 +346,10 @@ function QuestionFormModal({
           </div>
 
           <button
-            type="button" onClick={onAddQuestion} disabled={questions.length >= 10}
+            type="button" onClick={onAddQuestion} disabled={questions.length >= 20}
             className="w-full font-mono text-[10px] text-brand-500 border border-dashed border-brand-500/40 py-2 hover:bg-brand-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-1"
           >
-            <Plus className="w-3 h-3" /> Adicionar Questão {questions.length >= 10 ? '(máximo atingido)' : ''}
+            <Plus className="w-3 h-3" /> Adicionar Questão {questions.length >= 20 ? '(máximo: 20)' : ''}
           </button>
 
           {error && (

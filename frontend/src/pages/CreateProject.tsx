@@ -538,7 +538,7 @@ function CreateSkillModal({ initialName, onClose, onCreated }: {
   const [error, setError] = useState('')
 
   function addQuestion() {
-    if (questions.length >= 10) return
+    if (questions.length >= 20) return
     setQuestions(prev => [...prev, emptyQuestion()])
   }
 
@@ -612,8 +612,8 @@ function CreateSkillModal({ initialName, onClose, onCreated }: {
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider">Questões ({questions.length}/10)</label>
-              <button type="button" onClick={addQuestion} disabled={questions.length >= 10}
+              <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider">Questões ({questions.length}/20)</label>
+              <button type="button" onClick={addQuestion} disabled={questions.length >= 20}
                 className="font-mono text-[10px] text-brand-500 border border-brand-500/50 hover:border-brand-500 px-2 py-1 flex items-center gap-1 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
                 <Plus className="w-3 h-3" /> Adicionar
               </button>
