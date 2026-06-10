@@ -16,6 +16,7 @@ import PerfilEmpresa from './pages/PerfilEmpresa'
 import PerfilEspecialista from './pages/PerfilEspecialista'
 import AvaliarPropostas from './pages/AvaliarPropostas'
 import BuscarProjetos from './pages/BuscarProjetos'
+import GerenciarSkills from './pages/GerenciarSkills'
 
 function DashboardRoute() {
   const { user } = useAuth()
@@ -54,6 +55,7 @@ function AppRoutes() {
       <Route path="/projects/browse" element={<ProtectedRoute><BuscarProjetos /></ProtectedRoute>} />
       <Route path="/profile/company/:id" element={<ProtectedRoute><PerfilEmpresa /></ProtectedRoute>} />
       <Route path="/profile/specialist/:id" element={<ProtectedRoute><PerfilEspecialista /></ProtectedRoute>} />
+      <Route path="/skills" element={<ProtectedRoute><GerenciarSkills /></ProtectedRoute>} />
     </Routes>
   )
 }

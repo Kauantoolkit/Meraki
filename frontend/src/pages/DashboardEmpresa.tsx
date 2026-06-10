@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, Inbox, Wallet, PlusSquare, FolderCode, FolderGit2, Users, Search, Trash2, X, AlertTriangle, Pencil, Plus } from 'lucide-react'
+import { Activity, Inbox, Wallet, PlusSquare, FolderCode, FolderGit2, Users, Search, Trash2, X, AlertTriangle, Pencil, Plus, BookOpen } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { extractApiError } from '../api/client'
@@ -97,13 +97,22 @@ export default function DashboardEmpresa() {
             <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Meus Projetos</h1>
             <p className="text-sm text-zinc-400 font-mono mt-2">Gerencie licitações, acompanhe milestones e aprove entregas.</p>
           </div>
-          <button
-            onClick={() => navigate('/projects/new')}
-            className="btn-sharp bg-brand-500 text-dark-bg font-bold uppercase tracking-widest text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]"
-          >
-            <PlusSquare className="w-4 h-4" />
-            Novo Projeto
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/skills')}
+              className="btn-sharp bg-dark-input text-zinc-300 font-bold uppercase tracking-widest text-xs px-5 py-3 border border-dark-border hover:border-brand-500 transition-colors flex items-center gap-2"
+            >
+              <BookOpen className="w-4 h-4" />
+              Skills
+            </button>
+            <button
+              onClick={() => navigate('/projects/new')}
+              className="btn-sharp bg-brand-500 text-dark-bg font-bold uppercase tracking-widest text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors flex items-center gap-2 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]"
+            >
+              <PlusSquare className="w-4 h-4" />
+              Novo Projeto
+            </button>
+          </div>
         </div>
 
         {/* Stats */}

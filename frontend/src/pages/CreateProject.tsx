@@ -538,6 +538,7 @@ function CreateSkillModal({ initialName, onClose, onCreated }: {
   const [error, setError] = useState('')
 
   function addQuestion() {
+    if (questions.length >= 10) return
     setQuestions(prev => [...prev, emptyQuestion()])
   }
 
