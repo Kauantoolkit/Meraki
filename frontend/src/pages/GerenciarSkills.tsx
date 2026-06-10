@@ -185,7 +185,18 @@ export default function GerenciarSkills() {
           skillId={addQuestionsSkillId}
           skillName={skills.find(s => s.id === addQuestionsSkillId)?.displayName ?? ''}
           onClose={() => setAddQuestionsSkillId(null)}
-          onAdded={() => setAddQuestionsSkillId(null)}
+          onAdded={() => {
+            const skillId = addQuestionsSkillId
+            setAddQuestionsSkillId(null)
+            // Invalida cache e re-fetcha se a skill estiver expandida
+            setExpandedQuestions(prev => { const next = { ...prev }; delete next[skillId]; return next })
+            if (expandedSkill === skillId) {
+              setLoadingQuestions(skillId)
+              skillsApi.getQuestions(skillId)
+                .then(r => setExpandedQuestions(prev => ({ ...prev, [skillId]: r.data })))
+                .finally(() => setLoadingQuestions(null))
+            }
+          }}
         />
       )}
 
