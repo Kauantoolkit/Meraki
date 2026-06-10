@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Info, Plus, Trash2, ArrowRight, ArrowLeft, Send, Terminal, AlertCircle, X, Loader2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -15,6 +15,7 @@ export default function CreateProject() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [skillInput, setSkillInput] = useState('')
+  const [debouncedSkillInput, setDebouncedSkillInput] = useState('')
   const [skills, setSkills] = useState<string[]>([])
   const [catalog, setCatalog] = useState<Skill[]>([])
   const [createSkillOpen, setCreateSkillOpen] = useState(false)
@@ -42,6 +43,19 @@ export default function CreateProject() {
   useEffect(() => {
     skillsApi.getAll().then(res => setCatalog(res.data)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSkillInput(skillInput.trim()), 300)
+    return () => clearTimeout(t)
+  }, [skillInput])
+
+  const catalogSuggestions = useMemo(() => {
+    const q = debouncedSkillInput.toLowerCase()
+    if (!q) return []
+    return catalog
+      .filter(s => !skills.includes(s.name) && (s.name.includes(q) || s.displayName.toLowerCase().includes(q)))
+      .slice(0, 8)
+  }, [debouncedSkillInput, catalog, skills])
 
   function addSkill() {
     const v = skillInput.trim().toLowerCase()
@@ -269,15 +283,14 @@ export default function CreateProject() {
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
-                      {/* Catalog suggestions */}
-                      {catalog.length > 0 && (
+                      {/* Catalog search results */}
+                      {catalogSuggestions.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <span className="font-mono text-[9px] text-zinc-600 mr-1">Catálogo:</span>
-                          {catalog.filter(s => !skills.includes(s.name)).slice(0, 12).map(s => (
+                          {catalogSuggestions.map(s => (
                             <button
                               key={s.id}
                               type="button"
-                              onClick={() => { if (!skills.includes(s.name)) setSkills(prev => [...prev, s.name]) }}
+                              onClick={() => { setSkills(prev => [...prev, s.name]); setSkillInput('') }}
                               className="font-mono text-[9px] border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5 hover:border-brand-500 hover:text-brand-500 transition-colors"
                             >
                               {s.displayName}
