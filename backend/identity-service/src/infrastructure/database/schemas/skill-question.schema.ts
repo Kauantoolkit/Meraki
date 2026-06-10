@@ -26,5 +26,10 @@ export const SkillQuestionSchema = new EntitySchema<SkillQuestion>({
     createdByCompanyId: {
       type: 'varchar',
     },
+    deletedAt: {
+      type: 'timestamp',
+      nullable: true,
+      default: null,
+    },
   },
 });

@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -46,6 +48,28 @@ export class SkillsController {
   @ApiOperation({ summary: 'Criar skill com questões (empresa)' })
   createSkill(@Body() body: Record<string, unknown>, @Req() req: Request) {
     return this.skillsService.createSkill(body, this.token(req));
+  }
+
+  @Patch('questions/:questionId')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Editar uma questão (empresa)' })
+  updateQuestion(
+    @Param('questionId') questionId: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: Request,
+  ) {
+    return this.skillsService.updateQuestion(questionId, body, this.token(req));
+  }
+
+  @Delete('questions/:questionId')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Soft delete de uma questão (empresa)' })
+  deleteQuestion(@Param('questionId') questionId: string, @Req() req: Request) {
+    return this.skillsService.deleteQuestion(questionId, this.token(req));
   }
 
   @Post(':skillId/questions')

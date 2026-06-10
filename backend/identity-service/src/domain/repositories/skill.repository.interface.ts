@@ -32,6 +32,8 @@ export interface ISkillRepository {
   getQuestionsBySkillAndCompany(skillId: string, companyId: string): Promise<SkillQuestion[]>;
   getRandomQuestionsForSkill(skillId: string, limit: number): Promise<SkillQuestion[]>;
   getQuestionsByIds(ids: string[]): Promise<SkillQuestion[]>;
+  updateQuestion(id: string, data: { text?: string; options?: string[]; correctIndex?: number }): Promise<SkillQuestion>;
+  softDeleteQuestion(id: string): Promise<void>;
   saveValidation(data: CreateValidationData): Promise<SkillValidation>;
   findValidation(specialistId: string, skillId: string): Promise<SkillValidation | null>;
   findValidationsBySpecialist(specialistId: string): Promise<SkillValidation[]>;

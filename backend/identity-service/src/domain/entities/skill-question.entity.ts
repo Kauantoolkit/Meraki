@@ -5,4 +5,5 @@ export class SkillQuestion {
   options: string[]; // stored as JSON
   correctIndex: number; // 0-3
   createdByCompanyId: string;
+  deletedAt: Date | null;
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, ChevronDown, ChevronUp, X, BookOpen } from 'lucide-react'
+import { Plus, ChevronDown, ChevronUp, X, BookOpen, Pencil, Trash2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { skillsApi, Skill, CreateQuestionDto } from '../api/skills'
 import { extractApiError } from '../api/client'
@@ -32,6 +32,8 @@ export default function GerenciarSkills() {
   const [loadingQuestions, setLoadingQuestions] = useState<string | null>(null)
   const [addQuestionsSkillId, setAddQuestionsSkillId] = useState<string | null>(null)
 
+  const [editingQuestion, setEditingQuestion] = useState<SkillQuestionFull | null>(null)
+
   function toggleExpand(skillId: string) {
     if (expandedSkill === skillId) {
       setExpandedSkill(null)
@@ -44,6 +46,29 @@ export default function GerenciarSkills() {
         .then(r => setExpandedQuestions(prev => ({ ...prev, [skillId]: r.data })))
         .finally(() => setLoadingQuestions(null))
     }
+  }
+
+  function handleQuestionUpdated(updated: SkillQuestionFull) {
+    setExpandedQuestions(prev => {
+      const entries = Object.entries(prev)
+      const next: Record<string, SkillQuestionFull[]> = {}
+      for (const [sid, qs] of entries) {
+        next[sid] = qs.map(q => q.id === updated.id ? updated : q)
+      }
+      return next
+    })
+    setEditingQuestion(null)
+  }
+
+  function handleQuestionDeleted(questionId: string) {
+    setExpandedQuestions(prev => {
+      const entries = Object.entries(prev)
+      const next: Record<string, SkillQuestionFull[]> = {}
+      for (const [sid, qs] of entries) {
+        next[sid] = qs.filter(q => q.id !== questionId)
+      }
+      return next
+    })
   }
 
   useEffect(() => {
@@ -110,7 +135,24 @@ export default function GerenciarSkills() {
                       <p className="font-mono text-xs text-zinc-600">Nenhuma questão cadastrada.</p>
                     ) : (expandedQuestions[skill.id] ?? []).map((q, i) => (
                       <div key={q.id} className="bg-dark-input border border-dark-border p-3 space-y-2">
-                        <p className="font-mono text-xs text-white"><span className="text-zinc-500">{i + 1}. </span>{q.text}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-mono text-xs text-white"><span className="text-zinc-500">{i + 1}. </span>{q.text}</p>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button onClick={() => setEditingQuestion(q)} className="text-zinc-500 hover:text-brand-400 transition-colors">
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={async () => {
+                                if (!confirm('Remover esta questão?')) return
+                                await skillsApi.deleteQuestion(q.id)
+                                handleQuestionDeleted(q.id)
+                              }}
+                              className="text-zinc-500 hover:text-red-400 transition-colors"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
                         <div className="grid grid-cols-2 gap-1">
                           {q.options.map((opt, oi) => (
                             <span key={oi} className={`font-mono text-[10px] px-2 py-1 border ${oi === q.correctIndex ? 'border-brand-500 text-brand-400 bg-brand-500/10' : 'border-zinc-700 text-zinc-500'}`}>
@@ -144,6 +186,14 @@ export default function GerenciarSkills() {
           skillName={skills.find(s => s.id === addQuestionsSkillId)?.displayName ?? ''}
           onClose={() => setAddQuestionsSkillId(null)}
           onAdded={() => setAddQuestionsSkillId(null)}
+        />
+      )}
+
+      {editingQuestion && (
+        <EditQuestionModal
+          question={editingQuestion}
+          onClose={() => setEditingQuestion(null)}
+          onSaved={handleQuestionUpdated}
         />
       )}
     </div>
@@ -409,6 +459,99 @@ function QuestionFormModal({
               className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-2 hover:bg-brand-400 border border-brand-500 transition-colors disabled:opacity-50"
             >
               {saving ? 'Salvando...' : saveLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── EditQuestionModal ────────────────────────────────────────────────────────
+
+function EditQuestionModal({ question, onClose, onSaved }: {
+  question: SkillQuestionFull
+  onClose: () => void
+  onSaved: (updated: SkillQuestionFull) => void
+}) {
+  const [text, setText] = useState(question.text)
+  const [options, setOptions] = useState<[string, string, string, string]>([...question.options] as [string, string, string, string])
+  const [correctIndex, setCorrectIndex] = useState(question.correctIndex)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSave() {
+    if (!text.trim()) { setError('Enunciado obrigatório.'); return }
+    if (options.some(o => !o.trim())) { setError('Todas as opções devem ser preenchidas.'); return }
+    setSaving(true)
+    setError('')
+    try {
+      await skillsApi.updateQuestion(question.id, {
+        text: text.trim(),
+        options: options.map(o => o.trim()),
+        correctIndex,
+      })
+      onSaved({ ...question, text: text.trim(), options: options.map(o => o.trim()), correctIndex })
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao salvar questão.'))
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-card border border-dark-border w-full max-w-lg shadow-2xl z-10">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
+
+        <div className="flex items-center justify-between p-5 border-b border-dark-border">
+          <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">Editar Questão</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white"><X className="w-4 h-4" /></button>
+        </div>
+
+        <div className="p-5 space-y-4">
+          <div className="space-y-2">
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Enunciado</label>
+            <textarea
+              maxLength={200} rows={3} value={text}
+              onChange={e => setText(e.target.value)}
+              className="w-full px-3 py-2 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none resize-none"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Opções</label>
+            <div className="grid grid-cols-2 gap-2">
+              {options.map((opt, oi) => (
+                <label key={oi} className={`flex items-center gap-2 border px-3 py-2 cursor-pointer transition-colors ${correctIndex === oi ? 'border-brand-500 bg-brand-500/10' : 'border-zinc-700 hover:border-zinc-500'}`}>
+                  <input
+                    type="radio" checked={correctIndex === oi}
+                    onChange={() => setCorrectIndex(oi)}
+                    className="accent-brand-500"
+                  />
+                  <input
+                    type="text" maxLength={100} value={opt}
+                    onChange={e => { const o = [...options] as typeof options; o[oi] = e.target.value; setOptions(o) }}
+                    className="flex-1 bg-transparent text-xs font-mono text-white placeholder-zinc-600 focus:outline-none min-w-0"
+                  />
+                </label>
+              ))}
+            </div>
+            <p className="font-mono text-[10px] text-zinc-600">Selecione o radio da opção correta.</p>
+          </div>
+
+          {error && <p className="font-mono text-xs text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2">{error}</p>}
+
+          <div className="flex justify-end gap-3 pt-2 border-t border-dark-border">
+            <button onClick={onClose} className="font-mono text-xs text-zinc-400 px-5 py-2 border border-dark-border hover:border-zinc-500 transition-colors">
+              Cancelar
+            </button>
+            <button
+              onClick={handleSave} disabled={saving}
+              className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-2 hover:bg-brand-400 border border-brand-500 transition-colors disabled:opacity-50"
+            >
+              {saving ? 'Salvando...' : 'Salvar'}
             </button>
           </div>
         </div>

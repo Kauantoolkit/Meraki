@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   UseGuards,
@@ -69,6 +71,28 @@ export class SkillsController {
   @ApiOperation({ summary: 'Criar skill com questões iniciais (empresa)' })
   createSkill(@Body() dto: CreateSkillDto, @CurrentUser() user: AuthenticatedUser) {
     return this.createSkillUseCase.execute(dto, user.companyId ?? user.id);
+  }
+
+  @Patch('questions/:questionId')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.COMPANY)
+  @ApiOperation({ summary: 'Editar uma questão (empresa)' })
+  async updateQuestion(
+    @Param('questionId', ParseUUIDPipe) questionId: string,
+    @Body() body: { text?: string; options?: string[]; correctIndex?: number },
+  ) {
+    return this.skillRepo.updateQuestion(questionId, body);
+  }
+
+  @Delete('questions/:questionId')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.COMPANY)
+  @ApiOperation({ summary: 'Soft delete de uma questão (empresa)' })
+  async deleteQuestion(@Param('questionId', ParseUUIDPipe) questionId: string) {
+    await this.skillRepo.softDeleteQuestion(questionId);
+    return { ok: true };
   }
 
   @Post(':skillId/questions')

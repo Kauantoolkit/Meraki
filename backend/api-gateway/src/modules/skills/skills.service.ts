@@ -56,6 +56,21 @@ export class SkillsService {
     );
   }
 
+  updateQuestion(questionId: string, body: Record<string, unknown>, token: string) {
+    return this.proxy.patch(
+      `${IDENTITY_URL}/api/skills/questions/${questionId}`,
+      body,
+      this.proxy.authHeaders(token),
+    );
+  }
+
+  deleteQuestion(questionId: string, token: string) {
+    return this.proxy.delete(
+      `${IDENTITY_URL}/api/skills/questions/${questionId}`,
+      this.proxy.authHeaders(token),
+    );
+  }
+
   getMyValidations(token: string) {
     return this.proxy.get(
       `${IDENTITY_URL}/api/skills/my-validations`,

@@ -61,5 +61,11 @@ export const skillsApi = {
   attemptProject: (skillId: string, answers: number[], companyId: string, questionIds: string[]) =>
     api.post<QuizResult>(`/skills/${skillId}/attempt-project`, { answers, companyId, questionIds }),
 
+  updateQuestion: (questionId: string, data: { text?: string; options?: string[]; correctIndex?: number }) =>
+    api.patch(`/skills/questions/${questionId}`, data),
+
+  deleteQuestion: (questionId: string) =>
+    api.delete(`/skills/questions/${questionId}`),
+
   getMyValidations: () => api.get<SkillValidation[]>('/skills/my-validations'),
 }

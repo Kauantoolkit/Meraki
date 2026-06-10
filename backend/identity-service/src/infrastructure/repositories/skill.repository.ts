@@ -28,6 +28,15 @@ export class SkillRepository implements ISkillRepository {
     return this.skillRepo.find({ order: { displayName: 'ASC' } });
   }
 
+  async updateQuestion(id: string, data: { text?: string; options?: string[]; correctIndex?: number }): Promise<SkillQuestion> {
+    await this.questionRepo.update(id, data);
+    return this.questionRepo.findOne({ where: { id } }) as Promise<SkillQuestion>;
+  }
+
+  async softDeleteQuestion(id: string): Promise<void> {
+    await this.questionRepo.update(id, { deletedAt: new Date() });
+  }
+
   findById(id: string): Promise<Skill | null> {
     return this.skillRepo.findOne({ where: { id } });
   }
@@ -74,15 +83,15 @@ export class SkillRepository implements ISkillRepository {
   }
 
   getQuestionsBySkillId(skillId: string): Promise<SkillQuestion[]> {
-    return this.questionRepo.find({ where: { skillId } });
+    return this.questionRepo.find({ where: { skillId, deletedAt: null } });
   }
 
   getQuestionsBySkillAndCompany(skillId: string, companyId: string): Promise<SkillQuestion[]> {
-    return this.questionRepo.find({ where: { skillId, createdByCompanyId: companyId } });
+    return this.questionRepo.find({ where: { skillId, createdByCompanyId: companyId, deletedAt: null } });
   }
 
   async getRandomQuestionsForSkill(skillId: string, limit: number): Promise<SkillQuestion[]> {
-    const all = await this.questionRepo.find({ where: { skillId } });
+    const all = await this.questionRepo.find({ where: { skillId, deletedAt: null } });
     // Fisher-Yates shuffle then slice
     for (let i = all.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
