@@ -159,6 +159,7 @@ export default function CreateProject() {
   ]
 
   return (
+    <>
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased flex flex-col">
       <Navbar backUrl="/dashboard" projectTitle="CRIAR_PROJETO" />
 
@@ -510,6 +511,7 @@ export default function CreateProject() {
         }}
       />
     )}
+    </>
   )
 }
 
