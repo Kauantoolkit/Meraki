@@ -44,6 +44,11 @@ import { PaymentController } from './interfaces/controllers/payment.controller';
 import { PaymentHiringController } from './interfaces/controllers/payment-hiring.controller';
 import { WithdrawalController } from './interfaces/controllers/withdrawal.controller';
 
+// Providers (infrastructure)
+import { PaymentProvider } from './infrastructure/providers/payment-provider.interface';
+import { PixPaymentProvider } from './infrastructure/providers/pix-payment.provider';
+import { ConfigService } from '@nestjs/config';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Payment, EscrowAccount, Withdrawal, SpecialistBalance]),
@@ -81,6 +86,18 @@ import { WithdrawalController } from './interfaces/controllers/withdrawal.contro
     // Consumers
     MilestoneValidatedConsumer,
     DeliveryEventConsumer,
+    // Payment Provider Factory
+    {
+      provide: PaymentProvider,
+      useFactory: (configService: ConfigService) => {
+        const provider = configService.get('PAYMENT_PROVIDER');
+        if (provider === 'pix') {
+          return new PixPaymentProvider(configService);
+        }
+        throw new Error(`Unsupported payment provider: ${provider}`);
+      },
+      inject: [ConfigService],
+    },
   ],
 })
 export class PaymentModule {}

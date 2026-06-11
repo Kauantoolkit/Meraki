@@ -2,7 +2,7 @@ import { IsString, IsArray, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SubmitDeliveryDto {
-  @ApiProperty({ description: 'ID do milestone sendo entregue' })
+  @ApiProperty({ description: 'ID do milestone' })
   @IsString()
   milestoneId: string;
 

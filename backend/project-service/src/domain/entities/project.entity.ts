@@ -11,6 +11,9 @@ export class Project {
   deadline: Date;
   status: ProjectStatus;
 
+  contractSignedAt: Date | null = null;
+  contractHash: string | null = null;
+
   /** FK para Identity Context — referência externa */
   companyId: string;
 
@@ -33,7 +36,7 @@ export class Project {
     }
     this.specialistId = specialistId;
     this.bidId = bidId;
-    this.status = ProjectStatus.IN_PROGRESS;
+    this.status = ProjectStatus.SIGNING;
   }
 
   complete(): void {

@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PaymentFactory } from '../../domain/factories/payment.factory';
 import { PaymentRepository } from '../../infrastructure/repositories/payment.repository';
-import { SpecialistBalanceRepository } from '../../infrastructure/repositories/specialist-balance.repository';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { CreatePaymentHiringDto } from '../dto/create-payment-hiring.dto';
+import { PaymentProvider } from '../../infrastructure/providers/payment-provider.interface';
 
 @Injectable()
 export class CreatePaymentHiringUseCase {
@@ -12,8 +12,8 @@ export class CreatePaymentHiringUseCase {
   constructor(
     private readonly paymentFactory: PaymentFactory,
     private readonly paymentRepo: PaymentRepository,
-    private readonly balanceRepo: SpecialistBalanceRepository,
     private readonly events: EventPublisherService,
+    private readonly paymentProvider: PaymentProvider,
   ) {}
 
   async execute(dto: CreatePaymentHiringDto, companyId: string) {
@@ -23,6 +23,17 @@ export class CreatePaymentHiringUseCase {
       specialistId: dto.specialistId,
       amount: dto.amount,
     });
+
+    // Generate payment method (Pix key/QR code) via provider
+    const paymentMethod = await this.paymentProvider.generatePaymentMethod(dto.amount, {
+      projectId: dto.projectId,
+      milestoneId: payment.milestoneId,
+    });
+
+    // Save payment record with provider details
+    payment.paymentMethod = paymentMethod.type;
+    payment.paymentIdentifier = paymentMethod.identifier;
+    // status is PENDING by default via factory
 
     const saved = await this.paymentRepo.save(payment);
 
@@ -34,8 +45,11 @@ export class CreatePaymentHiringUseCase {
       companyId,
     });
 
-    this.logger.log(`Pagamento de contratação criado: ${saved.id} - R$${dto.amount}`);
+    this.logger.log(`Pagamento de contratação solicitado: ${saved.id} - R$${dto.amount} via ${paymentMethod.type}`);
 
-    return saved;
+    return {
+      payment: saved,
+      paymentMethod: paymentMethod,
+    };
   }
 }

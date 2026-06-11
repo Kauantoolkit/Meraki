@@ -1,6 +1,7 @@
 import { PaymentNotInEscrowError } from '../exceptions/payment-not-in-escrow.error';
 
 export enum PaymentStatus {
+  PENDING = 'PENDING',
   ESCROW_HELD = 'ESCROW_HELD',
   RELEASED = 'RELEASED',
   REFUNDED = 'REFUNDED',
@@ -15,6 +16,8 @@ export class Payment {
   specialistAmount: number;
   platformFee: number;
   status: PaymentStatus;
+  paymentMethod?: string;
+  paymentIdentifier?: string;
   escrowTransactionId: string;
   releaseTransactionId: string;
   releasedAt: Date;

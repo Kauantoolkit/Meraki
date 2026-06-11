@@ -9,6 +9,7 @@ import { CreateMilestoneDto } from '../../application/dto/create-milestone.dto';
 import { CreateMilestoneUseCase } from '../../application/use-cases/create-milestone.use-case';
 import { GetMilestonesByProjectUseCase } from '../../application/use-cases/get-milestones-by-project.use-case';
 import { UpdateMilestoneStatusUseCase } from '../../application/use-cases/update-milestone-status.use-case';
+import { LegallyAcceptMilestoneUseCase, LegallyAcceptMilestoneDto } from '../../application/use-cases/legally-accept-milestone.use-case';
 
 @ApiTags('Milestones')
 @Controller('api/projects')
@@ -19,6 +20,7 @@ export class MilestoneController {
     private readonly createMilestone: CreateMilestoneUseCase,
     private readonly getMilestones: GetMilestonesByProjectUseCase,
     private readonly updateStatus: UpdateMilestoneStatusUseCase,
+    private readonly legallyAccept: LegallyAcceptMilestoneUseCase,
   ) {}
 
   @Post(':id/milestones')
@@ -85,5 +87,18 @@ export class MilestoneController {
   @ApiResponse({ status: 404, description: 'Milestone não encontrado.' })
   reject(@Param('milestoneId') milestoneId: string) {
     return this.updateStatus.execute(milestoneId, 'reject');
+  }
+
+  @Put('milestones/:milestoneId/legally-accept')
+  @ApiOperation({ summary: 'Aceite legal do milestone (empresa)' })
+  @ApiParam({ name: 'milestoneId', description: 'UUID do milestone' })
+  @ApiResponse({ status: 200, description: 'Milestone aceito legalmente.' })
+  @ApiResponse({ status: 400, description: 'Milestone deve estar APPROVED.' })
+  @ApiResponse({ status: 404, description: 'Milestone não encontrado.' })
+  legallyAccept(
+    @Param('milestoneId') milestoneId: string,
+    @Body() dto: LegallyAcceptMilestoneDto,
+  ) {
+    return this.legallyAccept.execute(milestoneId, dto);
   }
 }

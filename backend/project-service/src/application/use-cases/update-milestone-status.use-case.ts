@@ -4,7 +4,7 @@ import { MilestoneRepository } from '../../infrastructure/repositories/milestone
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { MilestoneUpdatedEvent } from '../../domain/events/milestone-updated.event';
 
-export type MilestoneAction = 'start' | 'submit' | 'approve' | 'reject';
+export type MilestoneAction = 'start' | 'submit' | 'approve' | 'reject' | 'legallyAccept';
 
 @Injectable()
 export class UpdateMilestoneStatusUseCase {
@@ -25,6 +25,11 @@ export class UpdateMilestoneStatusUseCase {
       milestone.submit();
     } else if (action === 'approve') {
       milestone.approve();
+    } else if (action === 'legallyAccept') {
+      // Aqui precisaremos de um invoiceId, que deve vir do DTO
+      // Como a assinatura do método execute é fixa (id, action),
+      // vou ajustar para aceitar um payload opcional.
+      throw new Error('Ação legallyAccept requer invoiceId. Use o novo endpoint de aceite legal.');
     } else if (action === 'reject') {
       milestone.reject();
     }

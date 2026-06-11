@@ -12,6 +12,8 @@ export class Milestone {
   description: string;
   amount: number;
   status: MilestoneStatus;
+  invoiceId: string | null = null;
+  legalApprovalAt: Date | null = null;
 
   /** Ordem sequencial — usado na invariante RN04 */
   order: number;
@@ -51,6 +53,15 @@ export class Milestone {
       throw new InvalidMilestoneTransitionError('aprovar', 'SUBMITTED');
     }
     this.status = MilestoneStatus.APPROVED;
+  }
+
+  legallyAccept(invoiceId: string): void {
+    if (this.status !== MilestoneStatus.APPROVED) {
+      throw new InvalidMilestoneTransitionError('aceite legal', 'APPROVED');
+    }
+    this.invoiceId = invoiceId;
+    this.legalApprovalAt = new Date();
+    this.status = MilestoneStatus.LEGALLY_ACCEPTED;
   }
 
   reject(): void {
