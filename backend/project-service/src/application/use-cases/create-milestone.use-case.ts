@@ -1,8 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MilestoneFactory } from '../../domain/factories/milestone.factory';
-import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
-import { ProjectRepository } from '../../infrastructure/repositories/project.repository';
+import { IMilestoneRepository, MILESTONE_REPOSITORY } from '../../domain/repositories/milestone.repository.interface';
+import { IProjectRepository, PROJECT_REPOSITORY } from '../../domain/repositories/project.repository.interface';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { MilestoneCreatedEvent } from '../../domain/events/milestone-created.event';
 import { CreateMilestoneDto } from '../dto/create-milestone.dto';
@@ -12,8 +12,8 @@ import { ProjectStatus } from '../../domain/enums/project-status.enum';
 export class CreateMilestoneUseCase {
   constructor(
     private readonly factory: MilestoneFactory,
-    private readonly milestoneRepo: MilestoneRepository,
-    private readonly projectRepo: ProjectRepository,
+    @Inject(MILESTONE_REPOSITORY) private readonly milestoneRepo: IMilestoneRepository,
+    @Inject(PROJECT_REPOSITORY) private readonly projectRepo: IProjectRepository,
     private readonly events: EventPublisherService,
     private readonly emitter: EventEmitter2,
   ) {}

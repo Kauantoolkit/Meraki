@@ -9,12 +9,18 @@ import { Milestone } from './domain/entities/milestone.entity';
 import { ProjectHistory } from './domain/entities/project-history.entity';
 import { ProjectFactory } from './domain/factories/project.factory';
 import { MilestoneFactory } from './domain/factories/milestone.factory';
+import { PROJECT_REPOSITORY } from './domain/repositories/project.repository.interface';
+import { MILESTONE_REPOSITORY } from './domain/repositories/milestone.repository.interface';
+import { PROJECT_HISTORY_REPOSITORY } from './domain/repositories/project-history.repository.interface';
 
 // Infrastructure
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 import { ProjectRepository } from './infrastructure/repositories/project.repository';
 import { MilestoneRepository } from './infrastructure/repositories/milestone.repository';
 import { ProjectHistoryRepository } from './infrastructure/repositories/project-history.repository';
+
+// Application — Ports
+import { SKILL_CATALOG_PORT } from './application/ports/skill-catalog.port';
 
 // Application — Use Cases
 import { CreateProjectUseCase } from './application/use-cases/create-project.use-case';
@@ -58,10 +64,12 @@ import { SkillsCatalogService } from './infrastructure/http/skills-catalog.servi
     // Domain Factories
     { provide: ProjectFactory, useFactory: () => new ProjectFactory() },
     { provide: MilestoneFactory, useFactory: () => new MilestoneFactory() },
-    // Repositories
-    ProjectRepository,
-    MilestoneRepository,
-    ProjectHistoryRepository,
+    // Repositories (interface tokens → concrete implementations)
+    { provide: PROJECT_REPOSITORY, useClass: ProjectRepository },
+    { provide: MILESTONE_REPOSITORY, useClass: MilestoneRepository },
+    { provide: PROJECT_HISTORY_REPOSITORY, useClass: ProjectHistoryRepository },
+    // HTTP Ports (interface tokens → concrete implementations)
+    { provide: SKILL_CATALOG_PORT, useClass: SkillsCatalogService },
     // Use cases
     CreateProjectUseCase,
     GetProjectsUseCase,
@@ -78,8 +86,6 @@ import { SkillsCatalogService } from './infrastructure/http/skills-catalog.servi
     ProjectHistoryListener,
     // Event consumer
     BidAcceptedConsumer,
-    // HTTP clients
-    SkillsCatalogService,
   ],
 })
 export class ProjectModule {}

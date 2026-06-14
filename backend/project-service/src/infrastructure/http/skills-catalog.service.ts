@@ -1,22 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { ISkillCatalogPort } from '../../application/ports/skill-catalog.port';
 
 @Injectable()
-export class SkillsCatalogService {
+export class SkillsCatalogService implements ISkillCatalogPort {
   private readonly logger = new Logger(SkillsCatalogService.name);
   private readonly identityUrl = process.env.IDENTITY_SERVICE_URL ?? 'http://identity-service:3001';
-
-  async skillExists(skillName: string): Promise<boolean> {
-    try {
-      const res = await fetch(`${this.identityUrl}/api/skills`);
-      if (!res.ok) return true; // falha silenciosa: não bloqueia se identity-service indisponível
-      const skills: { name: string; displayName: string }[] = await res.json();
-      const normalized = skillName.trim().toLowerCase();
-      return skills.some((s) => s.name === normalized || s.displayName.toLowerCase() === normalized);
-    } catch (err) {
-      this.logger.warn(`Não foi possível validar skill "${skillName}" no catálogo: ${err}`);
-      return true; // falha silenciosa
-    }
-  }
 
   async validateSkills(skillNames: string[]): Promise<string[]> {
     try {

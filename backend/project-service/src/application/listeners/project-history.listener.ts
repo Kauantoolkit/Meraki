@@ -1,6 +1,6 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { ProjectHistoryRepository } from '../../infrastructure/repositories/project-history.repository';
+import { IProjectHistoryRepository, PROJECT_HISTORY_REPOSITORY } from '../../domain/repositories/project-history.repository.interface';
 import { ProjectCreatedEvent } from '../../domain/events/project-created.event';
 import { MilestoneCreatedEvent } from '../../domain/events/milestone-created.event';
 import { MilestoneUpdatedEvent } from '../../domain/events/milestone-updated.event';
@@ -10,7 +10,9 @@ import { ProjectHistoryAction } from '../../domain/enums/project-history-action.
 export class ProjectHistoryListener {
   private readonly logger = new Logger(ProjectHistoryListener.name);
 
-  constructor(private readonly historyRepo: ProjectHistoryRepository) {}
+  constructor(
+    @Inject(PROJECT_HISTORY_REPOSITORY) private readonly historyRepo: IProjectHistoryRepository,
+  ) {}
 
   @OnEvent('project.created')
   async handleProjectCreated(event: ProjectCreatedEvent): Promise<void> {

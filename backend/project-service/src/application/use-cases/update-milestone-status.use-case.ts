@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
+import { IMilestoneRepository, MILESTONE_REPOSITORY } from '../../domain/repositories/milestone.repository.interface';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { MilestoneUpdatedEvent } from '../../domain/events/milestone-updated.event';
 
@@ -9,7 +9,7 @@ export type MilestoneAction = 'start' | 'submit' | 'approve' | 'reject';
 @Injectable()
 export class UpdateMilestoneStatusUseCase {
   constructor(
-    private readonly milestoneRepo: MilestoneRepository,
+    @Inject(MILESTONE_REPOSITORY) private readonly milestoneRepo: IMilestoneRepository,
     private readonly events: EventPublisherService,
     private readonly emitter: EventEmitter2,
   ) {}
