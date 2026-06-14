@@ -7,9 +7,11 @@ import { SpecialistPublicProfile } from '../../domain/entities/specialist-public
 
 export interface MyPortfolioDto {
   id: string;
-  specialistId: string;
+  userId: string;
+  name: string;
   bio: string;
   skills: string[];
+  skillBadges: Record<string, 'yellow' | 'green'>;
   rating: number;
   completedProjects: number;
   certifications: Array<{
@@ -61,9 +63,11 @@ export class GetMyPortfolioUseCase {
 
     return {
       id: profile.id,
-      specialistId: profile.userId,
+      userId: profile.userId,
+      name: profile.name ?? '',
       bio: profile.bio ?? '',
       skills: profile.skills ?? [],
+      skillBadges: profile.skillBadges ?? {},
       rating: Number(profile.rating ?? 0),
       completedProjects: profile.completedProjects ?? 0,
       certifications: certifications.map((c) => ({

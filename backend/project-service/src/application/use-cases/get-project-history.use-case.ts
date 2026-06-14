@@ -1,13 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { ProjectHistoryRepository } from '../../infrastructure/repositories/project-history.repository';
-import { ProjectRepository } from '../../infrastructure/repositories/project.repository';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { IProjectHistoryRepository, PROJECT_HISTORY_REPOSITORY } from '../../domain/repositories/project-history.repository.interface';
+import { IProjectRepository, PROJECT_REPOSITORY } from '../../domain/repositories/project.repository.interface';
 import { ProjectHistory } from '../../domain/entities/project-history.entity';
 
 @Injectable()
 export class GetProjectHistoryUseCase {
   constructor(
-    private readonly historyRepo: ProjectHistoryRepository,
-    private readonly projectRepo: ProjectRepository,
+    @Inject(PROJECT_HISTORY_REPOSITORY) private readonly historyRepo: IProjectHistoryRepository,
+    @Inject(PROJECT_REPOSITORY) private readonly projectRepo: IProjectRepository,
   ) {}
 
   async execute(projectId: string): Promise<ProjectHistory[]> {

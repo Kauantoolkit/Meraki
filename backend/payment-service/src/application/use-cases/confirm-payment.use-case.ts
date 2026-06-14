@@ -1,9 +1,11 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PaymentRepository } from '../../infrastructure/repositories/payment.repository';
-import { SpecialistBalanceRepository } from '../../infrastructure/repositories/specialist-balance.repository';
-import { FeeCalculationDomainService } from '../../domain/services/fee-calculation.domain-service';
-import { SpecialistBalance } from '../../domain/entities/specialist-balance.entity';
+import { EscrowAccountRepository } from '../../infrastructure/repositories/escrow-account.repository';
+import { EscrowAccount } from '../../domain/entities/escrow-account.entity';
+import { PaymentProvider } from '../../infrastructure/providers/payment-provider.interface';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
+import { PaymentStatus } from '../../domain/entities/payment.entity';
+import { Money } from '../../domain/value-objects/money.value-object';
 
 @Injectable()
 export class ConfirmPaymentUseCase {
@@ -11,43 +13,43 @@ export class ConfirmPaymentUseCase {
 
   constructor(
     private readonly paymentRepo: PaymentRepository,
-    private readonly balanceRepo: SpecialistBalanceRepository,
-    private readonly feeService: FeeCalculationDomainService,
+    private readonly escrowRepo: EscrowAccountRepository,
+    private readonly paymentProvider: PaymentProvider,
     private readonly events: EventPublisherService,
   ) {}
 
   async execute(paymentId: string) {
     const payment = await this.paymentRepo.findById(paymentId);
     if (!payment) throw new NotFoundException('Pagamento não encontrado');
+    if (payment.status !== 'PENDING') {
+      throw new BadRequestException(`Pagamento não pode ser confirmado no estado atual: ${payment.status}`);
+    }
 
-    const { specialistAmount, platformFee } = payment.release(this.feeService.rate);
-    payment.releaseTransactionId = `release-${Date.now()}`;
+    // 1. Verify payment with the provider
+    const verification = await this.paymentProvider.verifyPayment(paymentId);
+    if (verification.status !== 'PAID') {
+      throw new BadRequestException('O provedor de pagamento não confirmou o recebimento dos fundos.');
+    }
+
+    // 2. Update payment status to ESCROW_HELD
+    payment.status = PaymentStatus.ESCROW_HELD;
     await this.paymentRepo.save(payment);
 
-    // Atualiza saldo do especialista
-    let balance = await this.balanceRepo.findBySpecialist(payment.specialistId);
-    if (!balance) {
-      balance = new SpecialistBalance();
-      balance.specialistId = payment.specialistId;
-      balance.totalEarned = 0;
-      balance.availableBalance = 0;
-      balance.totalWithdrawn = 0;
+    // 3. Update Project Escrow Account
+    let escrow = await this.escrowRepo.findByProject(payment.projectId);
+    if (!escrow) {
+      escrow = new EscrowAccount();
+      escrow.projectId = payment.projectId;
+      escrow.totalAmount = 0;
+      escrow.heldAmount = 0;
+      escrow.releasedAmount = 0;
     }
-    balance.credit(specialistAmount);
-    await this.balanceRepo.save(balance);
 
-    await this.events.publishPaymentReleased({
-      paymentId: payment.id,
-      milestoneId: payment.milestoneId,
-      projectId: payment.projectId,
-      amount: payment.amount,
-      specialistAmount,
-      platformFee,
-      specialistId: payment.specialistId,
-    });
+    escrow.holdFunds(new Money(payment.amount));
+    await this.escrowRepo.save(escrow);
 
-    this.logger.log(`Pagamento ${paymentId} confirmado: R$${specialistAmount} para especialista`);
+    this.logger.log(`Pagamento ${paymentId} confirmado e movido para escrow: R$${payment.amount}`);
 
-    return { payment, specialistAmount, platformFee };
+    return { payment, escrow };
   }
 }

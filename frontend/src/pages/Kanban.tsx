@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { Terminal, UploadCloud, ShieldCheck, Check, User, Calendar, Lock } from 'lucide-react'
+import { Terminal, Settings2, UploadCloud, ShieldCheck, Check, Send, User, Calendar, Lock, AlertCircle, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
 import { projectStatusLabel } from '../lib/labels'
 import { milestonesApi, DeliveryData } from '../api/milestones'
 import { useAuth } from '../contexts/AuthContext'
+import { extractApiError } from '../api/client'
+import { validateDeliveryForm, ValidationError, formatValidationErrors } from '../lib/validators'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -37,6 +39,7 @@ export default function Kanban() {
   const [rejectReason, setRejectReason] = useState('')
   const [submitError, setSubmitError] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
   const [delivery, setDelivery] = useState<DeliveryData | null>(null)
 
   const isCompany = ((user?.userType ?? user?.type) as string)?.toUpperCase() === 'COMPANY'
@@ -66,7 +69,7 @@ export default function Kanban() {
       const updated = await projectsApi.getMilestones(projectId!)
       setMilestones(updated.data)
     } catch {
-      alert('Erro ao iniciar milestone.')
+      alert('Erro ao iniciar marco.')
     } finally {
       setActionLoading(false)
     }
@@ -74,10 +77,22 @@ export default function Kanban() {
 
   async function confirmSubmit() {
     if (!pendingMilestoneId || !projectId) return
-    if (!repoUrl.trim()) {
-      setSubmitError('O link do repositório/PR é obrigatório para submeter a entrega.')
+
+    // Validar antes de enviar
+    const errors = validateDeliveryForm({
+      projectId,
+      milestoneId: pendingMilestoneId,
+      deliveredFiles: repoUrl ? [repoUrl] : undefined,
+      deliveryNotes: releaseNotes,
+    })
+
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      setSubmitError(formatValidationErrors(errors))
       return
     }
+
+    setValidationErrors([])
     setSubmitError('')
     setActionLoading(true)
     try {
@@ -92,11 +107,15 @@ export default function Kanban() {
       setSubmitModal(false)
       setRepoUrl('')
       setReleaseNotes('')
-    } catch {
-      alert('Erro ao submeter entrega.')
+    } catch (e: unknown) {
+      setSubmitError(extractApiError(e, 'Erro ao submeter entrega. Verifique os dados e tente novamente.'))
     } finally {
       setActionLoading(false)
     }
+  }
+
+  function getFieldError(field: string): string | undefined {
+    return validationErrors.find(e => e.field === field)?.message
   }
 
   async function confirmApprove() {
@@ -110,7 +129,7 @@ export default function Kanban() {
       setMilestones(updated.data)
       setApproveModal(false)
     } catch {
-      alert('Erro ao aprovar milestone.')
+      alert('Erro ao aprovar marco.')
     } finally {
       setActionLoading(false)
     }
@@ -216,7 +235,7 @@ export default function Kanban() {
                       isCompany={isCompany}
                       canStart={m.id === nextStartableId}
                       onStart={() => startMilestone(m.id)}
-                      onSubmit={() => { setPendingMilestoneId(m.id); setSubmitError(''); setSubmitModal(true) }}
+                      onSubmit={() => { setPendingMilestoneId(m.id); setSubmitError(''); setValidationErrors([]); setSubmitModal(true) }}
                       onApprove={() => {
                         setPendingMilestoneId(m.id)
                         setDelivery(null)
@@ -242,7 +261,7 @@ export default function Kanban() {
           <div className="p-3 border-b border-dark-border bg-dark-card flex justify-between items-center">
             <div className="flex items-center gap-2">
               <Terminal className="w-4 h-4 text-brand-500" />
-              <h2 className="font-mono font-bold text-xs text-white uppercase tracking-wider">Project_History</h2>
+              <h2 className="font-mono font-bold text-xs text-white uppercase tracking-wider">HISTÓRICO</h2>
             </div>
             <div className="w-2 h-2 bg-brand-500 animate-pulse rounded-full" />
           </div>
@@ -273,33 +292,138 @@ export default function Kanban() {
       {submitModal && (
         <div className="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-dark-card border border-blue-500 w-full max-w-md p-6 shadow-[0_0_30px_rgba(59,130,246,0.15)]">
-            <h2 className="text-lg font-bold text-white uppercase tracking-tight mb-2 flex items-center gap-2">
-              <UploadCloud className="w-5 h-5 text-blue-400" /> Submeter Entrega
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-white uppercase tracking-tight flex items-center gap-2">
+                <UploadCloud className="w-5 h-5 text-blue-400" /> Submeter Entrega
+              </h2>
+              <button onClick={() => { setSubmitModal(false); setSubmitError(''); setValidationErrors([]); }} className="text-zinc-500 hover:text-zinc-300">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
             <p className="text-xs font-mono text-zinc-400 mb-6">Os fundos em <span className="text-brand-500">Escrow</span> ficarão pendentes da aprovação do cliente.</p>
+
+            {/* Painel de erros */}
+            {submitError && (
+              <div className="bg-red-500/10 border border-red-500/50 p-4 flex items-start gap-3 rounded-none mb-6">
+                <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <p className="font-mono text-xs font-bold text-red-400 mb-1">ERROS DE VALIDAÇÃO</p>
+                  <p className="font-mono text-xs text-red-300 whitespace-pre-wrap">{submitError}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSubmitError('')}
+                  className="text-red-400 hover:text-red-300 shrink-0"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
             <div className="space-y-4 mb-6">
               <div>
-                <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">
-                  Repositório / URL <span className="text-red-400">*</span>
-                </label>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-[10px] font-mono text-zinc-500 uppercase">Repositório / URL</label>
+                  {getFieldError('deliveredFiles') && (
+                    <span className="text-[9px] font-mono text-red-400 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {getFieldError('deliveredFiles')}
+                    </span>
+                  )}
+                </div>
                 <input type="text" data-testid="ms-submit-repo" value={repoUrl}
-                  onChange={e => { setRepoUrl(e.target.value); setSubmitError('') }}
-                  className={`w-full bg-[#000] border p-3 text-xs font-mono text-white focus:outline-none focus:border-blue-500 ${submitError ? 'border-red-500' : 'border-dark-border'}`}
+                  onChange={e => {
+                    setRepoUrl(e.target.value)
+                    if (validationErrors.some(e => e.field === 'deliveredFiles')) {
+                      setValidationErrors(validationErrors.filter(e => e.field !== 'deliveredFiles'))
+                    }
+                  }}
+                  className={`w-full bg-[#000] border p-3 text-xs font-mono text-white focus:outline-none rounded-none ${
+                    getFieldError('deliveredFiles')
+                      ? 'border-red-500/50 focus:border-red-500'
+                      : 'border-dark-border focus:border-blue-500'
+                  }`}
                   placeholder="https://github.com/..." />
-                {submitError && (
-                  <p className="font-mono text-[10px] text-red-400 mt-1">{submitError}</p>
-                )}
               </div>
               <div>
-                <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Notas de Release</label>
-                <textarea data-testid="ms-submit-notes" value={releaseNotes} onChange={e => setReleaseNotes(e.target.value)}
-                  className="w-full bg-[#000] border border-dark-border p-3 text-xs font-sans text-white focus:outline-none focus:border-blue-500 resize-none h-20" placeholder="Descreva o que foi entregue..." />
+                <div className="flex justify-between items-center mb-1">
+                  <label className="block text-[10px] font-mono text-zinc-500 uppercase">Notas de Release</label>
+                  <span className="text-[9px] font-mono text-zinc-500">{releaseNotes.length}/2000</span>
+                </div>
+                <textarea data-testid="ms-submit-notes" value={releaseNotes}
+                  onChange={e => {
+                    setReleaseNotes(e.target.value)
+                    if (validationErrors.some(e => e.field === 'deliveryNotes')) {
+                      setValidationErrors(validationErrors.filter(e => e.field !== 'deliveryNotes'))
+                    }
+                  }}
+                  className={`w-full bg-[#000] border p-3 text-xs font-sans text-white focus:outline-none resize-none h-20 rounded-none ${
+                    getFieldError('deliveryNotes')
+                      ? 'border-red-500/50 focus:border-red-500'
+                      : 'border-dark-border focus:border-blue-500'
+                  }`}
+                  placeholder="Descreva o que foi entregue..." />
+                {getFieldError('deliveryNotes') && (
+                  <p className="text-[9px] font-mono text-red-400 flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3 h-3" /> {getFieldError('deliveryNotes')}
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex gap-3">
-              <button onClick={() => setSubmitModal(false)} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
+              <button onClick={() => { setSubmitModal(false); setSubmitError(''); setValidationErrors([]); }} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
               <button data-testid="ms-submit-confirm" onClick={confirmSubmit} disabled={actionLoading} className="flex-1 btn-sharp bg-blue-500 text-dark-bg font-bold font-mono text-xs px-4 py-3 border border-blue-500 hover:bg-blue-400 transition-colors disabled:opacity-70">
-                {actionLoading ? 'Enviando...' : 'DEPLOY_SUBMIT()'}
+                {actionLoading ? 'Enviando...' : 'ENVIAR_ENTREGA()'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Reject Modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-dark-card border border-red-500 w-full max-w-md p-6 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+            <h2 className="text-lg font-bold text-white uppercase tracking-tight mb-2 flex items-center gap-2">
+              Rejeitar Entrega
+            </h2>
+            <p className="text-xs font-mono text-zinc-400 mb-4">A milestone voltará ao estado <span className="text-orange-400">Em Andamento</span> para correção pelo especialista.</p>
+            {delivery && (
+              <div className="mb-4 bg-dark-input border border-dark-border p-3 space-y-2">
+                <p className="font-mono text-[10px] text-zinc-500 uppercase mb-2">Entregáveis Submetidos</p>
+                {delivery.deliveredFiles && delivery.deliveredFiles.length > 0 ? (
+                  <div className="space-y-1">
+                    {delivery.deliveredFiles.map((f, i) => (
+                      <a key={i} href={f} target="_blank" rel="noopener noreferrer"
+                        className="block font-mono text-xs text-blue-400 hover:text-blue-300 underline truncate">
+                        {f}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="font-mono text-[10px] text-zinc-600 italic">Nenhum link submetido.</p>
+                )}
+                {delivery.deliveryNotes && (
+                  <div className="border-t border-dark-border pt-2 mt-2">
+                    <p className="font-mono text-[10px] text-zinc-500 uppercase mb-1">Notas</p>
+                    <p className="font-mono text-xs text-zinc-300 whitespace-pre-wrap">{delivery.deliveryNotes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="mb-6">
+              <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Motivo da Rejeição</label>
+              <textarea
+                data-testid="ms-reject-reason"
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                className="w-full bg-[#000] border border-dark-border p-3 text-xs font-sans text-white focus:outline-none focus:border-red-500 resize-none h-20"
+                placeholder="Descreva o que precisa ser corrigido..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { setRejectModal(false); setRejectReason('') }} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
+              <button data-testid="ms-reject-confirm" onClick={confirmReject} disabled={actionLoading} className="flex-1 btn-sharp bg-red-500 text-white font-bold font-mono text-xs px-4 py-3 border border-red-500 hover:bg-red-400 transition-colors disabled:opacity-70">
+                {actionLoading ? 'Rejeitando...' : 'REJEITAR_ENTREGA()'}
               </button>
             </div>
           </div>
@@ -362,10 +486,10 @@ export default function Kanban() {
         <div className="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-dark-card border border-brand-500 w-full max-w-md p-6 shadow-[0_0_30px_rgba(85,202,124,0.15)]">
             <h2 className="text-lg font-bold text-white uppercase tracking-tight mb-2 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-brand-500" /> Aprovar Milestone
+              <ShieldCheck className="w-5 h-5 text-brand-500" /> Aprovar Marco
             </h2>
             <div className="bg-brand-500/10 border border-brand-500/30 p-3 mb-4">
-              <p className="text-[10px] font-mono text-brand-500 uppercase">Warning: Ação Irreversível</p>
+              <p className="text-[10px] font-mono text-brand-500 uppercase">Aviso: Ação Irreversível</p>
               <p className="text-xs text-zinc-300 mt-1">Ao aprovar, o valor estipulado no Escrow será transferido para o especialista.</p>
             </div>
             <div className="flex items-center gap-3 mb-4 bg-dark-input p-3 border border-dark-border">

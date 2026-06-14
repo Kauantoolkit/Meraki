@@ -1,11 +1,13 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { ProjectRepository } from '../../infrastructure/repositories/project.repository';
+import { Injectable, NotFoundException, ForbiddenException, Inject } from '@nestjs/common';
+import { IProjectRepository, PROJECT_REPOSITORY } from '../../domain/repositories/project.repository.interface';
 import { UpdateProjectDto } from '../dto/update-project.dto';
 import { ProjectStatus } from '../../domain/enums/project-status.enum';
 
 @Injectable()
 export class UpdateProjectUseCase {
-  constructor(private readonly projectRepo: ProjectRepository) {}
+  constructor(
+    @Inject(PROJECT_REPOSITORY) private readonly projectRepo: IProjectRepository,
+  ) {}
 
   async execute(id: string, dto: UpdateProjectDto, companyId: string) {
     const project = await this.projectRepo.findById(id);

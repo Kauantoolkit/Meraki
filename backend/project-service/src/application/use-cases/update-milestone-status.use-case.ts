@@ -1,15 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
+import { IMilestoneRepository, MILESTONE_REPOSITORY } from '../../domain/repositories/milestone.repository.interface';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { MilestoneUpdatedEvent } from '../../domain/events/milestone-updated.event';
 
-export type MilestoneAction = 'start' | 'submit' | 'approve' | 'reject';
+export type MilestoneAction = 'start' | 'submit' | 'approve' | 'reject' | 'legallyAccept';
 
 @Injectable()
 export class UpdateMilestoneStatusUseCase {
   constructor(
-    private readonly milestoneRepo: MilestoneRepository,
+    @Inject(MILESTONE_REPOSITORY) private readonly milestoneRepo: IMilestoneRepository,
     private readonly events: EventPublisherService,
     private readonly emitter: EventEmitter2,
   ) {}
@@ -25,6 +25,11 @@ export class UpdateMilestoneStatusUseCase {
       milestone.submit();
     } else if (action === 'approve') {
       milestone.approve();
+    } else if (action === 'legallyAccept') {
+      // Aqui precisaremos de um invoiceId, que deve vir do DTO
+      // Como a assinatura do método execute é fixa (id, action),
+      // vou ajustar para aceitar um payload opcional.
+      throw new Error('Ação legallyAccept requer invoiceId. Use o novo endpoint de aceite legal.');
     } else if (action === 'reject') {
       milestone.reject();
     }

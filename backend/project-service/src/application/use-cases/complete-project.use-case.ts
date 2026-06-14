@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
-import { ProjectRepository } from '../../infrastructure/repositories/project.repository';
-import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, Inject } from '@nestjs/common';
+import { IProjectRepository, PROJECT_REPOSITORY } from '../../domain/repositories/project.repository.interface';
+import { IMilestoneRepository, MILESTONE_REPOSITORY } from '../../domain/repositories/milestone.repository.interface';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { ProjectCompletedEvent } from '../../domain/events/project-completed.event';
 import { MilestoneStatus } from '../../domain/enums/milestone-status.enum';
@@ -8,8 +8,8 @@ import { MilestoneStatus } from '../../domain/enums/milestone-status.enum';
 @Injectable()
 export class CompleteProjectUseCase {
   constructor(
-    private readonly projectRepo: ProjectRepository,
-    private readonly milestoneRepo: MilestoneRepository,
+    @Inject(PROJECT_REPOSITORY) private readonly projectRepo: IProjectRepository,
+    @Inject(MILESTONE_REPOSITORY) private readonly milestoneRepo: IMilestoneRepository,
     private readonly events: EventPublisherService,
   ) {}
 
@@ -36,6 +36,7 @@ export class CompleteProjectUseCase {
         projectId: project.id,
         specialistId: project.specialistId,
         companyId: project.companyId,
+        requirements: project.requirements ?? [],
       }),
     );
   }

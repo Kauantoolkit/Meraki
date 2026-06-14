@@ -9,12 +9,18 @@ import { Milestone } from './domain/entities/milestone.entity';
 import { ProjectHistory } from './domain/entities/project-history.entity';
 import { ProjectFactory } from './domain/factories/project.factory';
 import { MilestoneFactory } from './domain/factories/milestone.factory';
+import { PROJECT_REPOSITORY } from './domain/repositories/project.repository.interface';
+import { MILESTONE_REPOSITORY } from './domain/repositories/milestone.repository.interface';
+import { PROJECT_HISTORY_REPOSITORY } from './domain/repositories/project-history.repository.interface';
 
 // Infrastructure
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 import { ProjectRepository } from './infrastructure/repositories/project.repository';
 import { MilestoneRepository } from './infrastructure/repositories/milestone.repository';
 import { ProjectHistoryRepository } from './infrastructure/repositories/project-history.repository';
+
+// Application — Ports
+import { SKILL_CATALOG_PORT } from './application/ports/skill-catalog.port';
 
 // Application — Use Cases
 import { CreateProjectUseCase } from './application/use-cases/create-project.use-case';
@@ -23,11 +29,13 @@ import { GetProjectByIdUseCase } from './application/use-cases/get-project-by-id
 import { UpdateProjectUseCase } from './application/use-cases/update-project.use-case';
 import { CancelProjectUseCase } from './application/use-cases/cancel-project.use-case';
 import { CompleteProjectUseCase } from './application/use-cases/complete-project.use-case';
+import { SignProjectContractUseCase } from './application/use-cases/sign-project-contract.use-case';
 import { AssignSpecialistUseCase } from './application/use-cases/assign-specialist.use-case';
 import { CreateMilestoneUseCase } from './application/use-cases/create-milestone.use-case';
 import { GetMilestonesByProjectUseCase } from './application/use-cases/get-milestones-by-project.use-case';
 import { UpdateMilestoneStatusUseCase } from './application/use-cases/update-milestone-status.use-case';
 import { GetProjectHistoryUseCase } from './application/use-cases/get-project-history.use-case';
+import { LegallyAcceptMilestoneUseCase } from './application/use-cases/legally-accept-milestone.use-case';
 
 // Application — Listeners
 import { ProjectHistoryListener } from './application/listeners/project-history.listener';
@@ -39,6 +47,7 @@ import { ProjectHistoryController } from './interfaces/controllers/project-histo
 
 // Event consumer (bid.accepted)
 import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.consumer';
+import { SkillsCatalogService } from './infrastructure/http/skills-catalog.service';
 
 @Module({
   imports: [
@@ -57,10 +66,12 @@ import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.cons
     // Domain Factories
     { provide: ProjectFactory, useFactory: () => new ProjectFactory() },
     { provide: MilestoneFactory, useFactory: () => new MilestoneFactory() },
-    // Repositories
-    ProjectRepository,
-    MilestoneRepository,
-    ProjectHistoryRepository,
+    // Repositories (interface tokens → concrete implementations)
+    { provide: PROJECT_REPOSITORY, useClass: ProjectRepository },
+    { provide: MILESTONE_REPOSITORY, useClass: MilestoneRepository },
+    { provide: PROJECT_HISTORY_REPOSITORY, useClass: ProjectHistoryRepository },
+    // HTTP Ports (interface tokens → concrete implementations)
+    { provide: SKILL_CATALOG_PORT, useClass: SkillsCatalogService },
     // Use cases
     CreateProjectUseCase,
     GetProjectsUseCase,
@@ -68,11 +79,13 @@ import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.cons
     UpdateProjectUseCase,
     CancelProjectUseCase,
     CompleteProjectUseCase,
+    SignProjectContractUseCase,
     AssignSpecialistUseCase,
     CreateMilestoneUseCase,
     GetMilestonesByProjectUseCase,
     UpdateMilestoneStatusUseCase,
     GetProjectHistoryUseCase,
+    LegallyAcceptMilestoneUseCase,
     // Listeners (RN07)
     ProjectHistoryListener,
     // Event consumer

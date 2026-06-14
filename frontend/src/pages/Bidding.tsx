@@ -1,11 +1,14 @@
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { FileCode, Building2, Coins, CalendarClock, ShieldAlert, Send, Loader2, CheckSquare, ListChecks, Pencil, X } from 'lucide-react'
+import { FileCode, Building2, Coins, CalendarClock, ShieldAlert, Send, Loader2, CheckSquare, ListChecks, Pencil, X, Award, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
 import { bidsApi, Bid, BidMilestoneProposal } from '../api/bids'
+import { skillsApi, Skill, SkillQuestion, QuizResult } from '../api/skills'
+import { portfolioApi } from '../api/portfolio'
 import { extractApiError } from '../api/client'
 import { projectStatusLabel, bidStatusLabel } from '../lib/labels'
+import { validateBidForm, ValidationError, formatValidationErrors } from '../lib/validators'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -37,6 +40,15 @@ export default function Bidding() {
   const [editError, setEditError] = useState('')
   const [updating, setUpdating] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
+  const [coverLetterLineCount, setCoverLetterLineCount] = useState(1)
+  const [coverLetterScrollTop, setCoverLetterScrollTop] = useState(0)
+  const coverLetterRef = useRef<HTMLTextAreaElement | null>(null)
+
+  // Skill quiz gate
+  const [skillsToValidate, setSkillsToValidate] = useState<Array<{ skillId: string; skillName: string; questions: SkillQuestion[] }>>([])
+  const [quizModalOpen, setQuizModalOpen] = useState(false)
+  const [pendingSubmitData, setPendingSubmitData] = useState<{ amount: number; durationDays: number; proposalText: string; milestoneProposals?: BidMilestoneProposal[] } | null>(null)
 
   useEffect(() => {
     if (!projectId) return
@@ -78,19 +90,20 @@ export default function Bidding() {
     })
   }
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    if (!project) return
+  function getFieldError(field: string): string | undefined {
+    return validationErrors.find(e => e.field === field)?.message
+  }
+
+  async function doSubmitBid(data: { amount: number; durationDays: number; proposalText: string; milestoneProposals?: BidMilestoneProposal[] }) {
     setSubmitting(true)
     setSubmitError('')
     try {
-      const hasMilestones = milestoneProposals.length > 0
       const res = await bidsApi.submit({
-        projectId: project.id,
-        amount: Number(amount),
-        durationDays: Math.round(Number(duration)),
-        proposalText: coverLetter,
-        milestoneProposals: hasMilestones ? milestoneProposals : undefined,
+        projectId: project!.id,
+        amount: data.amount,
+        durationDays: data.durationDays,
+        proposalText: data.proposalText,
+        milestoneProposals: data.milestoneProposals,
       })
       setSubmitted(res.data)
     } catch (err: unknown) {
@@ -105,6 +118,74 @@ export default function Bidding() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    if (!project) return
+
+    // Validar antes de enviar
+    const errors = validateBidForm({ projectId: project.id, coverLetter, amount, duration, milestoneProposals })
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      setSubmitError(formatValidationErrors(errors))
+      return
+    }
+    setValidationErrors([])
+    setSubmitError('')
+
+    const submitData = {
+      amount: Number(amount),
+      durationDays: Math.round(Number(duration)),
+      proposalText: coverLetter,
+      milestoneProposals: milestoneProposals.length > 0 ? milestoneProposals : undefined,
+    }
+
+    // Check skill quiz gate
+    if (project.skills && project.skills.length > 0 && project.companyId) {
+      setSubmitting(true)
+      try {
+        // Fetch specialist's current badges
+        let myBadges: Record<string, 'yellow' | 'green'> = {}
+        try {
+          const profileRes = await portfolioApi.getMyProfile()
+          myBadges = profileRes.data.skillBadges ?? {}
+        } catch {}
+
+        // For each required skill, check if company has questions AND specialist lacks badge
+        const catalog = (await skillsApi.getAll()).data
+        const toValidate: Array<{ skillId: string; skillName: string; questions: SkillQuestion[] }> = []
+
+        for (const skillName of project.skills) {
+          const normalized = skillName.toLowerCase()
+          // Skip if specialist already has a badge
+          if (myBadges[normalized] === 'yellow' || myBadges[normalized] === 'green') continue
+
+          // Find skill in catalog
+          const skillEntry = catalog.find(s => s.name === normalized || s.displayName.toLowerCase() === normalized)
+          if (!skillEntry) continue
+
+          // Check if company has questions for this skill
+          const qRes = await skillsApi.getCompanyQuestions(skillEntry.id, project.companyId)
+          if (qRes.data && qRes.data.length > 0) {
+            toValidate.push({ skillId: skillEntry.id, skillName: skillEntry.displayName, questions: qRes.data })
+          }
+        }
+
+        setSubmitting(false)
+
+        if (toValidate.length > 0) {
+          setSkillsToValidate(toValidate)
+          setPendingSubmitData(submitData)
+          setQuizModalOpen(true)
+          return
+        }
+      } catch {
+        setSubmitting(false)
+      }
+    }
+
+    await doSubmitBid(submitData)
   }
 
   function openEdit() {
@@ -179,7 +260,7 @@ export default function Bidding() {
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased flex flex-col">
       <div className="scanline" />
-      <Navbar backUrl="/dashboard" projectTitle="MERAKI // BIDDING_TERMINAL" />
+      <Navbar backUrl="/dashboard" projectTitle="MERAKI // PROPOSTA" />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -252,7 +333,7 @@ export default function Bidding() {
                   <div className="flex items-center gap-2 mb-3">
                     <ListChecks className="w-3.5 h-3.5 text-brand-500" />
                     <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
-                      Milestones ({project.milestones.length})
+                      Marcos ({project.milestones.length})
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -304,35 +385,87 @@ export default function Bidding() {
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
+                {/* Painel de erros de validação */}
+                {submitError && (
+                  <div className="bg-red-500/10 border border-red-500/50 p-4 flex items-start gap-3 rounded-none">
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-mono text-xs font-bold text-red-400 mb-1">ERROS DE VALIDAÇÃO</p>
+                      <p className="font-mono text-xs text-red-300 whitespace-pre-wrap">{submitError}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSubmitError('')}
+                      className="text-red-400 hover:text-red-300 shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">const proposedBudget =</label>
+                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">const valorProposto =</label>
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span className="font-mono text-zinc-500 group-focus-within:text-brand-500">R$</span>
                       </div>
                       <input
                         type="number" required min={1} value={amount} data-testid="bid-amount"
-                        onChange={e => setAmount(e.target.value)}
+                        onChange={e => {
+                          setAmount(e.target.value)
+                          if (validationErrors.some(e => e.field === 'proposedBudget')) {
+                            setValidationErrors(validationErrors.filter(e => e.field !== 'proposedBudget'))
+                          }
+                        }}
                         readOnly={milestoneProposals.length > 0}
                         placeholder="0.00"
-                        className={`w-full pl-10 pr-4 py-3 bg-[#000] border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none rounded-none ${milestoneProposals.length > 0 ? 'border-dark-border text-zinc-500 cursor-not-allowed' : 'border-dark-border focus:border-brand-500 focus:ring-1 focus:ring-brand-500'}`}
+                        className={`w-full pl-10 pr-4 py-3 bg-[#000] border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none rounded-none ${
+                          getFieldError('proposedBudget')
+                            ? 'border-red-500/50 focus:border-red-500'
+                            : milestoneProposals.length > 0
+                              ? 'border-dark-border text-zinc-500 cursor-not-allowed'
+                              : 'border-dark-border focus:border-brand-500 focus:ring-1 focus:ring-brand-500'
+                        }`}
                       />
                     </div>
-                    <p className="text-[9px] font-mono text-zinc-500 text-right">
-                      {milestoneProposals.length > 0 ? '// Soma automática dos milestones.' : '// Taxa de plataforma será retida no pagamento.'}
-                    </p>
+                    {getFieldError('proposedBudget') && (
+                      <p className="text-[9px] font-mono text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {getFieldError('proposedBudget')}
+                      </p>
+                    )}
+                    {!getFieldError('proposedBudget') && (
+                      <p className="text-[9px] font-mono text-zinc-500 text-right">
+                        {milestoneProposals.length > 0 ? '// Soma automática dos marcos.' : '// Taxa de plataforma será retida no pagamento.'}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">let estimatedDays =</label>
+                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">let diasEstimados =</label>
                     <div className="relative group">
-                      <input data-testid="bid-duration" type="number" required min={1} max={3650} value={duration} onChange={e => setDuration(e.target.value)}
+                      <input data-testid="bid-duration" type="number" required min={1} max={3650} value={duration}
+                        onChange={e => {
+                          setDuration(e.target.value)
+                          if (validationErrors.some(e => e.field === 'estimatedDuration')) {
+                            setValidationErrors(validationErrors.filter(e => e.field !== 'estimatedDuration'))
+                          }
+                        }}
                         placeholder="Ex: 45"
-                        className="w-full pl-4 pr-12 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
+                        className={`w-full pl-4 pr-12 py-3 bg-[#000] border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none rounded-none ${
+                          getFieldError('estimatedDuration')
+                            ? 'border-red-500/50 focus:border-red-500'
+                            : 'border-dark-border focus:border-brand-500 focus:ring-1 focus:ring-brand-500'
+                        }`}
+                      />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <span className="font-mono text-zinc-500 text-xs">DIAS</span>
                       </div>
                     </div>
+                    {getFieldError('estimatedDuration') && (
+                      <p className="text-[9px] font-mono text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {getFieldError('estimatedDuration')}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -341,7 +474,7 @@ export default function Bidding() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <ListChecks className="w-3.5 h-3.5 text-brand-500" />
-                      <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">const milestoneProposals[] = {'{'}</label>
+                      <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">const propostasMilestone[] = {'{'}</label>
                     </div>
                     <div className="space-y-2">
                       {project.milestones
@@ -386,19 +519,53 @@ export default function Bidding() {
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">function writeCoverLetter() {'{'}</label>
+                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">function escreverCartaDeApresentacao() {'{'}</label>
                     <button type="button" onClick={() => project && setCoverLetter(TEMPLATE(project.title, 'Especialista'))}
                       className="text-[10px] font-mono text-zinc-600 hover:text-zinc-400 cursor-pointer">[Inserir Template]</button>
                   </div>
-                  <div className="relative w-full border border-dark-border bg-[#000] p-1 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 transition-all">
-                    <div className="absolute left-0 top-0 bottom-0 w-8 border-r border-dark-border bg-dark-input flex flex-col items-center py-2 select-none">
-                      {[1,2,3,4,5,6,7,8].map(n => <span key={n} className="text-[10px] font-mono text-zinc-700">{n}</span>)}
+                  <div className={`relative w-full border bg-[#000] p-1 transition-all ${
+                    getFieldError('proposal')
+                      ? 'border-red-500/50 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500'
+                      : 'border-dark-border focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500'
+                  }`}>
+                    <div className="absolute left-0 top-0 bottom-0 w-10 border-r border-dark-border bg-dark-input overflow-hidden select-none">
+                      <div className="flex flex-col items-center pt-3" style={{ transform: `translateY(-${coverLetterScrollTop}px)` }}>
+                        {Array.from({ length: Math.max(coverLetterLineCount, 16) }, (_, idx) => (
+                          <span key={idx} className="text-[10px] font-mono text-zinc-700 leading-[24px]">{idx + 1}</span>
+                        ))}
+                      </div>
                     </div>
-                    <textarea data-testid="bid-cover" required minLength={20} maxLength={2000} value={coverLetter} onChange={e => { setCoverLetter(e.target.value); setSubmitError('') }}
+                    <textarea
+                      ref={coverLetterRef}
+                      data-testid="bid-cover"
+                      required
+                      minLength={20}
+                      maxLength={2000}
+                      value={coverLetter}
+                      onScroll={e => setCoverLetterScrollTop(e.currentTarget.scrollTop)}
+                      onChange={e => {
+                        const text = e.target.value
+                        setCoverLetter(text)
+                        setCoverLetterLineCount(Math.max(1, text.split('\n').length))
+                        if (validationErrors.some(err => err.field === 'proposal')) {
+                          setValidationErrors(validationErrors.filter(err => err.field !== 'proposal'))
+                        }
+                      }}
                       placeholder="Apresente a sua proposta técnica..."
-                      className="editor-textarea w-full pl-10 pr-2 py-2 bg-transparent text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none h-64" />
+                      className="editor-textarea relative z-10 w-full pl-12 pr-2 py-3 bg-transparent text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none h-64"
+                    />
                   </div>
-                  <label className="text-[10px] font-mono text-brand-500 block">{'}'}</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-mono text-brand-500 block">{'}'}</label>
+                    <div className="text-[9px] font-mono text-zinc-500">
+                      {coverLetter.length}/2000 caracteres
+                      {getFieldError('proposal') && (
+                        <p className="text-red-400 flex items-center gap-1 mt-1">
+                          <AlertCircle className="w-3 h-3" /> {getFieldError('proposal')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {submitError && (
@@ -468,7 +635,7 @@ export default function Bidding() {
                     </div>
                     {existingBid.milestoneProposals.length > 0 && project?.milestones && (
                       <div className="mt-3 pt-3 border-t border-dark-border space-y-1.5">
-                        <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Por Milestone</p>
+                        <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Por Marco</p>
                         {existingBid.milestoneProposals.map(mp => {
                           const m = project.milestones!.find(x => x.id === mp.milestoneId)
                           return (
@@ -535,7 +702,7 @@ export default function Bidding() {
                           />
                         </div>
                         {editMilestoneProposals.length > 0 && (
-                          <p className="text-[9px] font-mono text-zinc-500">// Soma automática dos milestones.</p>
+                          <p className="text-[9px] font-mono text-zinc-500">// Soma automática dos marcos.</p>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -553,7 +720,7 @@ export default function Bidding() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <ListChecks className="w-3 h-3 text-brand-500" />
-                          <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">Proposta por Milestone</label>
+                          <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">Proposta por Marco</label>
                         </div>
                         <div className="space-y-2">
                           {project.milestones
@@ -648,6 +815,195 @@ export default function Bidding() {
           </section>
         </div>
       </main>
+
+      {quizModalOpen && skillsToValidate.length > 0 && pendingSubmitData && (
+        <ProjectSkillQuizModal
+          skills={skillsToValidate}
+          companyId={project?.companyId ?? ''}
+          onClose={() => { setQuizModalOpen(false); setSkillsToValidate([]); setPendingSubmitData(null) }}
+          onAllPassed={async () => {
+            setQuizModalOpen(false)
+            setSkillsToValidate([])
+            if (pendingSubmitData) await doSubmitBid(pendingSubmitData)
+            setPendingSubmitData(null)
+          }}
+          onSkip={async () => {
+            setQuizModalOpen(false)
+            setSkillsToValidate([])
+            if (pendingSubmitData) await doSubmitBid(pendingSubmitData)
+            setPendingSubmitData(null)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── ProjectSkillQuizModal ────────────────────────────────────────────────────
+
+function ProjectSkillQuizModal({ skills, companyId, onClose, onAllPassed, onSkip }: {
+  skills: Array<{ skillId: string; skillName: string; questions: SkillQuestion[] }>
+  companyId: string
+  onClose: () => void
+  onAllPassed: () => void
+  onSkip: () => void
+}) {
+  const [currentIdx, setCurrentIdx] = useState(0)
+  const [answers, setAnswers] = useState<number[]>([])
+  const [result, setResult] = useState<QuizResult | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
+  const current = skills[currentIdx]
+
+  useEffect(() => {
+    if (current) {
+      setAnswers(new Array(current.questions.length).fill(-1))
+      setResult(null)
+      setError('')
+    }
+  }, [currentIdx])
+
+  async function submitCurrentQuiz() {
+    if (answers.some(a => a === -1)) {
+      setError('Responda todas as questões.')
+      return
+    }
+    setSubmitting(true)
+    setError('')
+    try {
+      const questionIds = current.questions.map(q => q.id)
+      const res = await skillsApi.attemptProject(current.skillId, answers, companyId, questionIds)
+      setResult(res.data)
+    } catch {
+      // Soft gate: if API fails, allow continuing
+      setResult({ passed: true, score: 100, correctAnswers: 0, totalQuestions: 0 })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  function handleNext() {
+    if (currentIdx < skills.length - 1) {
+      setCurrentIdx(i => i + 1)
+    } else {
+      // All done — proceed to bid
+      onAllPassed()
+    }
+  }
+
+  const isLast = currentIdx === skills.length - 1
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-card border border-brand-500/50 w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl z-10">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
+
+        <div className="flex items-center justify-between p-5 border-b border-dark-border">
+          <div>
+            <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">
+              Quiz de Acesso — {current.skillName}
+            </h2>
+            <p className="font-mono text-[10px] text-zinc-500 mt-0.5">
+              Skill {currentIdx + 1} de {skills.length} exigidas pelo projeto
+            </p>
+          </div>
+          <button onClick={onSkip} className="font-mono text-[10px] text-zinc-500 border border-dark-border px-2 py-1 hover:text-zinc-300 transition-colors">
+            Pular
+          </button>
+        </div>
+
+        <div className="p-5">
+          {!result ? (
+            <div className="space-y-5">
+              <p className="font-mono text-xs text-zinc-400">
+                Esta empresa exige validação de <span className="text-white font-bold">{current.skillName}</span> para submeter proposta.
+              </p>
+
+              {current.questions.map((q, qi) => (
+                <div key={q.id} className="bg-dark-input border border-dark-border p-4">
+                  <p className="font-mono text-xs text-white font-bold mb-3">
+                    <span className="text-brand-500 mr-2">{qi + 1}.</span>{q.text}
+                  </p>
+                  <div className="space-y-2">
+                    {q.options.map((opt, oi) => (
+                      <label
+                        key={oi}
+                        className={`flex items-center gap-3 p-2 border cursor-pointer transition-colors ${
+                          answers[qi] === oi
+                            ? 'border-brand-500 bg-brand-500/10'
+                            : 'border-dark-border hover:border-zinc-600'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`pq-${qi}`}
+                          checked={answers[qi] === oi}
+                          onChange={() => setAnswers(prev => {
+                            const next = [...prev]
+                            next[qi] = oi
+                            return next
+                          })}
+                          className="sr-only"
+                        />
+                        <div className={`w-3 h-3 rounded-full border flex-shrink-0 ${answers[qi] === oi ? 'bg-brand-500 border-brand-500' : 'border-zinc-600'}`} />
+                        <span className="font-mono text-xs text-zinc-300">{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {error && (
+                <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-between pt-2 border-t border-dark-border">
+                <button onClick={onSkip}
+                  className="font-mono text-xs text-zinc-500 border border-dark-border px-4 py-2 hover:text-zinc-300 transition-colors uppercase">
+                  Pular Validação
+                </button>
+                <button onClick={submitCurrentQuiz} disabled={submitting}
+                  className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 disabled:opacity-60 flex items-center gap-2 transition-colors">
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  {submitting ? 'Processando...' : 'Enviar Respostas'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              {result.passed ? (
+                <>
+                  <Award className="w-12 h-12 text-yellow-400 mx-auto mb-3" />
+                  <h3 className="font-mono text-lg font-bold text-white mb-1">APROVADO!</h3>
+                  <p className="font-mono text-xs text-zinc-400 mb-5">
+                    {result.correctAnswers}/{result.totalQuestions} corretas ({result.score}%) em <span className="text-white">{current.skillName}</span>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-12 h-12 text-amber-400 mx-auto mb-3" />
+                  <h3 className="font-mono text-lg font-bold text-white mb-1">REPROVADO</h3>
+                  <p className="font-mono text-xs text-zinc-400 mb-2">
+                    {result.correctAnswers}/{result.totalQuestions} corretas ({result.score}%) — necessário ≥70%
+                  </p>
+                  <p className="font-mono text-[10px] text-amber-400 mb-5">
+                    Você pode continuar, mas a empresa saberá que não passou no quiz.
+                  </p>
+                </>
+              )}
+              <button onClick={handleNext}
+                className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-8 py-3 border border-brand-500 hover:bg-brand-400 transition-colors">
+                {isLast ? 'Enviar Proposta' : 'Próxima Skill'}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

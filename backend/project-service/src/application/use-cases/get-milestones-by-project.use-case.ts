@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
-import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
+import { Injectable, Inject } from '@nestjs/common';
+import { IMilestoneRepository, MILESTONE_REPOSITORY } from '../../domain/repositories/milestone.repository.interface';
 
 @Injectable()
 export class GetMilestonesByProjectUseCase {
-  constructor(private readonly milestoneRepo: MilestoneRepository) {}
+  constructor(
+    @Inject(MILESTONE_REPOSITORY) private readonly milestoneRepo: IMilestoneRepository,
+  ) {}
 
   execute(projectId: string) {
     return this.milestoneRepo.findByProject(projectId);

@@ -1,12 +1,14 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
-import { ProjectRepository } from '../../infrastructure/repositories/project.repository';
+import { Injectable, Logger, Inject } from '@nestjs/common';
+import { IProjectRepository, PROJECT_REPOSITORY } from '../../domain/repositories/project.repository.interface';
 
 /** Consumido via evento bid.accepted do RabbitMQ */
 @Injectable()
 export class AssignSpecialistUseCase {
   private readonly logger = new Logger(AssignSpecialistUseCase.name);
 
-  constructor(private readonly projectRepo: ProjectRepository) {}
+  constructor(
+    @Inject(PROJECT_REPOSITORY) private readonly projectRepo: IProjectRepository,
+  ) {}
 
   async execute(projectId: string, specialistId: string, bidId: string) {
     const project = await this.projectRepo.findById(projectId);

@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete,
+  Controller, Get, Post, Put, Patch, Delete,
   Body, Param, Query, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import {
@@ -10,12 +10,14 @@ import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { CreateProjectDto } from '../../application/dto/create-project.dto';
 import { UpdateProjectDto } from '../../application/dto/update-project.dto';
+import { SignContractDto } from '../../application/dto/sign-contract.dto';
 import { CreateProjectUseCase } from '../../application/use-cases/create-project.use-case';
 import { GetProjectsUseCase } from '../../application/use-cases/get-projects.use-case';
 import { GetProjectByIdUseCase } from '../../application/use-cases/get-project-by-id.use-case';
 import { UpdateProjectUseCase } from '../../application/use-cases/update-project.use-case';
 import { CancelProjectUseCase } from '../../application/use-cases/cancel-project.use-case';
 import { CompleteProjectUseCase } from '../../application/use-cases/complete-project.use-case';
+import { SignProjectContractUseCase } from '../../application/use-cases/sign-project-contract.use-case';
 import { ProjectStatus } from '../../domain/enums/project-status.enum';
 import { FindProjectsFilter } from '../../domain/repositories/project.repository.interface';
 
@@ -31,6 +33,7 @@ export class ProjectController {
     private readonly updateProject: UpdateProjectUseCase,
     private readonly cancelProject: CancelProjectUseCase,
     private readonly completeProject: CompleteProjectUseCase,
+    private readonly signContract: SignProjectContractUseCase,
   ) {}
 
   @Post()
@@ -111,5 +114,19 @@ export class ProjectController {
   @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
   complete(@Param('id') id: string, @CurrentUser('companyId') companyId: string) {
     return this.completeProject.execute(id, companyId);
+  }
+
+  @Patch(':id/sign-contract')
+  @ApiOperation({ summary: 'Firmar contrato do projeto' })
+  @ApiParam({ name: 'id', description: 'UUID do projeto' })
+  @ApiResponse({ status: 200, description: 'Contrato firmado.' })
+  @ApiResponse({ status: 400, description: 'Projeto não está em fase de assinatura.' })
+  @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
+  sign(
+    @Param('id') id: string,
+    @Body() dto: SignContractDto,
+    @CurrentUser('companyId') companyId: string,
+  ) {
+    return this.signContract.execute(id, dto);
   }
 }

@@ -119,6 +119,6 @@ test.describe('UC: RN03 — Um Vencedor por Projeto (RF06/RF07/RN03)', () => {
     await expect(page.getByRole('button', { name: /ACEITAR_PROPOSTA/i })).not.toBeVisible()
 
     // RN03: a outra proposta foi auto-rejeitada — badge REJEITADO deve aparecer
-    await expect(page.getByText('REJEITADO')).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByText('REJEITADO', { exact: true }).first()).toBeVisible({ timeout: 5_000 })
   })
 })

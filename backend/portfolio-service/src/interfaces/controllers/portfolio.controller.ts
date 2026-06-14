@@ -23,7 +23,8 @@ import {
 } from '../../application/dtos/portfolio.dto';
 
 interface AuthUser {
-  sub: string;
+  id: string;    // payload.sub — userId (User.id)
+  sub?: string;  // kept for backwards compat, same as id
   specialistId?: string;
 }
 
@@ -171,7 +172,9 @@ export class MyPortfolioController {
   ) {}
 
   private specialistId(req: Request): string {
-    return (req.user as AuthUser).specialistId ?? (req.user as AuthUser).sub;
+    // O perfil no portfolio-service é indexado por userId (User.id),
+    // não pelo specialistId (SpecialistProfile.id do identity-service).
+    return (req.user as AuthUser).id;
   }
 
   @Get()

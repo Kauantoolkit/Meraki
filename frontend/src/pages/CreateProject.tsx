@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Info, Plus, Trash2, ArrowRight, ArrowLeft, Send, Terminal, AlertCircle } from 'lucide-react'
+import { Info, Plus, Trash2, ArrowRight, ArrowLeft, Send, Terminal, AlertCircle, X, Loader2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi } from '../api/projects'
 import { extractApiError } from '../api/client'
+import { skillsApi, Skill, CreateQuestionDto } from '../api/skills'
 
 interface MilestoneInput { title: string; description: string; amount: string }
 
@@ -14,7 +15,11 @@ export default function CreateProject() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [skillInput, setSkillInput] = useState('')
+  const [debouncedSkillInput, setDebouncedSkillInput] = useState('')
   const [skills, setSkills] = useState<string[]>([])
+  const [catalog, setCatalog] = useState<Skill[]>([])
+  const [createSkillOpen, setCreateSkillOpen] = useState(false)
+  const [pendingSkillName, setPendingSkillName] = useState('')
   const [milestones, setMilestones] = useState<MilestoneInput[]>([
     { title: '', description: '', amount: '' },
     { title: '', description: '', amount: '' },
@@ -35,10 +40,37 @@ export default function CreateProject() {
     }
   }, [step])
 
+  useEffect(() => {
+    skillsApi.getAll().then(res => setCatalog(res.data)).catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSkillInput(skillInput.trim()), 300)
+    return () => clearTimeout(t)
+  }, [skillInput])
+
+  const catalogSuggestions = useMemo(() => {
+    const q = debouncedSkillInput.toLowerCase()
+    if (!q) return []
+    return catalog
+      .filter(s => !skills.includes(s.name) && (s.name.includes(q) || s.displayName.toLowerCase().includes(q)))
+      .slice(0, 8)
+  }, [debouncedSkillInput, catalog, skills])
+
   function addSkill() {
-    const v = skillInput.trim()
-    if (v && !skills.includes(v)) setSkills([...skills, v])
-    setSkillInput('')
+    const v = skillInput.trim().toLowerCase()
+    if (!v) return
+    if (skills.includes(v)) { setSkillInput(''); return }
+    const inCatalog = catalog.some(s => s.name === v || s.displayName.toLowerCase() === v)
+    if (inCatalog) {
+      setSkills([...skills, v])
+      setSkillInput('')
+    } else {
+      // Skill not in catalog — prompt to create it
+      setPendingSkillName(skillInput.trim())
+      setCreateSkillOpen(true)
+      setSkillInput('')
+    }
   }
 
   function addMilestone() {
@@ -141,6 +173,7 @@ export default function CreateProject() {
   ]
 
   return (
+    <>
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased flex flex-col">
       <Navbar backUrl="/dashboard" projectTitle="CRIAR_PROJETO" />
 
@@ -250,6 +283,22 @@ export default function CreateProject() {
                           <Plus className="w-4 h-4" />
                         </button>
                       </div>
+                      {/* Catalog search results */}
+                      {catalogSuggestions.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {catalogSuggestions.map(s => (
+                            <button
+                              key={s.id}
+                              type="button"
+                              data-testid={`cp-skill-suggestion-${s.name}`}
+                              onClick={() => { setSkills(prev => [...prev, s.name]); setSkillInput('') }}
+                              className="font-mono text-[9px] border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5 hover:border-brand-500 hover:text-brand-500 transition-colors"
+                            >
+                              {s.displayName}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div className="bg-[#000] border border-dark-border p-4 min-h-[120px]">
                       <p className="font-mono text-[10px] text-zinc-600 mb-3 uppercase tracking-widest border-b border-dark-border/50 pb-2">Requisitos Técnicos []</p>
@@ -461,6 +510,197 @@ export default function CreateProject() {
           </section>
         </div>
       </main>
+    </div>
+
+    {createSkillOpen && (
+      <CreateSkillModal
+        initialName={pendingSkillName}
+        onClose={() => setCreateSkillOpen(false)}
+        onCreated={(skillName) => {
+          setCatalog(prev => [...prev, { id: '', name: skillName.toLowerCase(), displayName: skillName, createdByCompanyId: '' }])
+          if (!skills.includes(skillName.toLowerCase())) {
+            setSkills(prev => [...prev, skillName.toLowerCase()])
+          }
+          setCreateSkillOpen(false)
+        }}
+      />
+    )}
+    </>
+  )
+}
+
+// ─── CreateSkillModal ─────────────────────────────────────────────────────────
+
+interface QuestionInput {
+  text: string
+  options: [string, string, string, string]
+  correctIndex: number
+}
+
+function emptyQuestion(): QuestionInput {
+  return { text: '', options: ['', '', '', ''], correctIndex: 0 }
+}
+
+function CreateSkillModal({ initialName, onClose, onCreated }: {
+  initialName: string
+  onClose: () => void
+  onCreated: (skillName: string) => void
+}) {
+  const [displayName, setDisplayName] = useState(initialName)
+  const [questions, setQuestions] = useState<QuestionInput[]>(Array.from({ length: 10 }, emptyQuestion))
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  function addQuestion() {
+    if (questions.length >= 20) return
+    setQuestions(prev => [...prev, emptyQuestion()])
+  }
+
+  function removeQuestion(i: number) {
+    if (questions.length <= 10) return
+    setQuestions(prev => prev.filter((_, idx) => idx !== i))
+  }
+
+  function updateQuestion(i: number, field: 'text' | 'correctIndex', value: string | number) {
+    setQuestions(prev => prev.map((q, idx) => idx === i ? { ...q, [field]: value } : q))
+  }
+
+  function updateOption(qi: number, oi: number, value: string) {
+    setQuestions(prev => prev.map((q, idx) => {
+      if (idx !== qi) return q
+      const opts = [...q.options] as [string, string, string, string]
+      opts[oi] = value
+      return { ...q, options: opts }
+    }))
+  }
+
+  async function handleSave() {
+    if (!displayName.trim()) { setError('Nome da skill é obrigatório.'); return }
+    if (questions.length < 10) { setError('Mínimo de 10 questões.'); return }
+    for (const q of questions) {
+      if (!q.text.trim()) { setError('Todas as questões devem ter enunciado.'); return }
+      if (q.options.some(o => !o.trim())) { setError('Todas as opções devem ser preenchidas.'); return }
+    }
+    setSaving(true)
+    setError('')
+    try {
+      const dto: CreateQuestionDto[] = questions.map(q => ({
+        text: q.text.trim(),
+        options: q.options.map(o => o.trim()),
+        correctIndex: q.correctIndex,
+      }))
+      await skillsApi.create({ displayName: displayName.trim(), questions: dto })
+      onCreated(displayName.trim())
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao criar skill.'))
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-card border border-dark-border w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl z-10">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
+
+        <div className="flex items-center justify-between p-5 border-b border-dark-border">
+          <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">Criar Nova Skill</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-6">
+          <div className="space-y-2">
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Nome da Skill</label>
+            <input
+              type="text"
+              maxLength={60}
+              value={displayName}
+              onChange={e => setDisplayName(e.target.value)}
+              placeholder="Ex: TypeScript"
+              className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+            />
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider">Questões ({questions.length}/20)</label>
+              <button type="button" onClick={addQuestion} disabled={questions.length >= 20}
+                className="font-mono text-[10px] text-brand-500 border border-brand-500/50 hover:border-brand-500 px-2 py-1 flex items-center gap-1 transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                <Plus className="w-3 h-3" /> Adicionar
+              </button>
+            </div>
+
+            {questions.map((q, qi) => (
+              <div key={qi} className="bg-dark-input border border-dark-border p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-zinc-500">Questão {qi + 1}</span>
+                  {questions.length > 3 && (
+                    <button type="button" onClick={() => removeQuestion(qi)}
+                      className="text-zinc-600 hover:text-red-500 transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  maxLength={300}
+                  value={q.text}
+                  onChange={e => updateQuestion(qi, 'text', e.target.value)}
+                  placeholder="Enunciado da questão"
+                  className="w-full px-3 py-2 bg-[#000] border border-dark-border text-xs font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+                />
+                <div className="space-y-2">
+                  {q.options.map((opt, oi) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name={`correct-${qi}`}
+                        checked={q.correctIndex === oi}
+                        onChange={() => updateQuestion(qi, 'correctIndex', oi)}
+                        className="accent-brand-500"
+                        title="Marcar como correta"
+                      />
+                      <input
+                        type="text"
+                        maxLength={200}
+                        value={opt}
+                        onChange={e => updateOption(qi, oi, e.target.value)}
+                        placeholder={`Opção ${oi + 1}${q.correctIndex === oi ? ' (correta)' : ''}`}
+                        className={`flex-1 px-3 py-1.5 bg-[#000] border text-xs font-mono text-white placeholder-zinc-700 focus:outline-none rounded-none ${
+                          q.correctIndex === oi ? 'border-brand-500/50' : 'border-dark-border focus:border-brand-500'
+                        }`}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <p className="font-mono text-[9px] text-zinc-600">Selecione o botão de rádio ao lado da opção correta.</p>
+              </div>
+            ))}
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {error}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-dark-border">
+            <button type="button" onClick={onClose}
+              className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase">
+              Cancelar
+            </button>
+            <button type="button" onClick={handleSave} disabled={saving}
+              className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors uppercase disabled:opacity-60 flex items-center gap-2">
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+              {saving ? 'Criando...' : 'Criar Skill'}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

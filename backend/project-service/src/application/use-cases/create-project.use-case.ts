@@ -1,27 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ProjectFactory } from '../../domain/factories/project.factory';
 import { MilestoneFactory } from '../../domain/factories/milestone.factory';
-import { ProjectRepository } from '../../infrastructure/repositories/project.repository';
-import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
+import { IProjectRepository, PROJECT_REPOSITORY } from '../../domain/repositories/project.repository.interface';
+import { IMilestoneRepository, MILESTONE_REPOSITORY } from '../../domain/repositories/milestone.repository.interface';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { ProjectCreatedEvent } from '../../domain/events/project-created.event';
 import { MilestoneCreatedEvent } from '../../domain/events/milestone-created.event';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { Project } from '../../domain/entities/project.entity';
+import { ISkillCatalogPort, SKILL_CATALOG_PORT } from '../ports/skill-catalog.port';
 
 @Injectable()
 export class CreateProjectUseCase {
   constructor(
     private readonly projectFactory: ProjectFactory,
     private readonly milestoneFactory: MilestoneFactory,
-    private readonly projectRepo: ProjectRepository,
-    private readonly milestoneRepo: MilestoneRepository,
+    @Inject(PROJECT_REPOSITORY) private readonly projectRepo: IProjectRepository,
+    @Inject(MILESTONE_REPOSITORY) private readonly milestoneRepo: IMilestoneRepository,
     private readonly events: EventPublisherService,
     private readonly emitter: EventEmitter2,
+    @Inject(SKILL_CATALOG_PORT) private readonly skillsCatalog: ISkillCatalogPort,
   ) {}
 
   async execute(dto: CreateProjectDto, companyId: string): Promise<Project> {
+    if (dto.requirements && dto.requirements.length > 0) {
+      const unknown = await this.skillsCatalog.validateSkills(dto.requirements);
+      if (unknown.length > 0) {
+        throw new BadRequestException(
+          `As seguintes skills não existem no catálogo: ${unknown.join(', ')}. Crie-as antes de publicar o projeto.`,
+        );
+      }
+    }
+
     const { milestones: milestoneDtos, ...projectData } = dto;
 
     const project = this.projectFactory.create({ ...projectData, companyId });

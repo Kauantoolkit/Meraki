@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Star, Briefcase, User, GitBranch, ExternalLink, ChevronRight, Plus, X, Pencil, CheckCircle, Clock } from 'lucide-react'
+import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile } from '../api/portfolio'
 import { usersApi } from '../api/auth'
+import { skillsApi, Skill, SkillQuestion, SkillValidation, QuizResult } from '../api/skills'
 import { extractApiError } from '../api/client'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
@@ -14,6 +15,7 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('history')
   const [editOpen, setEditOpen] = useState(false)
+  const [addSkillOpen, setAddSkillOpen] = useState(false)
 
   useEffect(() => {
     portfolioApi.getMyProfile()
@@ -97,9 +99,16 @@ export default function Portfolio() {
                     Habilidades
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
-                    {profile.skills.map(s => (
-                      <span key={s} className="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">{s}</span>
-                    ))}
+                    {profile.skills.map(s => {
+                      const badge = profile.skillBadges?.[s]
+                      return (
+                        <span key={s} className="flex items-center gap-1 text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">
+                          {s}
+                          {badge === 'green' && <Award className="w-3 h-3 text-green-400" aria-label="Testado via projeto" />}
+                          {badge === 'yellow' && <Award className="w-3 h-3 text-yellow-400" aria-label="Testado via quiz" />}
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
               )}
@@ -151,7 +160,11 @@ export default function Portfolio() {
                   ))}
                 </div>
               ) : (
-                <SkillsTab profile={profile} onUpdate={setProfile} onEditOpen={() => setEditOpen(true)} />
+                <SkillsTab
+                  profile={profile}
+                  onSkillAdded={(updatedProfile) => setProfile(updatedProfile)}
+                  onAddSkillOpen={() => setAddSkillOpen(true)}
+                />
               )}
             </div>
           </div>
@@ -165,71 +178,401 @@ export default function Portfolio() {
           onSave={updated => { setProfile(updated); setEditOpen(false) }}
         />
       )}
+
+      {addSkillOpen && profile && (
+        <AddSkillModal
+          profile={profile}
+          onClose={() => setAddSkillOpen(false)}
+          onSkillAdded={(skillName: string) => {
+            // Optimistic update — badge salvo no identity-service, mas event RabbitMQ
+            // para o portfolio-service é async. Atualizamos o estado local imediatamente
+            // para não depender do race condition de propagação de evento.
+            setAddSkillOpen(false)
+            setProfile(prev => prev ? {
+              ...prev,
+              skills: [...(prev.skills ?? []), skillName],
+              skillBadges: { ...(prev.skillBadges ?? {}), [skillName]: 'yellow' },
+            } : prev)
+          }}
+        />
+      )}
     </div>
   )
 }
 
-function SkillsTab({ profile, onUpdate, onEditOpen }: {
+// ─── SkillsTab ────────────────────────────────────────────────────────────────
+
+function SkillsTab({ profile, onSkillAdded, onAddSkillOpen }: {
   profile: PublicProfile
-  onUpdate: (p: PublicProfile) => void
-  onEditOpen: () => void
+  onSkillAdded: (p: PublicProfile) => void
+  onAddSkillOpen: () => void
 }) {
+  const [validations, setValidations] = useState<SkillValidation[]>([])
+  const [loadingValidations, setLoadingValidations] = useState(true)
+
+  useEffect(() => {
+    skillsApi.getMyValidations()
+      .then(res => setValidations(res.data))
+      .catch(() => {})
+      .finally(() => setLoadingValidations(false))
+  }, [profile.skills])
+
   const skills = profile.skills ?? []
+  const badges = profile.skillBadges ?? {}
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="font-mono text-xs text-zinc-500">
           {skills.length === 0
-            ? 'Nenhuma habilidade cadastrada.'
-            : `${skills.length} habilidade${skills.length !== 1 ? 's' : ''} cadastrada${skills.length !== 1 ? 's' : ''}.`}
+            ? 'Nenhuma habilidade validada.'
+            : `${skills.length} habilidade${skills.length !== 1 ? 's' : ''} no perfil.`}
         </p>
-        <button onClick={onEditOpen}
+        <button onClick={onAddSkillOpen}
           className="font-mono text-[10px] text-brand-500 border border-brand-500/50 hover:border-brand-500 px-3 py-1.5 transition-colors flex items-center gap-1">
-          <Plus className="w-3 h-3" /> Gerenciar Habilidades
+          <Plus className="w-3 h-3" /> Adicionar Skill
         </button>
       </div>
 
       {skills.length === 0 ? (
         <div className="py-12 text-center border border-dashed border-zinc-700 font-mono text-zinc-600">
-          <p className="mb-3">Adicione suas habilidades para aparecer nas buscas das empresas.</p>
-          <button onClick={onEditOpen}
+          <p className="mb-3">Adicione suas habilidades validadas por quiz para aparecer nas buscas.</p>
+          <button onClick={onAddSkillOpen}
             className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors">
-            Adicionar Habilidades
+            Adicionar Habilidade
           </button>
         </div>
       ) : (
         <div className="space-y-2">
-          {skills.map(skill => (
-            <div key={skill} className="bg-dark-card border border-dark-border p-4 flex items-center justify-between hover:border-brand-500/30 transition-colors">
-              <div className="flex items-center gap-3">
+          {skills.map(skill => {
+            const badge = badges[skill]
+            return (
+              <div key={skill} className="bg-dark-card border border-dark-border p-4 flex items-center justify-between hover:border-brand-500/30 transition-colors">
                 <span className="font-mono text-sm text-white font-bold">{skill}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1.5 bg-dark-input border border-orange-400/30 px-2 py-1">
-                  <Clock className="w-3 h-3 text-orange-400" />
-                  <span className="font-mono text-[10px] text-orange-400">Validação em breve</span>
+                <div className="flex items-center gap-2">
+                  {badge === 'green' ? (
+                    <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-400/30 px-2 py-1">
+                      <Award className="w-3 h-3 text-green-400" />
+                      <span className="font-mono text-[10px] text-green-400">Testado via projeto</span>
+                    </div>
+                  ) : badge === 'yellow' ? (
+                    <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-400/30 px-2 py-1">
+                      <Award className="w-3 h-3 text-yellow-400" />
+                      <span className="font-mono text-[10px] text-yellow-400">Testado via quiz</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 bg-dark-input border border-zinc-700 px-2 py-1">
+                      <CheckCircle className="w-3 h-3 text-zinc-500" />
+                      <span className="font-mono text-[10px] text-zinc-500">Adicionada</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
+      {/* Legend */}
       <div className="bg-dark-input border border-dark-border p-4 mt-4">
-        <div className="flex items-start gap-2">
-          <CheckCircle className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
-          <div>
-            <p className="font-mono text-xs text-white font-bold mb-1">Sistema de Validação por Provas</p>
-            <p className="font-mono text-[10px] text-zinc-500 leading-relaxed">
-              Em breve, cada habilidade poderá ser validada através de um teste técnico. Especialistas aprovados recebem um badge de verificação, aumentando a visibilidade nas buscas.
+        <p className="font-mono text-xs text-white font-bold mb-2">Legenda de Badges</p>
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2">
+            <Award className="w-3.5 h-3.5 text-yellow-400" />
+            <p className="font-mono text-[10px] text-zinc-400">
+              <span className="text-yellow-400 font-bold">Testado via quiz</span> — Aprovado com ≥70%. Skill validada teoricamente.
             </p>
           </div>
+          <div className="flex items-center gap-2">
+            <Award className="w-3.5 h-3.5 text-green-400" />
+            <p className="font-mono text-[10px] text-zinc-400">
+              <span className="text-green-400 font-bold">Testado via projeto</span> — Skill aplicada em projeto real.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent attempts */}
+      {!loadingValidations && validations.length > 0 && (
+        <div className="mt-4">
+          <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-3">Última Tentativa por Skill</p>
+          <div className="space-y-1.5">
+            {Object.values(
+              validations.reduce<Record<string, SkillValidation>>((acc, v) => {
+                if (!acc[v.skillName] || new Date(v.attemptedAt) > new Date(acc[v.skillName].attemptedAt)) {
+                  acc[v.skillName] = v
+                }
+                return acc
+              }, {})
+            ).slice(0, 5).map(v => (
+              <div key={v.id} className="flex items-center justify-between bg-dark-input border border-dark-border px-3 py-2">
+                <span className="font-mono text-xs text-white">{v.skillName}</span>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-xs text-zinc-500">{v.score}%</span>
+                  <span className={`font-mono text-[10px] px-2 py-0.5 border ${
+                    v.passed
+                      ? 'text-brand-500 border-brand-500/30 bg-brand-500/10'
+                      : 'text-red-400 border-red-500/30 bg-red-500/10'
+                  }`}>
+                    {v.passed ? 'APROVADO' : 'REPROVADO'}
+                  </span>
+                  <span className="font-mono text-[10px] text-zinc-600">
+                    {new Date(v.attemptedAt).toLocaleDateString('pt-BR')}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── AddSkillModal ────────────────────────────────────────────────────────────
+
+type AddSkillStep = 'pick' | 'quiz' | 'result'
+
+function AddSkillModal({ profile, onClose, onSkillAdded }: {
+  profile: PublicProfile
+  onClose: () => void
+  onSkillAdded: (skillName: string) => void
+}) {
+  const [step, setStep] = useState<AddSkillStep>('pick')
+  const [catalog, setCatalog] = useState<Skill[]>([])
+  const [loadingCatalog, setLoadingCatalog] = useState(true)
+  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null)
+  const [questions, setQuestions] = useState<SkillQuestion[]>([])
+  const [loadingQuestions, setLoadingQuestions] = useState(false)
+  const [answers, setAnswers] = useState<number[]>([])
+  const [submitting, setSubmitting] = useState(false)
+  const [result, setResult] = useState<QuizResult | null>(null)
+  const [error, setError] = useState('')
+
+  const existingSkills = new Set(profile.skills ?? [])
+
+  useEffect(() => {
+    skillsApi.getAll()
+      .then(res => setCatalog(res.data))
+      .catch(() => setError('Erro ao carregar catálogo de skills'))
+      .finally(() => setLoadingCatalog(false))
+  }, [])
+
+  async function pickSkill(skill: Skill) {
+    setSelectedSkill(skill)
+    setLoadingQuestions(true)
+    setError('')
+    try {
+      const res = await skillsApi.getRandomQuestions(skill.id)
+      if (!res.data || res.data.length === 0) {
+        setError('Esta skill não possui questões disponíveis ainda.')
+        return
+      }
+      setQuestions(res.data)
+      setAnswers(new Array(res.data.length).fill(-1))
+      setStep('quiz')
+    } catch {
+      setError('Erro ao carregar questões.')
+    } finally {
+      setLoadingQuestions(false)
+    }
+  }
+
+  async function submitQuiz() {
+    if (answers.some(a => a === -1)) {
+      setError('Responda todas as questões antes de enviar.')
+      return
+    }
+    if (!selectedSkill) return
+    setSubmitting(true)
+    setError('')
+    try {
+      const questionIds = questions.map(q => q.id)
+      const res = await skillsApi.attemptProfile(selectedSkill.id, answers, questionIds)
+      setResult(res.data)
+      setStep('result')
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao processar respostas.'))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const availableSkills = catalog.filter(s => !existingSkills.has(s.name))
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-card border border-dark-border w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl z-10">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
+
+        <div className="flex items-center justify-between p-5 border-b border-dark-border">
+          <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">
+            {step === 'pick' && 'Selecionar Habilidade'}
+            {step === 'quiz' && `Quiz — ${selectedSkill?.displayName}`}
+            {step === 'result' && 'Resultado do Quiz'}
+          </h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-5">
+          {/* Step: Pick skill */}
+          {step === 'pick' && (
+            <div className="space-y-3">
+              <p className="font-mono text-xs text-zinc-500 mb-4">
+                Escolha uma skill do catálogo. Você fará um quiz para validar seu conhecimento.
+              </p>
+              {loadingCatalog ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-brand-500" />
+                </div>
+              ) : availableSkills.length === 0 ? (
+                <p className="font-mono text-xs text-zinc-500 text-center py-8">
+                  Nenhuma skill disponível para adicionar.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  {availableSkills.map(skill => (
+                    <button
+                      key={skill.id}
+                      onClick={() => pickSkill(skill)}
+                      disabled={loadingQuestions}
+                      className="text-left bg-dark-input border border-dark-border p-3 hover:border-brand-500 transition-colors disabled:opacity-50"
+                    >
+                      <p className="font-mono text-sm text-white font-bold">{skill.displayName}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {error && (
+                <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs mt-4">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step: Quiz */}
+          {step === 'quiz' && (
+            <div className="space-y-6">
+              <p className="font-mono text-xs text-zinc-500">
+                Responda as {questions.length} questões abaixo. É necessário acertar ≥70% para adicionar a skill ao perfil.
+              </p>
+              {questions.map((q, qi) => (
+                <div key={q.id} className="bg-dark-input border border-dark-border p-4">
+                  <p className="font-mono text-xs text-white font-bold mb-3">
+                    <span className="text-brand-500 mr-2">{qi + 1}.</span>{q.text}
+                  </p>
+                  <div className="space-y-2">
+                    {q.options.map((opt, oi) => (
+                      <label
+                        key={oi}
+                        className={`flex items-center gap-3 p-2 border cursor-pointer transition-colors ${
+                          answers[qi] === oi
+                            ? 'border-brand-500 bg-brand-500/10'
+                            : 'border-dark-border hover:border-zinc-600'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`q-${qi}`}
+                          checked={answers[qi] === oi}
+                          onChange={() => setAnswers(prev => {
+                            const next = [...prev]
+                            next[qi] = oi
+                            return next
+                          })}
+                          className="sr-only"
+                        />
+                        <div className={`w-3 h-3 rounded-full border flex-shrink-0 ${
+                          answers[qi] === oi ? 'bg-brand-500 border-brand-500' : 'border-zinc-600'
+                        }`} />
+                        <span className="font-mono text-xs text-zinc-300">{opt}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
+              {error && (
+                <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  {error}
+                </div>
+              )}
+
+              <div className="flex justify-between pt-2 border-t border-dark-border">
+                <button onClick={() => { setStep('pick'); setError('') }}
+                  className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase">
+                  Voltar
+                </button>
+                <button onClick={submitQuiz} disabled={submitting}
+                  className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors disabled:opacity-60 flex items-center gap-2">
+                  {submitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                  {submitting ? 'Processando...' : 'Enviar Respostas'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Step: Result */}
+          {step === 'result' && result && (
+            <div className="text-center py-4">
+              {result.passed ? (
+                <>
+                  <div className="w-16 h-16 rounded-full bg-yellow-500/10 border border-yellow-400/30 flex items-center justify-center mx-auto mb-4">
+                    <Award className="w-8 h-8 text-yellow-400" />
+                  </div>
+                  <h3 className="font-mono text-lg font-bold text-white mb-1">APROVADO!</h3>
+                  <p className="font-mono text-xs text-yellow-400 mb-4">
+                    Você acertou {result.correctAnswers}/{result.totalQuestions} ({result.score}%)
+                  </p>
+                  <p className="font-mono text-xs text-zinc-400 mb-6">
+                    A skill <span className="text-white font-bold">{selectedSkill?.displayName}</span> foi adicionada ao seu perfil como <span className="text-yellow-400">testada via quiz</span>.
+                    Entregue projetos com esta skill para conquistar o selo <span className="text-green-400">testado via projeto</span>!
+                  </p>
+                  <button onClick={() => onSkillAdded(selectedSkill!.name)}
+                    className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-8 py-3 border border-brand-500 hover:bg-brand-400 transition-colors">
+                    Ver Perfil Atualizado
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-400/30 flex items-center justify-center mx-auto mb-4">
+                    <AlertCircle className="w-8 h-8 text-red-400" />
+                  </div>
+                  <h3 className="font-mono text-lg font-bold text-white mb-1">REPROVADO</h3>
+                  <p className="font-mono text-xs text-red-400 mb-4">
+                    Você acertou {result.correctAnswers}/{result.totalQuestions} ({result.score}%). Necessário ≥70%.
+                  </p>
+                  <p className="font-mono text-xs text-zinc-400 mb-6">
+                    A skill não foi adicionada ao seu perfil. Estude mais e tente novamente.
+                  </p>
+                  <div className="flex justify-center gap-3">
+                    <button onClick={() => { setStep('pick'); setResult(null); setError('') }}
+                      className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase">
+                      Tentar Outra
+                    </button>
+                    <button onClick={() => { setStep('quiz'); setAnswers(new Array(questions.length).fill(-1)); setResult(null); setError('') }}
+                      className="btn-sharp bg-dark-input text-brand-500 font-mono text-xs px-4 py-2 border border-brand-500/50 hover:border-brand-500 transition-colors">
+                      Tentar Novamente
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
   )
 }
+
+// ─── EditProfileModal ─────────────────────────────────────────────────────────
 
 function EditProfileModal({ profile, onClose, onSave }: {
   profile: PublicProfile | null
@@ -237,28 +580,17 @@ function EditProfileModal({ profile, onClose, onSave }: {
   onSave: (updated: PublicProfile) => void
 }) {
   const [bio, setBio] = useState(profile?.bio ?? '')
-  const [skills, setSkills] = useState<string[]>(profile?.skills ?? [])
-  const [skillInput, setSkillInput] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-
-  function addSkill() {
-    const v = skillInput.trim()
-    if (v && !skills.includes(v)) setSkills(prev => [...prev, v])
-    setSkillInput('')
-  }
 
   async function handleSave() {
     setSaving(true)
     setError('')
     try {
-      // Atualiza portfolio-service e identity-service em paralelo
       await Promise.all([
-        portfolioApi.updateProfile({ bio, skills }),
-        usersApi.updateProfile({ bio, skills }),
+        portfolioApi.updateProfile({ bio }),
+        usersApi.updateProfile({ bio }),
       ])
-      // Re-busca o perfil completo: a API retorna apenas a entidade parcial do banco
-      // (sem 'name', 'userId', etc.), o que causaria tela preta ao usá-la diretamente
       const fresh = await portfolioApi.getMyProfile()
       onSave(fresh.data)
     } catch (err: unknown) {
@@ -293,36 +625,11 @@ function EditProfileModal({ profile, onClose, onSave }: {
             />
           </div>
 
-          <div className="space-y-2">
-            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Habilidades</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                maxLength={40}
-                value={skillInput}
-                onChange={e => setSkillInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addSkill())}
-                placeholder="Ex: React, NestJS, Docker..."
-                className="flex-1 px-4 py-2 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
-              />
-              <button type="button" onClick={addSkill}
-                className="bg-dark-input text-white font-mono text-xs px-4 py-2 border border-dark-border hover:border-brand-500 transition-colors">
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="bg-[#000] border border-dark-border p-3 min-h-[60px] flex flex-wrap gap-2">
-              {skills.length === 0 && (
-                <span className="font-mono text-[10px] text-zinc-600">Nenhuma habilidade adicionada.</span>
-              )}
-              {skills.map(s => (
-                <span key={s}
-                  onClick={() => setSkills(skills.filter(sk => sk !== s))}
-                  className="group flex items-center gap-1 text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1 hover:border-red-500 transition-colors cursor-pointer">
-                  {s} <X className="w-2.5 h-2.5 text-zinc-600 group-hover:text-red-500" />
-                </span>
-              ))}
-            </div>
-            <p className="font-mono text-[9px] text-zinc-600">Clique em uma habilidade para removê-la.</p>
+          <div className="bg-dark-input border border-dark-border p-3">
+            <p className="font-mono text-[10px] text-zinc-500">
+              Para gerenciar habilidades, use o botão "Adicionar Skill" na aba Habilidades & Validações.
+              Cada skill deve ser validada via quiz.
+            </p>
           </div>
 
           {error && (
