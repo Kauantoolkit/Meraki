@@ -36,7 +36,7 @@ export class Project {
     }
     this.specialistId = specialistId;
     this.bidId = bidId;
-    this.status = ProjectStatus.SIGNING;
+    this.status = ProjectStatus.IN_PROGRESS;
   }
 
   complete(): void {
