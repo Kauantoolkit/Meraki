@@ -17,41 +17,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('meraki_token')
-    const storedUser = localStorage.getItem('meraki_user')
-    // Reject tokens that were incorrectly saved as the literal string "undefined"
-    if (storedToken && storedToken !== 'undefined' && storedUser && storedUser !== 'undefined') {
-      try {
-        setToken(storedToken)
-        setUser(JSON.parse(storedUser))
-      } catch {
-        localStorage.removeItem('meraki_token')
-        localStorage.removeItem('meraki_user')
-      }
-    } else {
-      localStorage.removeItem('meraki_token')
-      localStorage.removeItem('meraki_user')
-    }
-    setIsLoading(false)
+    const storedToken = sessionStorage.getItem('meraki_token')
 
     const handleUnauthorized = () => {
       setToken(null)
       setUser(null)
     }
     window.addEventListener('meraki:unauthorized', handleUnauthorized)
+
+    if (!storedToken || storedToken === 'undefined') {
+      sessionStorage.removeItem('meraki_token')
+      sessionStorage.removeItem('meraki_user')
+      setIsLoading(false)
+      return () => window.removeEventListener('meraki:unauthorized', handleUnauthorized)
+    }
+
+    // Usa cached user para render imediato, depois valida com servidor
+    setToken(storedToken)
+    const storedUser = sessionStorage.getItem('meraki_user')
+    if (storedUser) {
+      try {
+        const cached = JSON.parse(storedUser)
+        setUser(cached)
+      } catch {}
+    }
+    setIsLoading(false)
+
+    // Valida em background — só faz logout em 401 (token inválido/expirado)
+    // Erros de rede, 5xx ou 429 mantêm o usuário cached para não derrubar sessão por instabilidade
+    authApi.me()
+      .then(res => {
+        const u = {
+          ...res.data,
+          type: res.data.userType === 'COMPANY' ? 'company' as const : 'specialist' as const,
+        }
+        setUser(u)
+        sessionStorage.setItem('meraki_user', JSON.stringify(u))
+      })
+      .catch((err: any) => {
+        const status = err?.response?.status
+        if (status === 401) {
+          // Token inválido ou expirado — o interceptor do client.ts já limpou o storage
+          setToken(null)
+          setUser(null)
+        }
+        // Qualquer outro erro (rede, 5xx, 429, timeout) — mantém sessão cached
+      })
+
     return () => window.removeEventListener('meraki:unauthorized', handleUnauthorized)
   }, [])
 
   function login(newToken: string, newUser: UserProfile) {
-    localStorage.setItem('meraki_token', newToken)
-    localStorage.setItem('meraki_user', JSON.stringify(newUser))
+    sessionStorage.setItem('meraki_token', newToken)
+    sessionStorage.setItem('meraki_user', JSON.stringify(newUser))
     setToken(newToken)
     setUser(newUser)
   }
 
   function logout() {
-    localStorage.removeItem('meraki_token')
-    localStorage.removeItem('meraki_user')
+    sessionStorage.removeItem('meraki_token')
+    sessionStorage.removeItem('meraki_user')
     setToken(null)
     setUser(null)
   }

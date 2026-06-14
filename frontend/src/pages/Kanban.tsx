@@ -100,7 +100,7 @@ export default function Kanban() {
         milestoneId: pendingMilestoneId,
         projectId,
         deliveryNotes: releaseNotes || undefined,
-        deliveredFiles: repoUrl ? [repoUrl] : undefined,
+        deliveredFiles: [repoUrl.trim()],
       })
       const updated = await projectsApi.getMilestones(projectId)
       setMilestones(updated.data)
@@ -151,6 +151,8 @@ export default function Kanban() {
     }
   }
 
+  }
+
   const byStatus = (status: KanbanStatus) => milestones.filter(m => m.status === status)
 
   // RN04: only the first PENDING milestone (by order) whose all predecessors are APPROVED can be started
@@ -198,9 +200,6 @@ export default function Kanban() {
               <p className="font-mono text-[10px] text-zinc-500 uppercase">Orçamento em Escrow</p>
               <p className="font-mono font-bold text-brand-500">{project ? fmt(project.budget) : '—'}</p>
             </div>
-            <button className="btn-sharp bg-dark-input hover:bg-dark-hover text-white font-mono text-xs px-4 py-2 border border-dark-border hover:border-brand-500 transition-colors flex items-center gap-1">
-              <Settings2 className="w-4 h-4" /> OPÇÕES
-            </button>
           </div>
         </div>
       </header>
@@ -442,6 +441,57 @@ export default function Kanban() {
         </div>
       )}
 
+      {/* Reject Modal */}
+      {rejectModal && (
+        <div className="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-dark-card border border-red-500 w-full max-w-md p-6 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+            <h2 className="text-lg font-bold text-white uppercase tracking-tight mb-2 flex items-center gap-2">
+              Rejeitar Entrega
+            </h2>
+            <p className="text-xs font-mono text-zinc-400 mb-4">A milestone voltará ao estado <span className="text-orange-400">Em Andamento</span> para correção pelo especialista.</p>
+            {delivery && (
+              <div className="mb-4 bg-dark-input border border-dark-border p-3 space-y-2">
+                <p className="font-mono text-[10px] text-zinc-500 uppercase mb-2">Entregáveis Submetidos</p>
+                {delivery.deliveredFiles && delivery.deliveredFiles.length > 0 ? (
+                  <div className="space-y-1">
+                    {delivery.deliveredFiles.map((f, i) => (
+                      <a key={i} href={f} target="_blank" rel="noopener noreferrer"
+                        className="block font-mono text-xs text-blue-400 hover:text-blue-300 underline truncate">
+                        {f}
+                      </a>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="font-mono text-[10px] text-zinc-600 italic">Nenhum link submetido.</p>
+                )}
+                {delivery.deliveryNotes && (
+                  <div className="border-t border-dark-border pt-2 mt-2">
+                    <p className="font-mono text-[10px] text-zinc-500 uppercase mb-1">Notas</p>
+                    <p className="font-mono text-xs text-zinc-300 whitespace-pre-wrap">{delivery.deliveryNotes}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="mb-6">
+              <label className="block text-[10px] font-mono text-zinc-500 uppercase mb-1">Motivo da Rejeição</label>
+              <textarea
+                data-testid="ms-reject-reason"
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                className="w-full bg-[#000] border border-dark-border p-3 text-xs font-sans text-white focus:outline-none focus:border-red-500 resize-none h-20"
+                placeholder="Descreva o que precisa ser corrigido..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={() => { setRejectModal(false); setRejectReason('') }} className="flex-1 btn-sharp bg-dark-input text-zinc-300 font-mono text-xs px-4 py-3 border border-dark-border hover:border-zinc-500 transition-colors">CANCELAR</button>
+              <button data-testid="ms-reject-confirm" onClick={confirmReject} disabled={actionLoading} className="flex-1 btn-sharp bg-red-500 text-white font-bold font-mono text-xs px-4 py-3 border border-red-500 hover:bg-red-400 transition-colors disabled:opacity-70">
+                {actionLoading ? 'Rejeitando...' : 'REJEITAR_ENTREGA()'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Approve Modal */}
       {approveModal && (
         <div className="fixed inset-0 z-50 bg-[#000]/80 backdrop-blur-sm flex items-center justify-center p-4">
@@ -453,7 +503,7 @@ export default function Kanban() {
               <p className="text-[10px] font-mono text-brand-500 uppercase">Aviso: Ação Irreversível</p>
               <p className="text-xs text-zinc-300 mt-1">Ao aprovar, o valor estipulado no Escrow será transferido para o especialista.</p>
             </div>
-            <div className="flex items-center gap-3 mb-6 bg-dark-input p-3 border border-dark-border">
+            <div className="flex items-center gap-3 mb-4 bg-dark-input p-3 border border-dark-border">
               <Lock className="w-4 h-4 text-zinc-500" />
               <div>
                 <p className="text-[10px] font-mono text-zinc-500 uppercase">Milestone a Aprovar</p>

@@ -109,6 +109,7 @@ export default function Bidding() {
     setValidationErrors([])
     setSubmitError('')
     setSubmitting(true)
+    setSubmitError('')
     try {
       const hasMilestones = milestoneProposals.length > 0
       const res = await bidsApi.submit({
@@ -496,6 +497,7 @@ export default function Bidding() {
                           setValidationErrors(validationErrors.filter(err => err.field !== 'proposal'))
                         }
                       }}
+>>>>>>> main
                       placeholder="Apresente a sua proposta técnica..."
                       className="editor-textarea relative z-10 w-full pl-12 pr-2 py-3 bg-transparent text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none h-64"
                     />

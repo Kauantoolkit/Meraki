@@ -4,9 +4,10 @@ export default defineConfig({
   testDir: './e2e-integration',
   timeout: 60_000,
   retries: 0,
+  workers: 1,
   use: {
     baseURL: 'http://localhost:5173',
-    headless: false,
+    headless: true,
     viewport: { width: 1440, height: 900 },
     screenshot: 'only-on-failure',
     trace: 'on-first-retry',

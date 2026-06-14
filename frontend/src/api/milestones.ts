@@ -7,9 +7,23 @@ export interface DeliveryPayload {
   deliveredFiles?: string[]
 }
 
+export interface DeliveryData {
+  id: string
+  milestoneId: string
+  projectId: string
+  specialistId: string
+  deliveredFiles: string[]
+  deliveryNotes: string | null
+  status: string
+  createdAt: string
+}
+
 export const milestonesApi = {
   start: (milestoneId: string) =>
     api.put(`/milestones/${milestoneId}/start`),
+
+  getDelivery: (milestoneId: string) =>
+    api.get<DeliveryData | null>(`/milestones/${milestoneId}/delivery`),
 
   submit: (data: DeliveryPayload) =>
     api.post('/milestones/' + data.milestoneId + '/submit', {
@@ -18,8 +32,8 @@ export const milestonesApi = {
       deliveredFiles: data.deliveredFiles,
     }),
 
-  approve: (milestoneId: string) =>
-    api.put(`/milestones/${milestoneId}/approve`),
+  approve: (milestoneId: string, amount?: number) =>
+    api.put(`/milestones/${milestoneId}/approve`, amount != null ? { amount } : {}),
 
   reject: (milestoneId: string, reason: string) =>
     api.put(`/milestones/${milestoneId}/reject`, { reason }),

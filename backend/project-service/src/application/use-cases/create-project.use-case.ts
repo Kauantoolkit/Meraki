@@ -1,34 +1,63 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ProjectFactory } from '../../domain/factories/project.factory';
+import { MilestoneFactory } from '../../domain/factories/milestone.factory';
 import { ProjectRepository } from '../../infrastructure/repositories/project.repository';
+import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { ProjectCreatedEvent } from '../../domain/events/project-created.event';
+import { MilestoneCreatedEvent } from '../../domain/events/milestone-created.event';
 import { CreateProjectDto } from '../dto/create-project.dto';
 import { Project } from '../../domain/entities/project.entity';
 
 @Injectable()
 export class CreateProjectUseCase {
   constructor(
-    private readonly factory: ProjectFactory,
+    private readonly projectFactory: ProjectFactory,
+    private readonly milestoneFactory: MilestoneFactory,
     private readonly projectRepo: ProjectRepository,
+    private readonly milestoneRepo: MilestoneRepository,
     private readonly events: EventPublisherService,
     private readonly emitter: EventEmitter2,
   ) {}
 
   async execute(dto: CreateProjectDto, companyId: string): Promise<Project> {
-    const project = this.factory.create({ ...dto, companyId });
+    const { milestones: milestoneDtos, ...projectData } = dto;
+
+    const project = this.projectFactory.create({ ...projectData, companyId });
     const saved = await this.projectRepo.save(project);
 
-    const event = new ProjectCreatedEvent({
+    if (milestoneDtos && milestoneDtos.length > 0) {
+      try {
+        const milestones = this.milestoneFactory.createBatch(milestoneDtos, saved.id);
+        const savedMilestones = await this.milestoneRepo.saveMany(milestones);
+        saved.milestones = savedMilestones;
+
+        for (const milestone of savedMilestones) {
+          const milestoneEvent = new MilestoneCreatedEvent({
+            milestoneId: milestone.id,
+            projectId: milestone.projectId,
+            amount: milestone.amount,
+            order: milestone.order,
+          });
+          await this.events.publishMilestoneCreated(milestoneEvent);
+          this.emitter.emit('milestone.created', milestoneEvent);
+        }
+      } catch (err) {
+        await this.projectRepo.delete(saved.id);
+        throw err;
+      }
+    }
+
+    const projectEvent = new ProjectCreatedEvent({
       projectId: saved.id,
       title: saved.title,
       budget: saved.budget,
       companyId: saved.companyId,
     });
 
-    await this.events.publishProjectCreated(event);
-    this.emitter.emit('project.created', event);
+    await this.events.publishProjectCreated(projectEvent);
+    this.emitter.emit('project.created', projectEvent);
 
     return saved;
   }

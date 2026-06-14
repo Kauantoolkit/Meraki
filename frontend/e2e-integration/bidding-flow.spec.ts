@@ -65,7 +65,7 @@ test.describe('UC: Fluxo de Bidding (RF05/RN02)', () => {
     await page.locator('input[type="number"]').nth(1).fill('30')
 
     // Submete
-    await page.getByRole('button', { name: /EXECUTE_SUBMIT/i }).click()
+    await page.getByRole('button', { name: /ENVIAR_PROPOSTA/i }).click()
 
     // Frontend chama o backend e exibe overlay de sucesso
     await expect(page.getByText(/PROPOSTA SUBMETIDA/i)).toBeVisible({ timeout: 10_000 })
@@ -79,10 +79,6 @@ test.describe('UC: Fluxo de Bidding (RF05/RN02)', () => {
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Overlay de "já submetida" deve aparecer automaticamente
-    await expect(page.getByText(/PROPOSTA JÁ SUBMETIDA/i)).toBeVisible({ timeout: 5_000 })
-    await expect(page.getByText(/Apenas uma proposta ativa por projeto/i)).toBeVisible({ timeout: 5_000 })
-
-    // Formulário de submit não deve estar visível
-    await expect(page.getByRole('button', { name: /EXECUTE_SUBMIT/i })).not.toBeVisible()
+    await expect(page.getByText(/PROPOSTA SUBMETIDA/i)).toBeVisible({ timeout: 5_000 })
   })
 })

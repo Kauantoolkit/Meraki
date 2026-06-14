@@ -35,6 +35,10 @@ export class MilestonesService {
     return this.proxy.get(`${DELIVERY_URL}/api/kanban/${projectId}`, this.proxy.authHeaders(token));
   }
 
+  getDelivery(milestoneId: string, token: string) {
+    return this.proxy.get(`${DELIVERY_URL}/api/deliveries/${milestoneId}`, this.proxy.authHeaders(token));
+  }
+
   addComment(milestoneId: string, comment: string, token: string) {
     return this.proxy.post(`${DELIVERY_URL}/api/deliveries/${milestoneId}/comments`, { comment }, this.proxy.authHeaders(token));
   }
