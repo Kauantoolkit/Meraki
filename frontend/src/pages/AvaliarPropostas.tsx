@@ -47,7 +47,8 @@ export default function AvaliarPropostas() {
         if (pResult.status === 'fulfilled') {
           const p = pResult.value.data
           // ACL frontend: redireciona se a empresa logada não for dona do projeto
-          if (p.companyId !== user.companyId) {
+          // Só aplica se user.companyId já carregou (evita redirect falso-positivo)
+          if (user.companyId && p.companyId !== user.companyId) {
             navigate('/dashboard', { replace: true })
             return
           }
@@ -91,9 +92,9 @@ export default function AvaliarPropostas() {
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased">
       <div className="scanline" />
-      <Navbar backUrl="/dashboard" projectTitle={`${project?.id ?? '...'} // BIDDING_REVIEW`} />
+      <Navbar backUrl="/dashboard" projectTitle={project?.title ? `${project.title} // BIDDING_REVIEW` : 'BIDDING_REVIEW'} />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 overflow-x-hidden">
 
         {/* Project summary */}
         <div className="bg-dark-card border border-dark-border p-5 mb-8 relative">
@@ -101,18 +102,18 @@ export default function AvaliarPropostas() {
           <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className={`font-mono text-[9px] border px-2 py-0.5 tracking-widest uppercase ${
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className={`font-mono text-[9px] border px-2 py-0.5 tracking-widest uppercase shrink-0 ${
                   hasAccepted
                     ? 'text-brand-500 border-brand-500/30 bg-brand-500/10'
                     : 'text-blue-400 border-blue-400/30 bg-blue-400/10'
                 }`}>
                   {hasAccepted ? 'ESPECIALISTA SELECIONADO' : `STATUS: ${projectStatusLabel[project?.status ?? ''] ?? project?.status ?? ''}`}
                 </span>
-                <span className="font-mono text-[10px] text-zinc-600">{project?.id}</span>
+                <span className="font-mono text-[10px] text-zinc-600 truncate">{project?.id?.slice(0, 12)}</span>
               </div>
-              <h1 className="text-xl font-bold text-white">{project?.title}</h1>
+              <h1 className="text-xl font-bold text-white truncate">{project?.title}</h1>
               <p className="text-sm text-zinc-400 font-mono mt-1 line-clamp-2">{project?.description}</p>
             </div>
             <div className="grid grid-cols-3 gap-px bg-dark-border shrink-0">
@@ -195,7 +196,7 @@ export default function AvaliarPropostas() {
               return (
                 <div
                   key={bid.id}
-                  className={`bg-dark-card border transition-colors ${
+                  className={`bg-dark-card border transition-colors overflow-hidden ${
                     bid.status === 'ACCEPTED'
                       ? 'border-brand-500/40'
                       : bid.status === 'REJECTED'
@@ -204,17 +205,17 @@ export default function AvaliarPropostas() {
                   }`}
                 >
                   {/* Bid header */}
-                  <div className="p-5">
+                  <div className="p-5 w-full min-w-0">
                     <div className="flex items-start justify-between gap-4 mb-4">
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
                         <div className="w-9 h-9 bg-dark-input border border-dark-border flex items-center justify-center shrink-0">
                           <User className="w-4 h-4 text-zinc-500" />
                         </div>
-                        <div>
-                          <p className="font-mono text-sm font-bold text-white">
+                        <div className="min-w-0">
+                          <p className="font-mono text-sm font-bold text-white truncate">
                             {bid.specialistName ?? `Especialista #${idx + 1}`}
                           </p>
-                          <p className="font-mono text-[10px] text-zinc-600">
+                          <p className="font-mono text-[10px] text-zinc-600 truncate">
                             BID_ID: {bid.id.slice(0, 12)} · {new Date(bid.createdAt).toLocaleDateString('pt-BR')}
                           </p>
                         </div>
@@ -257,18 +258,47 @@ export default function AvaliarPropostas() {
                         }
                       </button>
                       {isExpanded && (
-                        <div className="px-4 pb-4 pt-1 border-t border-dark-border">
-                          <p className="font-mono text-xs text-zinc-300 leading-relaxed whitespace-pre-wrap">
+                        <div className="px-4 pb-4 pt-1 border-t border-dark-border w-full overflow-hidden">
+                          <p className="font-mono text-xs text-zinc-300 leading-relaxed break-all whitespace-pre-wrap">
                             {bid.proposalText || 'Sem texto de proposta.'}
                           </p>
                         </div>
                       )}
                       {!isExpanded && bid.proposalText && (
-                        <p className="px-4 pb-3 font-mono text-[10px] text-zinc-600 line-clamp-1 border-t border-dark-border pt-2">
+                        <p className="px-4 pb-3 font-mono text-[10px] text-zinc-600 line-clamp-1 border-t border-dark-border pt-2 break-all">
                           {bid.proposalText}
                         </p>
                       )}
                     </div>
+
+                    {/* Milestone proposals */}
+                    {bid.milestoneProposals && bid.milestoneProposals.length > 0 && (
+                      <div className="mt-4 bg-dark-input border border-dark-border">
+                        <div className="px-4 py-2.5 border-b border-dark-border">
+                          <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
+                            Observações por Marco
+                          </span>
+                        </div>
+                        <div className="divide-y divide-dark-border">
+                          {bid.milestoneProposals.map((mp) => {
+                            const milestone = project?.milestones?.find(m => m.id === mp.milestoneId)
+                            return (
+                              <div key={mp.milestoneId} className="px-4 py-3 flex flex-col gap-1">
+                                <p className="font-mono text-[10px] text-brand-500 uppercase tracking-wider">
+                                  {milestone?.title ?? `Marco ${mp.milestoneId.slice(0, 8)}`}
+                                </p>
+                                <div className="flex items-center justify-between">
+                                  <p className="font-mono text-xs text-white font-bold">{fmt(mp.proposedAmount)}</p>
+                                  {mp.note && (
+                                    <p className="font-mono text-[10px] text-zinc-400 italic max-w-[60%] text-right">{mp.note}</p>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Actions */}
                     {isPending && (

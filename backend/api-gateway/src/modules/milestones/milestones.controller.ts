@@ -49,6 +49,12 @@ export class MilestonesController {
     return this.milestonesService.rejectDelivery(id, body.reason, this.token(req));
   }
 
+  @Get(':id/delivery')
+  @ApiOperation({ summary: 'Buscar dados da entrega de um milestone' })
+  getDelivery(@Param('id') id: string, @Req() req: Request) {
+    return this.milestonesService.getDelivery(id, this.token(req));
+  }
+
   @Post(':id/comments')
   @ApiOperation({ summary: 'Adicionar comentário ao milestone' })
   addComment(@Param('id') id: string, @Body() body: AddCommentDto, @Req() req: Request) {

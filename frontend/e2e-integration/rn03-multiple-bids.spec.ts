@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { registerAndLogin } from './helpers/api'
+import { registerAndLogin, loginWithRetry } from './helpers/api'
 
 const API_URL = 'http://localhost:3000/api'
 
@@ -44,11 +44,7 @@ test.describe('UC: RN03 — Um Vencedor por Projeto (RF06/RF07/RN03)', () => {
 
     // Empresa
     await page.request.post(`${API_URL}/auth/register`, { data: company })
-    const companyLogin = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: company.email, password: company.password },
-    })
-    if (!companyLogin.ok()) throw new Error('Falha ao logar empresa')
-    companyToken = (await companyLogin.json()).accessToken
+    companyToken = await loginWithRetry(page, company.email, company.password)
 
     // Cria projeto
     const projRes = await page.request.post(`${API_URL}/projects`, {
@@ -66,10 +62,7 @@ test.describe('UC: RN03 — Um Vencedor por Projeto (RF06/RF07/RN03)', () => {
 
     // Especialista 1 regista e submete proposta
     await page.request.post(`${API_URL}/auth/register`, { data: specialist1 })
-    const spec1Login = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: specialist1.email, password: specialist1.password },
-    })
-    const spec1Token = (await spec1Login.json()).accessToken
+    const spec1Token = await loginWithRetry(page, specialist1.email, specialist1.password)
     await page.request.post(`${API_URL}/bids/project/${projectId}`, {
       headers: { Authorization: `Bearer ${spec1Token}` },
       data: { proposal: 'Proposta do Dev Alpha: 5 anos de React.', proposedBudget: 18000, estimatedDuration: 45 },
@@ -77,10 +70,7 @@ test.describe('UC: RN03 — Um Vencedor por Projeto (RF06/RF07/RN03)', () => {
 
     // Especialista 2 regista e submete proposta
     await page.request.post(`${API_URL}/auth/register`, { data: specialist2 })
-    const spec2Login = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: specialist2.email, password: specialist2.password },
-    })
-    const spec2Token = (await spec2Login.json()).accessToken
+    const spec2Token = await loginWithRetry(page, specialist2.email, specialist2.password)
     await page.request.post(`${API_URL}/bids/project/${projectId}`, {
       headers: { Authorization: `Bearer ${spec2Token}` },
       data: { proposal: 'Proposta do Dev Beta: foco em TypeScript.', proposedBudget: 17000, estimatedDuration: 40 },
@@ -99,7 +89,7 @@ test.describe('UC: RN03 — Um Vencedor por Projeto (RF06/RF07/RN03)', () => {
     await expect(page.getByText(/2\s+pendentes/i)).toBeVisible({ timeout: 5_000 })
 
     // Ambos os botões de aceite devem estar visíveis
-    const acceptBtns = page.getByRole('button', { name: /ACEITAR_BID/i })
+    const acceptBtns = page.getByRole('button', { name: /ACEITAR_PROPOSTA/i })
     await expect(acceptBtns).toHaveCount(2, { timeout: 5_000 })
   })
 
@@ -109,9 +99,9 @@ test.describe('UC: RN03 — Um Vencedor por Projeto (RF06/RF07/RN03)', () => {
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
 
     // Aceita a primeira proposta via modal
-    await page.getByRole('button', { name: /ACEITAR_BID/i }).first().click()
+    await page.getByRole('button', { name: /ACEITAR_PROPOSTA/i }).first().click()
     await expect(page.getByText(/Aceitar Proposta/i)).toBeVisible({ timeout: 3_000 })
-    await page.getByRole('button', { name: /CONFIRMAR/i }).click()
+    await page.getByRole('button', { name: /CONFIRMAR_ACEITE/i }).click()
 
     // RN03: redireciona para o kanban
     await expect(page).toHaveURL(/\/kanban\//, { timeout: 10_000 })
@@ -125,10 +115,10 @@ test.describe('UC: RN03 — Um Vencedor por Projeto (RF06/RF07/RN03)', () => {
     // Banner de especialista selecionado deve aparecer
     await expect(page.getByText(/Especialista Seleccionado/i)).toBeVisible({ timeout: 5_000 })
 
-    // Não deve existir botão de ACEITAR ativo (não BLOQUEADA, mas sem ação)
-    await expect(page.getByRole('button', { name: /ACEITAR_BID/i })).not.toBeVisible()
+    // Não deve existir botão de ACEITAR ativo
+    await expect(page.getByRole('button', { name: /ACEITAR_PROPOSTA/i })).not.toBeVisible()
 
-    // Deve mostrar mensagem de bloqueio para a proposta pendente restante
-    await expect(page.getByText(/Um especialista já foi seleccionado/i)).toBeVisible({ timeout: 5_000 })
+    // RN03: a outra proposta foi auto-rejeitada — badge REJEITADO deve aparecer
+    await expect(page.getByText('REJEITADO')).toBeVisible({ timeout: 5_000 })
   })
 })

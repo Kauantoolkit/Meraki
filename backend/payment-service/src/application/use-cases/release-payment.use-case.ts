@@ -5,11 +5,8 @@ import { SpecialistBalanceRepository } from '../../infrastructure/repositories/s
 import { FeeCalculationDomainService } from '../../domain/services/fee-calculation.domain-service';
 import { PaymentReleasedEvent } from '../../domain/events/payment-released.event';
 import { EscrowAccount } from '../../domain/entities/escrow-account.entity';
-import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
-import { DisputeRepository } from '../../infrastructure/repositories/dispute.repository';
-import { PaymentProvider } from '../../infrastructure/providers/payment-provider.interface';
-import { Money } from '../../domain/value-objects/money.value-object';
 import { SpecialistBalance } from '../../domain/entities/specialist-balance.entity';
+import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 
 export interface ReleasePaymentDto {
   milestoneId: string;

@@ -56,26 +56,26 @@ export const projectsApi = {
   list:            () => api.get<any>('/projects').then(r => ({ ...r, data: mapPage(r.data) })),
   listOpen:        () => api.get<any>('/projects?status=OPEN').then(r => ({ ...r, data: mapPage(r.data) })),
   listByCompany:   () => api.get<any>('/projects').then(r => ({ ...r, data: mapPage(r.data) })),
-  listBySpecialist:() => api.get<any>('/projects').then(r => ({ ...r, data: mapPage(r.data) })),
+  listBySpecialist:() =>
+    Promise.all([
+      api.get<any>('/projects?status=IN_PROGRESS'),
+      api.get<any>('/projects?status=COMPLETED'),
+    ]).then(([ip, co]) => {
+      const combined = [...(ip.data.data ?? []), ...(co.data.data ?? [])]
+      return { ...ip, data: mapPage({ data: combined, total: combined.length }) }
+    }),
 
   getById: (id: string) =>
     api.get<any>(`/projects/${id}`).then(r => ({ ...r, data: mapProject(r.data) })),
 
   cancel: (id: string) => api.delete<void>(`/projects/${id}`),
+  complete: (id: string) => api.put<void>(`/projects/${id}/complete`),
 
   update: (id: string, data: Partial<Pick<CreateProjectPayload, 'title' | 'description' | 'requirements' | 'budget' | 'deadline'>>) =>
     api.put<any>(`/projects/${id}`, data).then(r => ({ ...r, data: mapProject(r.data) })),
 
-  create: async (data: CreateProjectPayload) => {
-    const { milestones, ...projectData } = data
-    const res = await api.post<any>('/projects', projectData)
-    if (milestones && milestones.length > 0) {
-      for (const m of milestones) {
-        await api.post(`/projects/${res.data.id}/milestones`, m)
-      }
-    }
-    return { ...res, data: mapProject(res.data) }
-  },
+  create: async (data: CreateProjectPayload) =>
+    api.post<any>('/projects', data).then(r => ({ ...r, data: mapProject(r.data) })),
 
   getMilestones: (projectId: string) => api.get<Milestone[]>(`/projects/${projectId}/milestones`),
 }

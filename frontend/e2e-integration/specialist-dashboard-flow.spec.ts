@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { registerAndLogin } from './helpers/api'
+import { registerAndLogin, loginWithRetry } from './helpers/api'
 
 const API_URL = 'http://localhost:3000/api'
 
@@ -36,11 +36,7 @@ test.describe('UC: Especialista vê projetos abertos e acede ao bidding (RF05)',
 
     // Empresa cria projeto OPEN via API
     await page.request.post(`${API_URL}/auth/register`, { data: company })
-    const loginRes = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: company.email, password: company.password },
-    })
-    if (!loginRes.ok()) throw new Error('Falha ao logar empresa')
-    const companyToken = (await loginRes.json()).accessToken
+    const companyToken = await loginWithRetry(page, company.email, company.password)
 
     const projRes = await page.request.post(`${API_URL}/projects`, {
       headers: { Authorization: `Bearer ${companyToken}` },
@@ -63,7 +59,8 @@ test.describe('UC: Especialista vê projetos abertos e acede ao bidding (RF05)',
 
   test('projeto OPEN aparece na seção Oportunidades do dashboard do especialista', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.goto('/dashboard', { waitUntil: 'networkidle' })
+    await page.getByRole('button', { name: /ESPECIALISTA/i }).first().click()
+    await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
 
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText(/Oportunidades/i)).toBeVisible({ timeout: 5_000 })
@@ -74,14 +71,16 @@ test.describe('UC: Especialista vê projetos abertos e acede ao bidding (RF05)',
 
   test('botão APPLY_BID() navega para a tela de submissão de proposta do projeto correto', async ({ page }) => {
     await registerAndLogin(page, specialist)
-    await page.goto('/dashboard', { waitUntil: 'networkidle' })
+    await page.getByRole('button', { name: /ESPECIALISTA/i }).first().click()
+    await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
 
     await expect(page.locator('main')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText(PROJECT_TITLE)).toBeVisible({ timeout: 10_000 })
 
-    // Clica no botão APPLY_BID do card deste projeto
-    const projectCard = page.locator(`text=${PROJECT_TITLE}`).locator('..').locator('..')
-    await projectCard.getByRole('button', { name: /APPLY_BID/i }).click()
+    // Clica no botão ENVIAR_PROPOSTA do card deste projeto
+    // h3 é filho direto do card div; subir 1 nível vai ao card, não à secção
+    const projectCard = page.locator('h3').filter({ hasText: PROJECT_TITLE }).locator('..')
+    await projectCard.getByRole('button', { name: /ENVIAR_PROPOSTA/i }).click()
 
     // Deve navegar para a tela de bidding com o projectId correto
     await expect(page).toHaveURL(new RegExp(`/bidding/${projectId}`), { timeout: 5_000 })

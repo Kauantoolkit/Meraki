@@ -17,19 +17,33 @@ export default function DashboardEspecialista() {
   const [myBids, setMyBids] = useState<Bid[]>([])
   const [loading, setLoading] = useState(true)
 
+  // Habilidades do especialista logado (vêm de GET /users/me → profile.skills)
+  const mySkills: string[] = ((user as any)?.profile?.skills ?? []).map((s: string) => s.toLowerCase())
+
   useEffect(() => {
     Promise.all([
-      projectsApi.listOpen(),
       projectsApi.listBySpecialist(),
       bidsApi.myBids(),
-    ]).then(([open, mine, bids]) => {
-      setOpenProjects(open.data.data)
-      setMyProjects(mine.data.data.filter(p => p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
+      // Só busca projetos abertos se o especialista tiver skills para filtrar
+      mySkills.length > 0 ? projectsApi.listOpen() : Promise.resolve(null),
+    ]).then(([mine, bids, open]) => {
+      setMyProjects(mine.data.data.filter((p: Project) => p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
       setMyBids(bids.data)
+      if (open) setOpenProjects(open.data.data)
     }).catch(() => {
       // handled by the 401 interceptor — user will be redirected to login
     }).finally(() => setLoading(false))
   }, [])
+
+  // Recomendações só existem se há skills cadastradas — sem fallback "mostra tudo"
+  const recommended = mySkills.length > 0
+    ? openProjects
+        .filter(p => (p.skills ?? []).some(s => mySkills.includes(s.toLowerCase())))
+        .slice(0, 5)
+    : []
+
+  // Mapa projectId → Bid para exibir badge de relação nos cards
+  const bidMap = new Map<string, Bid>(myBids.map(b => [b.projectId, b]))
 
   const bidStatusColor = (status: string) => {
     if (status === 'ACCEPTED') return 'text-brand-500'
@@ -96,42 +110,79 @@ export default function DashboardEspecialista() {
           <div className="lg:col-span-2 flex flex-col gap-4">
             <div className="flex items-center justify-between border-b border-dark-border pb-2">
               <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                <Zap className="w-4 h-4 text-brand-500" /> Oportunidades & Convites
+                <Zap className="w-4 h-4 text-brand-500" />
+                Recomendados para Você
               </h2>
+              <button
+                onClick={() => navigate('/projects/browse')}
+                className="font-mono text-[10px] text-brand-500 hover:text-brand-400 border border-brand-500/30 hover:border-brand-500 px-2 py-1 transition-colors uppercase"
+              >
+                Ver todos →
+              </button>
             </div>
 
             {loading ? (
               <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">Carregando...</div>
-            ) : openProjects.length === 0 ? (
-              <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">Nenhum projeto OPEN disponível.</div>
-            ) : openProjects.map(p => (
-              <div key={p.id} className="bg-dark-card border border-brand-500/50 p-5 hover:border-brand-500 transition-colors">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="font-mono text-[10px] text-blue-400 border border-blue-400/30 bg-blue-400/10 px-2 py-0.5 tracking-widest flex items-center gap-1">
-                    OPORTUNIDADE
-                  </span>
-                  <span className="font-mono text-[10px] text-zinc-500">{p.id}</span>
-                </div>
-                <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
-                <p className="text-xs text-zinc-400 mb-4 line-clamp-2">{p.description || 'S/ Desc.'}</p>
-                <div className="bg-[#000] border border-dark-border p-3 mb-4 flex gap-4">
-                  <div>
-                    <p className="font-mono text-[9px] text-zinc-500">ORÇAMENTO (MAX)</p>
-                    <p className="font-mono text-xs font-bold text-white">{fmt(p.budget)}</p>
-                  </div>
-                  <div>
-                    <p className="font-mono text-[9px] text-zinc-500">DEADLINE</p>
-                    <p className="font-mono text-xs text-white">{p.deadline}</p>
-                  </div>
-                </div>
+            ) : mySkills.length === 0 ? (
+              <div className="p-6 border border-zinc-800 border-dashed flex flex-col items-center gap-3 text-center">
+                <span className="font-mono text-xs text-zinc-500">Sem skills cadastradas — não é possível gerar recomendações.</span>
                 <button
-                  onClick={() => navigate(`/bidding/${p.id}`)}
-                  className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-2 hover:bg-brand-400 border border-brand-500 transition-colors"
+                  onClick={() => navigate('/projects/browse')}
+                  className="font-mono text-xs text-brand-500 border border-brand-500/40 px-3 py-1.5 hover:border-brand-500 transition-colors"
                 >
-                  ENVIAR_PROPOSTA()
+                  Explorar projetos disponíveis →
                 </button>
               </div>
-            ))}
+            ) : recommended.length === 0 ? (
+              <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">
+                Nenhum projeto com as suas tecnologias no momento.{' '}
+                <button onClick={() => navigate('/projects/browse')} className="text-brand-500 hover:underline">Ver todos os projetos.</button>
+              </div>
+            ) : recommended.map(p => {
+              const myBid = bidMap.get(p.id)
+              const hasPending = myBid?.status === 'PENDING'
+              return (
+                <div key={p.id} className="bg-dark-card border border-brand-500/50 p-5 hover:border-brand-500 transition-colors">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    <span className="font-mono text-[10px] text-blue-400 border border-blue-400/30 bg-blue-400/10 px-2 py-0.5 tracking-widest">
+                      OPORTUNIDADE
+                    </span>
+                    {myBid?.status === 'PENDING' && (
+                      <span className="font-mono text-[10px] text-yellow-400 border border-yellow-400/30 bg-yellow-400/10 px-2 py-0.5">PROPOSTA ENVIADA</span>
+                    )}
+                    {myBid?.status === 'REJECTED' && (
+                      <span className="font-mono text-[10px] text-red-400 border border-red-400/30 bg-red-400/10 px-2 py-0.5">REJEITADA</span>
+                    )}
+                    {myBid?.status === 'WITHDRAWN' && (
+                      <span className="font-mono text-[10px] text-zinc-400 border border-zinc-600/30 bg-zinc-600/10 px-2 py-0.5">RETIRADA</span>
+                    )}
+                    <span className="font-mono text-[10px] text-zinc-500">{p.id.slice(0, 8)}</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
+                  <p className="text-xs text-zinc-400 mb-4 line-clamp-2">{p.description || 'S/ Desc.'}</p>
+                  <div className="bg-[#000] border border-dark-border p-3 mb-4 flex gap-4">
+                    <div>
+                      <p className="font-mono text-[9px] text-zinc-500">ORÇAMENTO (MAX)</p>
+                      <p className="font-mono text-xs font-bold text-white">{fmt(p.budget)}</p>
+                    </div>
+                    <div>
+                      <p className="font-mono text-[9px] text-zinc-500">DEADLINE</p>
+                      <p className="font-mono text-xs text-white">{p.deadline}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/bidding/${p.id}`)}
+                    className={`btn-sharp font-bold font-mono text-xs px-4 py-2 border transition-colors ${
+                      hasPending
+                        ? 'bg-yellow-400/10 text-yellow-400 border-yellow-400/40 hover:bg-yellow-400/20'
+                        : 'bg-brand-500 text-dark-bg border-brand-500 hover:bg-brand-400'
+                    }`}
+                  >
+                    {hasPending ? 'VER_PROPOSTA()' : 'ENVIAR_PROPOSTA()'}
+                  </button>
+                </div>
+              )
+            })}
 
             <div className="flex items-center justify-between border-b border-dark-border pb-2 mt-4">
               <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">

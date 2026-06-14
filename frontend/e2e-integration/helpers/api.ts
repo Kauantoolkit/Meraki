@@ -2,7 +2,34 @@ import { Page } from '@playwright/test'
 
 const API_URL = 'http://localhost:3000/api'
 
-/** Register a user via API and inject auth into the browser */
+/**
+ * Login com backoff exponencial para suportar o throttler (429) em contextos beforeAll.
+ * Retorna o accessToken ou lança erro.
+ */
+export async function loginWithRetry(page: Page, email: string, password: string): Promise<string> {
+  const body = await loginBodyWithRetry(page, email, password)
+  return body.accessToken
+}
+
+/**
+ * Igual a loginWithRetry mas retorna o body completo do login.
+ * Útil quando precisamos de campos extra (user.id, companyId, etc.).
+ */
+export async function loginBodyWithRetry(page: Page, email: string, password: string): Promise<any> {
+  let res: Awaited<ReturnType<typeof page.request.post>>
+  for (let attempt = 0; attempt < 6; attempt++) {
+    res = await page.request.post(`${API_URL}/auth/login`, { data: { email, password } })
+    if (res.status() !== 429) break
+    await new Promise(r => setTimeout(r, 3000 * (attempt + 1)))
+  }
+  if (!res!.ok()) throw new Error(`Login failed (${res!.status()}): ${await res!.text()}`)
+  return res!.json()
+}
+
+/**
+ * Regista o utilizador via API, depois faz login pela página de login real (UI).
+ * Testa o fluxo completo — incluindo o correto armazenamento em sessionStorage.
+ */
 export async function registerAndLogin(
   page: Page,
   data: {
@@ -13,40 +40,23 @@ export async function registerAndLogin(
     companyName?: string
   },
 ) {
-  // Try register first
+  // Registo via API (sem UI para registo nos testes de fluxo)
   const regPayload: any = { ...data }
   if (data.userType === 'COMPANY' && !data.companyName) {
     regPayload.companyName = data.name
   }
-  await page.request.post(`${API_URL}/auth/register`, { data: regPayload }).catch(() => {})
-
-  // Always login — retry with backoff on 429 (throttler)
-  let loginRes: Awaited<ReturnType<typeof page.request.post>>
-  for (let attempt = 0; attempt < 5; attempt++) {
-    loginRes = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: data.email, password: data.password },
-    })
-    if (loginRes.status() !== 429) break
-    await new Promise(r => setTimeout(r, 3000 * (attempt + 1)))
-  }
-  if (!loginRes!.ok()) throw new Error(`Failed to login: ${await loginRes!.text()}`)
-
-  const body = await loginRes.json()
-  const user = {
-    ...body.user,
-    type: body.user.userType === 'COMPANY' ? 'company' : 'specialist',
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const res = await page.request.post(`${API_URL}/auth/register`, { data: regPayload })
+    if (res.status() !== 429) break
+    await new Promise(r => setTimeout(r, 2000 * (attempt + 1)))
   }
 
-  await page.goto('/')
-  await page.evaluate(
-    ({ token, user }) => {
-      localStorage.setItem('meraki_token', token)
-      localStorage.setItem('meraki_user', JSON.stringify(user))
-    },
-    { token: body.accessToken, user },
-  )
-
-  return body
+  // Login pela UI — como um utilizador real; testa o fluxo de auth completo
+  await page.goto('/login', { waitUntil: 'domcontentloaded' })
+  await page.getByTestId('login-email').fill(data.email)
+  await page.getByTestId('login-password').fill(data.password)
+  await page.getByTestId('login-submit').click()
+  await page.waitForURL('**/dashboard', { timeout: 15_000 })
 }
 
 export const TEST_COMPANY = {
