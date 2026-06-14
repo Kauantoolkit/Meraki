@@ -72,7 +72,7 @@ export const TEST_COMPANY = {
  * Idempotente — se a skill já existe (409), ignora o erro.
  */
 export async function createSkillInCatalog(page: Page, displayName: string): Promise<void> {
-  const token = await page.evaluate(() => sessionStorage.getItem('accessToken'))
+  const token = await page.evaluate(() => sessionStorage.getItem('meraki_token'))
   const questions = Array.from({ length: 10 }, (_, i) => ({
     text: `Questão ${i + 1} sobre ${displayName}?`,
     options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],

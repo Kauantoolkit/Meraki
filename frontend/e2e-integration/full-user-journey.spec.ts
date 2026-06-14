@@ -30,6 +30,10 @@ async function createProjectViaWizard(
     deadline: string
   },
 ) {
+  // Garante que a skill existe no catálogo ANTES de navegar para o wizard,
+  // pois o catalog é fetched apenas no mount da página.
+  await createSkillInCatalog(page, opts.skill)
+
   await page.getByRole('button', { name: /EMPRESA/i }).first().click()
   await page.waitForURL(/\/dashboard/, { timeout: 5_000 })
   await page.getByRole('button', { name: /Novo Projeto/i }).click()
@@ -41,9 +45,8 @@ async function createProjectViaWizard(
   await page.locator('textarea').first().fill(opts.description)
   await page.getByTestId('cp-next-1').click()
 
-  // Step 2: Skill — garante que existe no catálogo e seleciona via autocomplete
+  // Step 2: Skill — seleciona via autocomplete (skill já existe no catálogo)
   await expect(page.locator('text=Adicionar Tecnologia')).toBeVisible({ timeout: 5_000 })
-  await createSkillInCatalog(page, opts.skill)
   await page.getByTestId('cp-skill-input').fill(opts.skill.toLowerCase())
   await page.getByTestId(`cp-skill-suggestion-${opts.skill.toLowerCase()}`).waitFor({ timeout: 5_000 })
   await page.getByTestId(`cp-skill-suggestion-${opts.skill.toLowerCase()}`).click()
