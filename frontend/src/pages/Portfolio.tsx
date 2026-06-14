@@ -105,7 +105,7 @@ export default function Portfolio() {
                         <span key={s} className="flex items-center gap-1 text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">
                           {s}
                           {badge === 'green' && <Award className="w-3 h-3 text-green-400" title="Badge Verde — Projeto entregue" />}
-                          {badge === 'yellow' && <Award className="w-3 h-3 text-yellow-400" title="Badge Amarelo — Quiz aprovado" />}
+                          {badge === 'yellow' && <Award className="w-3 h-3 text-yellow-400" title="Badge Amarela — Quiz aprovado" />}
                         </span>
                       )
                     })}
@@ -258,7 +258,7 @@ function SkillsTab({ profile, onSkillAdded, onAddSkillOpen }: {
                   ) : badge === 'yellow' ? (
                     <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-400/30 px-2 py-1">
                       <Award className="w-3 h-3 text-yellow-400" />
-                      <span className="font-mono text-[10px] text-yellow-400">Badge Amarelo</span>
+                      <span className="font-mono text-[10px] text-yellow-400">Badge Amarela</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5 bg-dark-input border border-zinc-700 px-2 py-1">
@@ -525,7 +525,7 @@ function AddSkillModal({ profile, onClose, onSkillAdded }: {
                     Você acertou {result.correctAnswers}/{result.totalQuestions} ({result.score}%)
                   </p>
                   <p className="font-mono text-xs text-zinc-400 mb-6">
-                    A skill <span className="text-white font-bold">{selectedSkill?.displayName}</span> foi adicionada ao seu perfil com badge amarelo.
+                    A skill <span className="text-white font-bold">{selectedSkill?.displayName}</span> foi adicionada ao seu perfil com badge amarela.
                     Entregue projetos com esta skill para conquistar o badge verde!
                   </p>
                   <button onClick={() => onSkillAdded(selectedSkill!.name)}
