@@ -104,8 +104,8 @@ export default function Portfolio() {
                       return (
                         <span key={s} className="flex items-center gap-1 text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">
                           {s}
-                          {badge === 'green' && <Award className="w-3 h-3 text-green-400" title="Badge Verde — Projeto entregue" />}
-                          {badge === 'yellow' && <Award className="w-3 h-3 text-yellow-400" title="Badge Amarela — Quiz aprovado" />}
+                          {badge === 'green' && <Award className="w-3 h-3 text-green-400" title="Testado via projeto" />}
+                          {badge === 'yellow' && <Award className="w-3 h-3 text-yellow-400" title="Testado via quiz" />}
                         </span>
                       )
                     })}
@@ -253,12 +253,12 @@ function SkillsTab({ profile, onSkillAdded, onAddSkillOpen }: {
                   {badge === 'green' ? (
                     <div className="flex items-center gap-1.5 bg-green-500/10 border border-green-400/30 px-2 py-1">
                       <Award className="w-3 h-3 text-green-400" />
-                      <span className="font-mono text-[10px] text-green-400">Badge Verde</span>
+                      <span className="font-mono text-[10px] text-green-400">Testado via projeto</span>
                     </div>
                   ) : badge === 'yellow' ? (
                     <div className="flex items-center gap-1.5 bg-yellow-500/10 border border-yellow-400/30 px-2 py-1">
                       <Award className="w-3 h-3 text-yellow-400" />
-                      <span className="font-mono text-[10px] text-yellow-400">Badge Amarela</span>
+                      <span className="font-mono text-[10px] text-yellow-400">Testado via quiz</span>
                     </div>
                   ) : (
                     <div className="flex items-center gap-1.5 bg-dark-input border border-zinc-700 px-2 py-1">
@@ -280,13 +280,13 @@ function SkillsTab({ profile, onSkillAdded, onAddSkillOpen }: {
           <div className="flex items-center gap-2">
             <Award className="w-3.5 h-3.5 text-yellow-400" />
             <p className="font-mono text-[10px] text-zinc-400">
-              <span className="text-yellow-400 font-bold">Amarelo</span> — Quiz aprovado (≥70%). Skill validada teoricamente.
+              <span className="text-yellow-400 font-bold">Testado via quiz</span> — Aprovado com ≥70%. Skill validada teoricamente.
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Award className="w-3.5 h-3.5 text-green-400" />
             <p className="font-mono text-[10px] text-zinc-400">
-              <span className="text-green-400 font-bold">Verde</span> — Projeto entregue. Skill validada na prática.
+              <span className="text-green-400 font-bold">Testado via projeto</span> — Skill aplicada em projeto real.
             </p>
           </div>
         </div>
@@ -525,8 +525,8 @@ function AddSkillModal({ profile, onClose, onSkillAdded }: {
                     Você acertou {result.correctAnswers}/{result.totalQuestions} ({result.score}%)
                   </p>
                   <p className="font-mono text-xs text-zinc-400 mb-6">
-                    A skill <span className="text-white font-bold">{selectedSkill?.displayName}</span> foi adicionada ao seu perfil com badge amarela.
-                    Entregue projetos com esta skill para conquistar o badge verde!
+                    A skill <span className="text-white font-bold">{selectedSkill?.displayName}</span> foi adicionada ao seu perfil como <span className="text-yellow-400">testada via quiz</span>.
+                    Entregue projetos com esta skill para conquistar o selo <span className="text-green-400">testado via projeto</span>!
                   </p>
                   <button onClick={() => onSkillAdded(selectedSkill!.name)}
                     className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-8 py-3 border border-brand-500 hover:bg-brand-400 transition-colors">
