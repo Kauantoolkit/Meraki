@@ -5,8 +5,8 @@ export interface PaymentMethod {
   expiresAt: Date;
 }
 
-export interface PaymentProvider {
-  generatePaymentMethod(amount: number, metadata: any): Promise<PaymentMethod>;
-  verifyPayment(paymentId: string): Promise<{ status: 'PENDING' | 'PAID' | 'FAILED' }>;
-  transferFunds(amount: number, targetAccountId: string): Promise<{ transactionId: string }>;
+export abstract class PaymentProvider {
+  abstract generatePaymentMethod(amount: number, metadata: any): Promise<PaymentMethod>;
+  abstract verifyPayment(paymentId: string): Promise<{ status: 'PENDING' | 'PAID' | 'FAILED' }>;
+  abstract transferFunds(amount: number, targetAccountId: string): Promise<{ transactionId: string }>;
 }
