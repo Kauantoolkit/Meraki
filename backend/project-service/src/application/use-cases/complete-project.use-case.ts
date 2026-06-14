@@ -36,6 +36,7 @@ export class CompleteProjectUseCase {
         projectId: project.id,
         specialistId: project.specialistId,
         companyId: project.companyId,
+        requirements: project.requirements ?? [],
       }),
     );
   }

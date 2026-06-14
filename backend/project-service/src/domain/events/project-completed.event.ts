@@ -5,6 +5,7 @@ export class ProjectCompletedEvent extends BaseEvent {
     projectId: string;
     specialistId: string;
     companyId: string;
+    requirements: string[];
   };
 
   constructor(payload: ProjectCompletedEvent['payload']) {
