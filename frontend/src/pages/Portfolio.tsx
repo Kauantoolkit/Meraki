@@ -183,10 +183,16 @@ export default function Portfolio() {
         <AddSkillModal
           profile={profile}
           onClose={() => setAddSkillOpen(false)}
-          onSkillAdded={async () => {
+          onSkillAdded={(skillName: string) => {
+            // Optimistic update — badge salvo no identity-service, mas event RabbitMQ
+            // para o portfolio-service é async. Atualizamos o estado local imediatamente
+            // para não depender do race condition de propagação de evento.
             setAddSkillOpen(false)
-            const fresh = await portfolioApi.getMyProfile()
-            setProfile(fresh.data)
+            setProfile(prev => prev ? {
+              ...prev,
+              skills: [...(prev.skills ?? []), skillName],
+              skillBadges: { ...(prev.skillBadges ?? {}), [skillName]: 'yellow' },
+            } : prev)
           }}
         />
       )}
@@ -323,7 +329,7 @@ type AddSkillStep = 'pick' | 'quiz' | 'result'
 function AddSkillModal({ profile, onClose, onSkillAdded }: {
   profile: PublicProfile
   onClose: () => void
-  onSkillAdded: () => void
+  onSkillAdded: (skillName: string) => void
 }) {
   const [step, setStep] = useState<AddSkillStep>('pick')
   const [catalog, setCatalog] = useState<Skill[]>([])
@@ -522,7 +528,7 @@ function AddSkillModal({ profile, onClose, onSkillAdded }: {
                     A skill <span className="text-white font-bold">{selectedSkill?.displayName}</span> foi adicionada ao seu perfil com badge amarelo.
                     Entregue projetos com esta skill para conquistar o badge verde!
                   </p>
-                  <button onClick={onSkillAdded}
+                  <button onClick={() => onSkillAdded(selectedSkill!.name)}
                     className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-8 py-3 border border-brand-500 hover:bg-brand-400 transition-colors">
                     Ver Perfil Atualizado
                   </button>
