@@ -39,6 +39,7 @@ import { ProjectHistoryController } from './interfaces/controllers/project-histo
 
 // Event consumer (bid.accepted)
 import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.consumer';
+import { SkillsCatalogService } from './infrastructure/http/skills-catalog.service';
 
 @Module({
   imports: [
@@ -77,6 +78,8 @@ import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.cons
     ProjectHistoryListener,
     // Event consumer
     BidAcceptedConsumer,
+    // HTTP clients
+    SkillsCatalogService,
   ],
 })
 export class ProjectModule {}

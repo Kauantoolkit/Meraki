@@ -171,11 +171,14 @@ services:
       DB_PASS: ${DB_PASS:-postgres}
       JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+      IDENTITY_SERVICE_URL: http://identity-service:3001
     depends_on:
       project-db:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+      identity-service:
+        condition: service_started
 
   bidding-service:
     build: ./bidding-service
