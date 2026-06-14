@@ -59,7 +59,7 @@ export class ReleasePaymentUseCase {
     escrow.releaseFunds(new Money(dto.amount));
     await this.escrowRepo.save(escrow);
 
-    // 4. Credita o saldo do especialista
+    // 4. Atualiza saldo do especialista (crédito após fee)
     let balance = await this.balanceRepo.findBySpecialist(dto.specialistId);
     if (!balance) {
       balance = new SpecialistBalance();

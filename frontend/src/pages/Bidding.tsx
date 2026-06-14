@@ -29,6 +29,7 @@ export default function Bidding() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState<Bid | null>(null)
   const [existingBid, setExistingBid] = useState<Bid | null>(null)
+  const [submitError, setSubmitError] = useState('')
   const [editing, setEditing] = useState(false)
   const [editAmount, setEditAmount] = useState('')
   const [editDuration, setEditDuration] = useState('')
@@ -36,8 +37,8 @@ export default function Bidding() {
   const [editMilestoneProposals, setEditMilestoneProposals] = useState<BidMilestoneProposal[]>([])
   const [editError, setEditError] = useState('')
   const [updating, setUpdating] = useState(false)
+  const [withdrawing, setWithdrawing] = useState(false)
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
-  const [submitError, setSubmitError] = useState('')
   const [coverLetterLineCount, setCoverLetterLineCount] = useState(1)
   const [coverLetterScrollTop, setCoverLetterScrollTop] = useState(0)
   const coverLetterRef = useRef<HTMLTextAreaElement | null>(null)
@@ -113,19 +114,19 @@ export default function Bidding() {
       const res = await bidsApi.submit({
         projectId: project.id,
         amount: Number(amount),
-        durationDays: Number(duration),
+        durationDays: Math.round(Number(duration)),
         proposalText: coverLetter,
         milestoneProposals: hasMilestones ? milestoneProposals : undefined,
       })
       setSubmitted(res.data)
-    } catch (e: unknown) {
-      const status = (e as any)?.response?.status
+    } catch (err: unknown) {
+      const status = (err as any)?.response?.status
       if (status === 422) {
         setSubmitError('Este projeto não está a aceitar novas propostas.')
       } else if (status === 409) {
-        setSubmitError('Já tem uma proposta ativa neste projeto.')
+        setSubmitError('Já tens uma proposta ativa neste projeto.')
       } else {
-        setSubmitError(extractApiError(e))
+        setSubmitError(extractApiError(err, 'Erro ao submeter proposta. Verifique os campos e tente novamente.'))
       }
     } finally {
       setSubmitting(false)
@@ -181,6 +182,20 @@ export default function Bidding() {
     }
   }
 
+  async function handleWithdraw() {
+    if (!existingBid) return
+    if (!window.confirm('Retirar a proposta? Esta ação não pode ser desfeita.')) return
+    setWithdrawing(true)
+    try {
+      await bidsApi.withdraw(existingBid.id)
+      setExistingBid({ ...existingBid, status: 'WITHDRAWN' })
+    } catch {
+      alert('Erro ao retirar proposta.')
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
   if (loading) return (
     <div className="bg-dark-bg min-h-screen flex items-center justify-center">
       <span className="font-mono text-brand-500">Carregando projeto...</span>
@@ -228,7 +243,7 @@ export default function Bidding() {
               </div>
 
               <h1 className="text-xl font-bold text-white mb-3">{project?.title}</h1>
-              <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{project?.description}</p>
+              <p className="text-sm text-zinc-400 mb-6 leading-relaxed break-words">{project?.description}</p>
 
               {project?.skills && project.skills.length > 0 && (
                 <div className="mb-6">
@@ -432,6 +447,7 @@ export default function Bidding() {
                                 </div>
                                 <input
                                   type="text"
+                                  maxLength={200}
                                   value={mp.note ?? ''}
                                   onChange={e => updateMilestoneProposal(m.id, 'note', e.target.value)}
                                   placeholder="Observação (opcional)"
@@ -496,6 +512,13 @@ export default function Bidding() {
                     </div>
                   </div>
                 </div>
+
+                {submitError && (
+                  <div className="flex items-start gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs">
+                    <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+                    <span data-testid="bid-error">{submitError}</span>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-4 border-t border-dark-border">
                   <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-500">
@@ -575,10 +598,19 @@ export default function Bidding() {
                   </div>
                   <div className="flex gap-3">
                     {existingBid.status === 'PENDING' && (
-                      <button onClick={openEdit}
-                        className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-5 py-2 border border-brand-500 hover:bg-brand-400 transition-colors flex items-center gap-2">
-                        <Pencil className="w-3.5 h-3.5" /> Editar Proposta
-                      </button>
+                      <>
+                        <button onClick={openEdit}
+                          className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-5 py-2 border border-brand-500 hover:bg-brand-400 transition-colors flex items-center gap-2">
+                          <Pencil className="w-3.5 h-3.5" /> Editar Proposta
+                        </button>
+                        <button
+                          data-testid="bid-withdraw-btn"
+                          onClick={handleWithdraw}
+                          disabled={withdrawing}
+                          className="btn-sharp bg-transparent text-red-400 font-mono font-bold text-xs px-5 py-2 border border-red-500/50 hover:bg-red-500/10 hover:border-red-400 transition-colors disabled:opacity-50">
+                          {withdrawing ? 'Retirando...' : 'Retirar Proposta'}
+                        </button>
+                      </>
                     )}
                     <button onClick={() => navigate('/dashboard')}
                       className="btn-sharp bg-transparent text-white font-mono text-xs px-5 py-2 border border-dark-border hover:border-brand-500 hover:text-brand-500 transition-colors">
@@ -661,6 +693,7 @@ export default function Bidding() {
                                     </div>
                                     <input
                                       type="text"
+                                      maxLength={200}
                                       value={mp.note ?? ''}
                                       onChange={e => updateEditMilestoneProposal(m.id, 'note', e.target.value)}
                                       placeholder="Observação (opcional)"
