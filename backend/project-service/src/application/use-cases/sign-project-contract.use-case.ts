@@ -1,12 +1,12 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { IProjectRepository } from '../../domain/repositories/project.repository.interface';
+import { IProjectRepository, PROJECT_REPOSITORY } from '../../domain/repositories/project.repository.interface';
 import { ProjectStatus } from '../../domain/enums/project-status.enum';
 import { SignContractDto } from '../dto/sign-contract.dto';
 
 @Injectable()
 export class SignProjectContractUseCase {
   constructor(
-    @Inject('IProjectRepository')
+    @Inject(PROJECT_REPOSITORY)
     private readonly projectRepo: IProjectRepository,
   ) {}
 

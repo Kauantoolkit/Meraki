@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { MilestoneRepository } from '../../infrastructure/repositories/milestone.repository';
+import { IMilestoneRepository, MILESTONE_REPOSITORY } from '../../domain/repositories/milestone.repository.interface';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { MilestoneUpdatedEvent } from '../../domain/events/milestone-updated.event';
 
@@ -10,8 +10,8 @@ export class LegallyAcceptMilestoneDto {
 @Injectable()
 export class LegallyAcceptMilestoneUseCase {
   constructor(
-    @Inject('IProjectRepository') // Note: used via MilestoneRepository usually
-    private readonly milestoneRepo: MilestoneRepository,
+    @Inject(MILESTONE_REPOSITORY)
+    private readonly milestoneRepo: IMilestoneRepository,
     private readonly events: EventPublisherService,
   ) {}
 

@@ -104,8 +104,8 @@ export default function Portfolio() {
                       return (
                         <span key={s} className="flex items-center gap-1 text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">
                           {s}
-                          {badge === 'green' && <Award className="w-3 h-3 text-green-400" title="Testado via projeto" />}
-                          {badge === 'yellow' && <Award className="w-3 h-3 text-yellow-400" title="Testado via quiz" />}
+                          {badge === 'green' && <Award className="w-3 h-3 text-green-400" aria-label="Testado via projeto" />}
+                          {badge === 'yellow' && <Award className="w-3 h-3 text-yellow-400" aria-label="Testado via quiz" />}
                         </span>
                       )
                     })}
