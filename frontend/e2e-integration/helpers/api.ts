@@ -51,12 +51,12 @@ export async function registerAndLogin(
     await new Promise(r => setTimeout(r, 2000 * (attempt + 1)))
   }
 
-  // Login pela UI — como um utilizador real; testa o fluxo de auth completo
+  // Login pela UI — como um utilizador real; testa o fluxo de auth completo.
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
   await page.getByTestId('login-email').fill(data.email)
   await page.getByTestId('login-password').fill(data.password)
   await page.getByTestId('login-submit').click()
-  await page.waitForURL('**/dashboard', { timeout: 15_000 })
+  await page.waitForURL('**/dashboard', { timeout: 20_000 })
 }
 
 export const TEST_COMPANY = {

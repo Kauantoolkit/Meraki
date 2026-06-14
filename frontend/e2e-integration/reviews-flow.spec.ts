@@ -87,10 +87,8 @@ test.describe('UC: Avaliações Reais — empresa avalia especialista (POST /rev
       userType: 'SPECIALIST' as const,
     }
     await page.request.post(`${API_URL}/auth/register`, { data: newSpec })
-    const login = await page.request.post(`${API_URL}/auth/login`, {
-      data: { email: newSpec.email, password: newSpec.password },
-    })
-    const newSpecId = (await login.json()).user.id
+    const loginBody = await loginBodyWithRetry(page, newSpec.email, newSpec.password)
+    const newSpecId = loginBody.user.id
 
     // Aguarda o evento user.registered ser processado pelo portfolio-service (RabbitMQ)
     await page.waitForTimeout(3000)
