@@ -290,6 +290,7 @@ export default function CreateProject() {
                             <button
                               key={s.id}
                               type="button"
+                              data-testid={`cp-skill-suggestion-${s.name}`}
                               onClick={() => { setSkills(prev => [...prev, s.name]); setSkillInput('') }}
                               className="font-mono text-[9px] border border-zinc-700 bg-dark-input text-zinc-400 px-1.5 py-0.5 hover:border-brand-500 hover:text-brand-500 transition-colors"
                             >

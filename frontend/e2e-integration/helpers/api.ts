@@ -66,6 +66,27 @@ export const TEST_COMPANY = {
   userType: 'COMPANY' as const,
 }
 
+/**
+ * Cria uma skill no catálogo via API usando a sessão da página já autenticada.
+ * Gera 10 questões dummy para satisfazer o mínimo exigido.
+ * Idempotente — se a skill já existe (409), ignora o erro.
+ */
+export async function createSkillInCatalog(page: Page, displayName: string): Promise<void> {
+  const token = await page.evaluate(() => sessionStorage.getItem('accessToken'))
+  const questions = Array.from({ length: 10 }, (_, i) => ({
+    text: `Questão ${i + 1} sobre ${displayName}?`,
+    options: ['Opção A', 'Opção B', 'Opção C', 'Opção D'],
+    correctIndex: 0,
+  }))
+  const res = await page.request.post(`${API_URL}/skills`, {
+    headers: { Authorization: `Bearer ${token}` },
+    data: { displayName, questions },
+  })
+  if (res.status() !== 201 && res.status() !== 409) {
+    throw new Error(`Falha ao criar skill "${displayName}": ${res.status()} ${await res.text()}`)
+  }
+}
+
 export const TEST_SPECIALIST = {
   name: 'E2E Specialist',
   email: `e2e-specialist-${Date.now()}@test.com`,

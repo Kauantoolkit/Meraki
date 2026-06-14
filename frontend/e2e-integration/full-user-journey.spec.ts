@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { registerAndLogin, loginWithRetry } from './helpers/api'
+import { registerAndLogin, loginWithRetry, createSkillInCatalog } from './helpers/api'
 
 const API_URL = 'http://localhost:3000/api'
 
@@ -41,10 +41,12 @@ async function createProjectViaWizard(
   await page.locator('textarea').first().fill(opts.description)
   await page.getByTestId('cp-next-1').click()
 
-  // Step 2: Skill
+  // Step 2: Skill — garante que existe no catálogo e seleciona via autocomplete
   await expect(page.locator('text=Adicionar Tecnologia')).toBeVisible({ timeout: 5_000 })
-  await page.getByTestId('cp-skill-input').fill(opts.skill)
-  await page.getByTestId('cp-skill-add').click()
+  await createSkillInCatalog(page, opts.skill)
+  await page.getByTestId('cp-skill-input').fill(opts.skill.toLowerCase())
+  await page.getByTestId(`cp-skill-suggestion-${opts.skill.toLowerCase()}`).waitFor({ timeout: 5_000 })
+  await page.getByTestId(`cp-skill-suggestion-${opts.skill.toLowerCase()}`).click()
   await page.getByTestId('cp-next-2').click()
 
   // Step 3: Milestone
