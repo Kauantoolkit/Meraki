@@ -11,6 +11,9 @@ export class Project {
   deadline: Date;
   status: ProjectStatus;
 
+  contractSignedAt: Date | null = null;
+  contractHash: string | null = null;
+
   /** FK para Identity Context — referência externa */
   companyId: string;
 

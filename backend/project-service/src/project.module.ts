@@ -29,6 +29,7 @@ import { GetProjectByIdUseCase } from './application/use-cases/get-project-by-id
 import { UpdateProjectUseCase } from './application/use-cases/update-project.use-case';
 import { CancelProjectUseCase } from './application/use-cases/cancel-project.use-case';
 import { CompleteProjectUseCase } from './application/use-cases/complete-project.use-case';
+import { SignProjectContractUseCase } from './application/use-cases/sign-project-contract.use-case';
 import { AssignSpecialistUseCase } from './application/use-cases/assign-specialist.use-case';
 import { CreateMilestoneUseCase } from './application/use-cases/create-milestone.use-case';
 import { GetMilestonesByProjectUseCase } from './application/use-cases/get-milestones-by-project.use-case';
@@ -77,11 +78,13 @@ import { SkillsCatalogService } from './infrastructure/http/skills-catalog.servi
     UpdateProjectUseCase,
     CancelProjectUseCase,
     CompleteProjectUseCase,
+    SignProjectContractUseCase,
     AssignSpecialistUseCase,
     CreateMilestoneUseCase,
     GetMilestonesByProjectUseCase,
     UpdateMilestoneStatusUseCase,
     GetProjectHistoryUseCase,
+    LegallyAcceptMilestoneUseCase,
     // Listeners (RN07)
     ProjectHistoryListener,
     // Event consumer

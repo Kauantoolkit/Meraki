@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { FileCode, Building2, Coins, CalendarClock, ShieldAlert, Send, Loader2, CheckSquare, ListChecks, Pencil, X, Award, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -8,6 +8,7 @@ import { skillsApi, Skill, SkillQuestion, QuizResult } from '../api/skills'
 import { portfolioApi } from '../api/portfolio'
 import { extractApiError } from '../api/client'
 import { projectStatusLabel, bidStatusLabel } from '../lib/labels'
+import { validateBidForm, ValidationError, formatValidationErrors } from '../lib/validators'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -39,6 +40,10 @@ export default function Bidding() {
   const [editError, setEditError] = useState('')
   const [updating, setUpdating] = useState(false)
   const [withdrawing, setWithdrawing] = useState(false)
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
+  const [coverLetterLineCount, setCoverLetterLineCount] = useState(1)
+  const [coverLetterScrollTop, setCoverLetterScrollTop] = useState(0)
+  const coverLetterRef = useRef<HTMLTextAreaElement | null>(null)
 
   // Skill quiz gate
   const [skillsToValidate, setSkillsToValidate] = useState<Array<{ skillId: string; skillName: string; questions: SkillQuestion[] }>>([])
@@ -85,6 +90,10 @@ export default function Bidding() {
     })
   }
 
+  function getFieldError(field: string): string | undefined {
+    return validationErrors.find(e => e.field === field)?.message
+  }
+
   async function doSubmitBid(data: { amount: number; durationDays: number; proposalText: string; milestoneProposals?: BidMilestoneProposal[] }) {
     setSubmitting(true)
     setSubmitError('')
@@ -114,6 +123,16 @@ export default function Bidding() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
     if (!project) return
+
+    // Validar antes de enviar
+    const errors = validateBidForm({ projectId: project.id, coverLetter, amount, duration, milestoneProposals })
+    if (errors.length > 0) {
+      setValidationErrors(errors)
+      setSubmitError(formatValidationErrors(errors))
+      return
+    }
+    setValidationErrors([])
+    setSubmitError('')
 
     const submitData = {
       amount: Number(amount),
@@ -241,7 +260,7 @@ export default function Bidding() {
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased flex flex-col">
       <div className="scanline" />
-      <Navbar backUrl="/dashboard" projectTitle="MERAKI // BIDDING_TERMINAL" />
+      <Navbar backUrl="/dashboard" projectTitle="MERAKI // PROPOSTA" />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -314,7 +333,7 @@ export default function Bidding() {
                   <div className="flex items-center gap-2 mb-3">
                     <ListChecks className="w-3.5 h-3.5 text-brand-500" />
                     <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider">
-                      Milestones ({project.milestones.length})
+                      Marcos ({project.milestones.length})
                     </p>
                   </div>
                   <div className="space-y-2">
@@ -366,35 +385,87 @@ export default function Bidding() {
               </div>
 
               <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-6">
+                {/* Painel de erros de validação */}
+                {submitError && (
+                  <div className="bg-red-500/10 border border-red-500/50 p-4 flex items-start gap-3 rounded-none">
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="font-mono text-xs font-bold text-red-400 mb-1">ERROS DE VALIDAÇÃO</p>
+                      <p className="font-mono text-xs text-red-300 whitespace-pre-wrap">{submitError}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSubmitError('')}
+                      className="text-red-400 hover:text-red-300 shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">const proposedBudget =</label>
+                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">const valorProposto =</label>
                     <div className="relative group">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <span className="font-mono text-zinc-500 group-focus-within:text-brand-500">R$</span>
                       </div>
                       <input
                         type="number" required min={1} value={amount} data-testid="bid-amount"
-                        onChange={e => setAmount(e.target.value)}
+                        onChange={e => {
+                          setAmount(e.target.value)
+                          if (validationErrors.some(e => e.field === 'proposedBudget')) {
+                            setValidationErrors(validationErrors.filter(e => e.field !== 'proposedBudget'))
+                          }
+                        }}
                         readOnly={milestoneProposals.length > 0}
                         placeholder="0.00"
-                        className={`w-full pl-10 pr-4 py-3 bg-[#000] border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none rounded-none ${milestoneProposals.length > 0 ? 'border-dark-border text-zinc-500 cursor-not-allowed' : 'border-dark-border focus:border-brand-500 focus:ring-1 focus:ring-brand-500'}`}
+                        className={`w-full pl-10 pr-4 py-3 bg-[#000] border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none rounded-none ${
+                          getFieldError('proposedBudget')
+                            ? 'border-red-500/50 focus:border-red-500'
+                            : milestoneProposals.length > 0
+                              ? 'border-dark-border text-zinc-500 cursor-not-allowed'
+                              : 'border-dark-border focus:border-brand-500 focus:ring-1 focus:ring-brand-500'
+                        }`}
                       />
                     </div>
-                    <p className="text-[9px] font-mono text-zinc-500 text-right">
-                      {milestoneProposals.length > 0 ? '// Soma automática dos milestones.' : '// Taxa de plataforma será retida no pagamento.'}
-                    </p>
+                    {getFieldError('proposedBudget') && (
+                      <p className="text-[9px] font-mono text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {getFieldError('proposedBudget')}
+                      </p>
+                    )}
+                    {!getFieldError('proposedBudget') && (
+                      <p className="text-[9px] font-mono text-zinc-500 text-right">
+                        {milestoneProposals.length > 0 ? '// Soma automática dos marcos.' : '// Taxa de plataforma será retida no pagamento.'}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">let estimatedDays =</label>
+                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider block">let diasEstimados =</label>
                     <div className="relative group">
-                      <input data-testid="bid-duration" type="number" required min={1} max={3650} value={duration} onChange={e => setDuration(e.target.value)}
+                      <input data-testid="bid-duration" type="number" required min={1} max={3650} value={duration}
+                        onChange={e => {
+                          setDuration(e.target.value)
+                          if (validationErrors.some(e => e.field === 'estimatedDuration')) {
+                            setValidationErrors(validationErrors.filter(e => e.field !== 'estimatedDuration'))
+                          }
+                        }}
                         placeholder="Ex: 45"
-                        className="w-full pl-4 pr-12 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 rounded-none" />
+                        className={`w-full pl-4 pr-12 py-3 bg-[#000] border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none rounded-none ${
+                          getFieldError('estimatedDuration')
+                            ? 'border-red-500/50 focus:border-red-500'
+                            : 'border-dark-border focus:border-brand-500 focus:ring-1 focus:ring-brand-500'
+                        }`}
+                      />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <span className="font-mono text-zinc-500 text-xs">DIAS</span>
                       </div>
                     </div>
+                    {getFieldError('estimatedDuration') && (
+                      <p className="text-[9px] font-mono text-red-400 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {getFieldError('estimatedDuration')}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -403,7 +474,7 @@ export default function Bidding() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <ListChecks className="w-3.5 h-3.5 text-brand-500" />
-                      <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">const milestoneProposals[] = {'{'}</label>
+                      <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">const propostasMilestone[] = {'{'}</label>
                     </div>
                     <div className="space-y-2">
                       {project.milestones
@@ -448,19 +519,53 @@ export default function Bidding() {
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">function writeCoverLetter() {'{'}</label>
+                    <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">function escreverCartaDeApresentacao() {'{'}</label>
                     <button type="button" onClick={() => project && setCoverLetter(TEMPLATE(project.title, 'Especialista'))}
                       className="text-[10px] font-mono text-zinc-600 hover:text-zinc-400 cursor-pointer">[Inserir Template]</button>
                   </div>
-                  <div className="relative w-full border border-dark-border bg-[#000] p-1 focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500 transition-all">
-                    <div className="absolute left-0 top-0 bottom-0 w-8 border-r border-dark-border bg-dark-input flex flex-col items-center py-2 select-none">
-                      {[1,2,3,4,5,6,7,8].map(n => <span key={n} className="text-[10px] font-mono text-zinc-700">{n}</span>)}
+                  <div className={`relative w-full border bg-[#000] p-1 transition-all ${
+                    getFieldError('proposal')
+                      ? 'border-red-500/50 focus-within:border-red-500 focus-within:ring-1 focus-within:ring-red-500'
+                      : 'border-dark-border focus-within:border-brand-500 focus-within:ring-1 focus-within:ring-brand-500'
+                  }`}>
+                    <div className="absolute left-0 top-0 bottom-0 w-10 border-r border-dark-border bg-dark-input overflow-hidden select-none">
+                      <div className="flex flex-col items-center pt-3" style={{ transform: `translateY(-${coverLetterScrollTop}px)` }}>
+                        {Array.from({ length: Math.max(coverLetterLineCount, 16) }, (_, idx) => (
+                          <span key={idx} className="text-[10px] font-mono text-zinc-700 leading-[24px]">{idx + 1}</span>
+                        ))}
+                      </div>
                     </div>
-                    <textarea data-testid="bid-cover" required minLength={20} maxLength={2000} value={coverLetter} onChange={e => { setCoverLetter(e.target.value); setSubmitError('') }}
+                    <textarea
+                      ref={coverLetterRef}
+                      data-testid="bid-cover"
+                      required
+                      minLength={20}
+                      maxLength={2000}
+                      value={coverLetter}
+                      onScroll={e => setCoverLetterScrollTop(e.currentTarget.scrollTop)}
+                      onChange={e => {
+                        const text = e.target.value
+                        setCoverLetter(text)
+                        setCoverLetterLineCount(Math.max(1, text.split('\n').length))
+                        if (validationErrors.some(err => err.field === 'proposal')) {
+                          setValidationErrors(validationErrors.filter(err => err.field !== 'proposal'))
+                        }
+                      }}
                       placeholder="Apresente a sua proposta técnica..."
-                      className="editor-textarea w-full pl-10 pr-2 py-2 bg-transparent text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none h-64" />
+                      className="editor-textarea relative z-10 w-full pl-12 pr-2 py-3 bg-transparent text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none h-64"
+                    />
                   </div>
-                  <label className="text-[10px] font-mono text-brand-500 block">{'}'}</label>
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-mono text-brand-500 block">{'}'}</label>
+                    <div className="text-[9px] font-mono text-zinc-500">
+                      {coverLetter.length}/2000 caracteres
+                      {getFieldError('proposal') && (
+                        <p className="text-red-400 flex items-center gap-1 mt-1">
+                          <AlertCircle className="w-3 h-3" /> {getFieldError('proposal')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 {submitError && (
@@ -530,7 +635,7 @@ export default function Bidding() {
                     </div>
                     {existingBid.milestoneProposals.length > 0 && project?.milestones && (
                       <div className="mt-3 pt-3 border-t border-dark-border space-y-1.5">
-                        <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Por Milestone</p>
+                        <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-2">Por Marco</p>
                         {existingBid.milestoneProposals.map(mp => {
                           const m = project.milestones!.find(x => x.id === mp.milestoneId)
                           return (
@@ -597,7 +702,7 @@ export default function Bidding() {
                           />
                         </div>
                         {editMilestoneProposals.length > 0 && (
-                          <p className="text-[9px] font-mono text-zinc-500">// Soma automática dos milestones.</p>
+                          <p className="text-[9px] font-mono text-zinc-500">// Soma automática dos marcos.</p>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -615,7 +720,7 @@ export default function Bidding() {
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
                           <ListChecks className="w-3 h-3 text-brand-500" />
-                          <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">Proposta por Milestone</label>
+                          <label className="text-[10px] font-mono text-brand-500 uppercase tracking-wider">Proposta por Marco</label>
                         </div>
                         <div className="space-y-2">
                           {project.milestones
