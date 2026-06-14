@@ -295,9 +295,16 @@ function SkillsTab({ profile, onSkillAdded, onAddSkillOpen }: {
       {/* Recent attempts */}
       {!loadingValidations && validations.length > 0 && (
         <div className="mt-4">
-          <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-3">Tentativas Recentes</p>
+          <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-wider mb-3">Última Tentativa por Skill</p>
           <div className="space-y-1.5">
-            {validations.slice(0, 5).map(v => (
+            {Object.values(
+              validations.reduce<Record<string, SkillValidation>>((acc, v) => {
+                if (!acc[v.skillName] || new Date(v.attemptedAt) > new Date(acc[v.skillName].attemptedAt)) {
+                  acc[v.skillName] = v
+                }
+                return acc
+              }, {})
+            ).slice(0, 5).map(v => (
               <div key={v.id} className="flex items-center justify-between bg-dark-input border border-dark-border px-3 py-2">
                 <span className="font-mono text-xs text-white">{v.skillName}</span>
                 <div className="flex items-center gap-3">
