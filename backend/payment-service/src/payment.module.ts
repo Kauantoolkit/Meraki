@@ -89,13 +89,7 @@ import { ConfigService } from '@nestjs/config';
     // Payment Provider Factory
     {
       provide: PaymentProvider,
-      useFactory: (configService: ConfigService) => {
-        const provider = configService.get('PAYMENT_PROVIDER');
-        if (provider === 'pix') {
-          return new PixPaymentProvider(configService);
-        }
-        throw new Error(`Unsupported payment provider: ${provider}`);
-      },
+      useFactory: (configService: ConfigService) => new PixPaymentProvider(configService),
       inject: [ConfigService],
     },
   ],

@@ -4,8 +4,8 @@ import { EscrowAccountRepository } from '../../infrastructure/repositories/escro
 import { SpecialistBalanceRepository } from '../../infrastructure/repositories/specialist-balance.repository';
 import { FeeCalculationDomainService } from '../../domain/services/fee-calculation.domain-service';
 import { PaymentReleasedEvent } from '../../domain/events/payment-released.event';
-import { EscrowAccount } from '../../domain/entities/escrow-account.entity';
 import { SpecialistBalance } from '../../domain/entities/specialist-balance.entity';
+import { Money } from '../../domain/value-objects/money.value-object';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 
 export interface ReleasePaymentDto {
@@ -25,31 +25,22 @@ export class ReleasePaymentUseCase {
     private readonly balanceRepo: SpecialistBalanceRepository,
     private readonly feeService: FeeCalculationDomainService,
     private readonly events: EventPublisherService,
-    private readonly disputeRepo: DisputeRepository,
-    private readonly paymentProvider: PaymentProvider,
   ) {}
 
   async execute(dto: ReleasePaymentDto): Promise<void> {
-    // Verificação de Disputa (DRS v2.0)
-    const activeDispute = await this.disputeRepo.findByMilestoneId(dto.milestoneId);
-    if (activeDispute && activeDispute.status === 'OPEN') {
-      throw new BadRequestException('Não é possível liberar pagamento para um milestone em disputa.');
-    }
-
     // 1. Busca o pagamento em ESCROW correspondente ao milestone
     const payment = await this.paymentRepo.findByMilestone(dto.milestoneId);
     if (!payment) {
       throw new NotFoundException('Pagamento em escrow não encontrado para este milestone.');
     }
 
-    // 2. Aplica RN06 via Domain Entity — calcula taxa e libera
-    // payment.release() valida se o status é ESCROW_HELD
+    // 2. Aplica RN06 — calcula taxa e libera
     const { specialistAmount, platformFee } = payment.release(this.feeService.rate);
     payment.releaseTransactionId = `rel-${Date.now()}`;
     await this.paymentRepo.save(payment);
 
-    // 3. Atualiza ou cria EscrowAccount do projeto
-    let escrow = await this.escrowRepo.findByProject(dto.projectId);
+    // 3. Atualiza EscrowAccount do projeto
+    const escrow = await this.escrowRepo.findByProject(dto.projectId);
     if (!escrow) {
       throw new BadRequestException('Conta de escrow do projeto não encontrada.');
     }
@@ -68,10 +59,7 @@ export class ReleasePaymentUseCase {
     balance.credit(specialistAmount);
     await this.balanceRepo.save(balance);
 
-    // 5. Executa a transferência real via Provedor
-    await this.paymentProvider.transferFunds(specialistAmount, dto.specialistId);
-
-    // 6. Domain Event tipado → publica payment.released
+    // 5. Domain Event → publica payment.released
     const event = new PaymentReleasedEvent({
       paymentId: payment.id,
       milestoneId: dto.milestoneId,
