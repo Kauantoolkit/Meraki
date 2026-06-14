@@ -15,6 +15,7 @@ export default function DashboardEspecialista() {
   const [openProjects, setOpenProjects] = useState<Project[]>([])
   const [myProjects, setMyProjects] = useState<Project[]>([])
   const [myBids, setMyBids] = useState<Bid[]>([])
+  const [bidProjects, setBidProjects] = useState<Map<string, string>>(new Map())
   const [loading, setLoading] = useState(true)
 
   // Habilidades do especialista logado (vêm de GET /users/me → profile.skills)
@@ -27,9 +28,18 @@ export default function DashboardEspecialista() {
       // Só busca projetos abertos se o especialista tiver skills para filtrar
       mySkills.length > 0 ? projectsApi.listOpen() : Promise.resolve(null),
     ]).then(([mine, bids, open]) => {
+      const bidList: Bid[] = bids.data
       setMyProjects(mine.data.data.filter((p: Project) => p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
-      setMyBids(bids.data)
+      setMyBids(bidList)
       if (open) setOpenProjects(open.data.data)
+      const uniqueIds = [...new Set(bidList.map((b: Bid) => b.projectId))]
+      Promise.all(
+        uniqueIds.map((id: string) =>
+          projectsApi.getById(id)
+            .then(r => [id, r.data.title] as [string, string])
+            .catch(() => [id, id.slice(0, 8)] as [string, string])
+        )
+      ).then(pairs => setBidProjects(new Map(pairs)))
     }).catch(() => {
       // handled by the 401 interceptor — user will be redirected to login
     }).finally(() => setLoading(false))
@@ -184,6 +194,39 @@ export default function DashboardEspecialista() {
               )
             })}
 
+            {/* Propostas Pendentes */}
+            {myBids.filter(b => b.status === 'PENDING').length > 0 && (
+              <>
+                <div className="flex items-center justify-between border-b border-dark-border pb-2 mt-4">
+                  <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Send className="w-4 h-4 text-blue-400" /> Propostas Pendentes
+                  </h2>
+                  <span className="font-mono text-[10px] text-blue-400 border border-blue-400/30 bg-blue-400/10 px-2 py-0.5">
+                    {myBids.filter(b => b.status === 'PENDING').length} aguardando
+                  </span>
+                </div>
+                {myBids.filter(b => b.status === 'PENDING').map(bid => (
+                  <div key={bid.id} className="bg-dark-card border border-blue-400/20 p-4 hover:border-blue-400/50 transition-colors">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-mono text-[10px] text-yellow-400 border border-yellow-400/30 bg-yellow-400/10 px-2 py-0.5">AGUARDANDO RESPOSTA</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-white mb-3">
+                      {bidProjects.get(bid.projectId) ?? <span className="font-mono text-zinc-500 text-[10px]">{bid.projectId.slice(0, 8)}</span>}
+                    </h3>
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[10px] text-zinc-400">{fmt(bid.amount)} · {bid.durationDays} dias</span>
+                      <button
+                        onClick={() => navigate(`/bidding/${bid.projectId}`)}
+                        className="btn-sharp font-mono text-xs text-blue-400 border border-blue-400/30 px-3 py-1 hover:border-blue-400 hover:bg-blue-400/10 transition-colors"
+                      >
+                        VER_PROPOSTA()
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+
             <div className="flex items-center justify-between border-b border-dark-border pb-2 mt-4">
               <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                 <Cpu className="w-4 h-4 text-brand-500" /> Trabalhos em Execução
@@ -233,11 +276,21 @@ export default function DashboardEspecialista() {
                 ) : myBids.map(bid => (
                   <div key={bid.id} className="border-b border-dark-border/50 pb-2">
                     <div className="flex justify-between items-center mb-1">
-                      <span className="text-zinc-500">{bid.projectId.slice(0, 8)}</span>
+                      <span className="text-zinc-400 truncate max-w-[140px]" title={bidProjects.get(bid.projectId)}>
+                        {bidProjects.get(bid.projectId) ?? bid.projectId.slice(0, 8)}
+                      </span>
                       <span className={bidStatusColor(bid.status)}>{bidStatusLabel[bid.status] ?? bid.status}</span>
                     </div>
-                    <div className="flex justify-between mt-1">
+                    <div className="flex justify-between items-center mt-1">
                       <span className="text-zinc-600">{fmt(bid.amount)} ({bid.durationDays} dias)</span>
+                      {bid.status === 'PENDING' && (
+                        <button
+                          onClick={() => navigate(`/bidding/${bid.projectId}`)}
+                          className="text-blue-400 hover:text-blue-300 text-[10px] underline"
+                        >
+                          ver →
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
