@@ -7,7 +7,8 @@ import { SpecialistPublicProfile } from '../../domain/entities/specialist-public
 
 export interface MyPortfolioDto {
   id: string;
-  specialistId: string;
+  userId: string;
+  name: string;
   bio: string;
   skills: string[];
   skillBadges: Record<string, 'yellow' | 'green'>;
@@ -62,7 +63,8 @@ export class GetMyPortfolioUseCase {
 
     return {
       id: profile.id,
-      specialistId: profile.userId,
+      userId: profile.userId,
+      name: profile.name ?? '',
       bio: profile.bio ?? '',
       skills: profile.skills ?? [],
       skillBadges: profile.skillBadges ?? {},
