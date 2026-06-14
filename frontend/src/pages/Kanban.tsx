@@ -151,8 +151,6 @@ export default function Kanban() {
     }
   }
 
-  }
-
   const byStatus = (status: KanbanStatus) => milestones.filter(m => m.status === status)
 
   // RN04: only the first PENDING milestone (by order) whose all predecessors are APPROVED can be started
@@ -285,15 +283,6 @@ export default function Kanban() {
             <div className="text-brand-500 flex items-center mt-4">
               <span>meraki@kanban:~$</span>
               <span className="w-2 h-3 bg-brand-500 ml-1 animate-pulse" />
-            </div>
-          </div>
-          <div className="p-3 border-t border-dark-border bg-dark-card">
-            <div className="relative">
-              <input type="text" placeholder="Registar nota..."
-                className="w-full pl-3 pr-10 py-2 bg-dark-input border border-dark-border text-[10px] font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus idea-border-brand-500 transition-all rounded-none" />
-              <button className="absolute inset-y-0 right-0 px-3 flex items-center text-zinc-500 hover:text-brand-500 transition-colors">
-                <Send className="w-3 h-3" />
-              </button>
             </div>
           </div>
         </aside>
