@@ -12,4 +12,8 @@ export class EventPublisherService {
   async publishUserUpdated(payload: Record<string, any>) {
     await this.rabbitMQ.publishEvent('user.updated', payload);
   }
+
+  async publishSkillValidated(payload: { specialistId: string; skillName: string; badge: 'yellow' }) {
+    await this.rabbitMQ.publishEvent('skill.validated', payload);
+  }
 }

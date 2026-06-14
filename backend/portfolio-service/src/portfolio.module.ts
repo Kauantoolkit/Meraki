@@ -39,6 +39,7 @@ import { GetMyPortfolioUseCase } from './application/use-cases/get-my-portfolio.
 import { UserRegisteredConsumer } from './infrastructure/rabbitmq/consumers/user-registered.consumer';
 import { PaymentReleasedConsumer } from './infrastructure/rabbitmq/consumers/payment-released.consumer';
 import { ProjectCompletedConsumer } from './infrastructure/rabbitmq/consumers/project-completed.consumer';
+import { SkillValidatedConsumer } from './infrastructure/rabbitmq/consumers/skill-validated.consumer';
 
 // Controllers (interfaces)
 import {
@@ -91,6 +92,7 @@ import {
     UserRegisteredConsumer,
     PaymentReleasedConsumer,
     ProjectCompletedConsumer,
+    SkillValidatedConsumer,
   ],
 })
 export class PortfolioModule {}

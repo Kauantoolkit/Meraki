@@ -1,6 +1,7 @@
 import { Injectable, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { ISkillRepository } from '../../domain/repositories/skill.repository.interface';
 import { IUserRepository } from '../../domain/repositories/user.repository.interface';
+import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 
 export interface QuizResult {
   passed: boolean;
@@ -17,6 +18,8 @@ export class AttemptProfileSkillQuizUseCase {
 
     @Inject('IUserRepository')
     private readonly userRepo: IUserRepository,
+
+    private readonly eventPublisher: EventPublisherService,
   ) {}
 
   async execute(skillId: string, answers: number[], specialistUserId: string, questionIds: string[]): Promise<QuizResult> {
@@ -75,6 +78,11 @@ export class AttemptProfileSkillQuizUseCase {
           await this.userRepo.updateSpecialistProfile(profile.id, {
             skillBadges: badges,
             skills,
+          });
+          await this.eventPublisher.publishSkillValidated({
+            specialistId: specialistUserId,
+            skillName: skill.name,
+            badge: 'yellow',
           });
         }
       }
