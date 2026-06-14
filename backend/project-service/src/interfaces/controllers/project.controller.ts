@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete,
+  Controller, Get, Post, Put, Patch, Delete,
   Body, Param, Query, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import {
@@ -122,7 +122,7 @@ export class ProjectController {
   @ApiResponse({ status: 200, description: 'Contrato firmado.' })
   @ApiResponse({ status: 400, description: 'Projeto não está em fase de assinatura.' })
   @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
-  signContract(
+  sign(
     @Param('id') id: string,
     @Body() dto: SignContractDto,
     @CurrentUser('companyId') companyId: string,

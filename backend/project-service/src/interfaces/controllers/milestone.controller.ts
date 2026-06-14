@@ -95,7 +95,7 @@ export class MilestoneController {
   @ApiResponse({ status: 200, description: 'Milestone aceito legalmente.' })
   @ApiResponse({ status: 400, description: 'Milestone deve estar APPROVED.' })
   @ApiResponse({ status: 404, description: 'Milestone não encontrado.' })
-  legallyAccept(
+  acceptLegally(
     @Param('milestoneId') milestoneId: string,
     @Body() dto: LegallyAcceptMilestoneDto,
   ) {

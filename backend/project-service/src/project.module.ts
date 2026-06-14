@@ -35,6 +35,7 @@ import { CreateMilestoneUseCase } from './application/use-cases/create-milestone
 import { GetMilestonesByProjectUseCase } from './application/use-cases/get-milestones-by-project.use-case';
 import { UpdateMilestoneStatusUseCase } from './application/use-cases/update-milestone-status.use-case';
 import { GetProjectHistoryUseCase } from './application/use-cases/get-project-history.use-case';
+import { LegallyAcceptMilestoneUseCase } from './application/use-cases/legally-accept-milestone.use-case';
 
 // Application — Listeners
 import { ProjectHistoryListener } from './application/listeners/project-history.listener';
