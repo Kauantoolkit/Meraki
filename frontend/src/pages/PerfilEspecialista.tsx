@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Star, Briefcase, User, Award, ChevronRight, ExternalLink, GitBranch, ArrowLeft } from 'lucide-react'
+import { Star, Briefcase, User, ChevronRight, ExternalLink, GitBranch, ArrowLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile, WorkHistoryItem, Review } from '../api/portfolio'
 
@@ -123,22 +123,6 @@ export default function PerfilEspecialista() {
                 </div>
               )}
 
-              {/* Credentials */}
-              <div className="bg-dark-card border border-dark-border p-5">
-                <h3 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span className="w-1 h-4 bg-brand-500 inline-block" />
-                  Credenciais
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 bg-dark-input border border-dark-border p-3">
-                    <Award className="w-4 h-4 text-brand-500 shrink-0" />
-                    <div>
-                      <p className="font-mono text-[10px] text-white font-bold">AWS Certified Solutions Architect</p>
-                      <p className="font-mono text-[9px] text-zinc-500">Amazon Web Services</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Right: Work History / Repos */}
