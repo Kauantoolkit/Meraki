@@ -5,6 +5,16 @@ import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile } from '../api/portfolio'
 import { skillsApi } from '../api/skills'
 
+/** Atrasa a propagacao de um valor ate ele parar de mudar por `delay` ms. */
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const handle = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(handle)
+  }, [value, delay])
+  return debounced
+}
+
 export default function ExplorarTalentos() {
   const navigate = useNavigate()
   const [allSpecialists, setAllSpecialists] = useState<PublicProfile[]>([])
@@ -15,12 +25,22 @@ export default function ExplorarTalentos() {
   const [hasSearched, setHasSearched] = useState(false)
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set())
 
+  const debouncedSearch = useDebounce(search, 300)
+
   // Load catalog skills on mount for filter chips
   useEffect(() => {
     skillsApi.getAll()
       .then(res => setAvailableSkills(res.data.map(s => s.name).sort()))
       .catch(() => {})
   }, [])
+
+  // Refiltra ao mudar a busca (com debounce) ou as skills selecionadas.
+  // Evita disparar antes de qualquer interacao do usuario.
+  useEffect(() => {
+    if (!hasSearched && debouncedSearch.trim() === '' && selectedSkills.size === 0) return
+    fetchAndFilter(debouncedSearch, selectedSkills)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch, selectedSkills])
 
   async function fetchAndFilter(searchVal: string, skills: Set<string>) {
     setLoading(true)
@@ -59,9 +79,9 @@ export default function ExplorarTalentos() {
       const next = new Set(prev)
       if (next.has(skill)) next.delete(skill)
       else next.add(skill)
-      fetchAndFilter(search, next)
       return next
     })
+    // A refiltragem acontece no efeito que observa selectedSkills.
   }
 
   return (
@@ -142,11 +162,7 @@ export default function ExplorarTalentos() {
 
               {selectedSkills.size > 0 && (
                 <button
-                  onClick={() => {
-                    const empty = new Set<string>()
-                    setSelectedSkills(empty)
-                    fetchAndFilter(search, empty)
-                  }}
+                  onClick={() => setSelectedSkills(new Set<string>())}
                   className="w-full font-mono text-[10px] text-zinc-500 hover:text-zinc-300 py-1.5 border border-transparent hover:border-dark-border transition-colors uppercase tracking-widest"
                 >
                   Limpar filtros
