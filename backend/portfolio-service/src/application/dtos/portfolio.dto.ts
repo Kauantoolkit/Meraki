@@ -117,6 +117,10 @@ export class UpdateMyProfileDto {
   @ApiPropertyOptional({ type: [String] })
   @IsOptional() @IsArray()
   skills?: string[];
+
+  @ApiPropertyOptional({ description: 'Links pessoais (GitHub, LinkedIn, repos...)' })
+  @IsOptional() @IsArray()
+  links?: Array<{ label: string; url: string }>;
 }
 
 export class AddSkillDto {

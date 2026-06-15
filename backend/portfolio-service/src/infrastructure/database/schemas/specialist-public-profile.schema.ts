@@ -12,6 +12,7 @@ export const SpecialistPublicProfileSchema = new EntitySchema<SpecialistPublicPr
     bio: { type: 'text', nullable: true },
     skills: { type: 'simple-array', nullable: true },
     skillBadges: { type: 'simple-json', nullable: true, default: '{}' },
+    links: { type: 'simple-json', nullable: true, default: '[]' },
     experience: { type: 'int', nullable: true },
     hourlyRate: { type: 'decimal', precision: 10, scale: 2, nullable: true },
     rating: { type: 'decimal', precision: 3, scale: 2, default: 0 },

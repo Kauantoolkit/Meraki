@@ -3,7 +3,7 @@ import { SpecialistProfileRepository } from '../../infrastructure/repositories/s
 import { CertificationRepository } from '../../infrastructure/repositories/certification.repository';
 import { ReviewRepository } from '../../infrastructure/repositories/review.repository';
 import { WorkHistoryRepository } from '../../infrastructure/repositories/work-history.repository';
-import { SpecialistPublicProfile } from '../../domain/entities/specialist-public-profile.entity';
+import { SpecialistPublicProfile, ProfileLink } from '../../domain/entities/specialist-public-profile.entity';
 
 export interface MyPortfolioDto {
   id: string;
@@ -12,6 +12,7 @@ export interface MyPortfolioDto {
   bio: string;
   skills: string[];
   skillBadges: Record<string, 'yellow' | 'green'>;
+  links: ProfileLink[];
   rating: number;
   completedProjects: number;
   certifications: Array<{
@@ -68,6 +69,7 @@ export class GetMyPortfolioUseCase {
       bio: profile.bio ?? '',
       skills: profile.skills ?? [],
       skillBadges: profile.skillBadges ?? {},
+      links: profile.links ?? [],
       rating: Number(profile.rating ?? 0),
       completedProjects: profile.completedProjects ?? 0,
       certifications: certifications.map((c) => ({

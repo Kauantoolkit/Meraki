@@ -1,5 +1,11 @@
 import { DomainException } from '../exceptions/domain.exception';
 
+/** Link pessoal do especialista (GitHub, LinkedIn, site, repositório, etc.) */
+export interface ProfileLink {
+  label: string;
+  url: string;
+}
+
 /** Perfil público do especialista — RF12 */
 export class SpecialistPublicProfile {
   id: string;
@@ -8,6 +14,7 @@ export class SpecialistPublicProfile {
   bio: string;
   skills: string[];
   skillBadges: Record<string, 'yellow' | 'green'>; // skillName → badge
+  links: ProfileLink[]; // links pessoais (GitHub, LinkedIn, repos...)
   experience: number;
   hourlyRate: number;
   rating: number;

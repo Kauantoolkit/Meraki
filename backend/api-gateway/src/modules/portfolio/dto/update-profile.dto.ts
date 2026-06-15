@@ -22,6 +22,15 @@ export class UpdatePortfolioProfileDto {
   @MaxLength(40, { each: true })
   skills?: string[];
 
+  @ApiPropertyOptional({
+    description: 'Links pessoais (GitHub, LinkedIn, repositórios...)',
+    example: [{ label: 'GitHub', url: 'https://github.com/usuario' }],
+  })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10)
+  links?: Array<{ label: string; url: string }>;
+
   @ApiPropertyOptional({ example: 150.0 })
   @IsOptional()
   @IsNumber()
