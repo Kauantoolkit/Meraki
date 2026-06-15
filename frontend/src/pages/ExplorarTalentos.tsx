@@ -220,7 +220,6 @@ function SpecialistCard({ specialist: s, onView }: { specialist: PublicProfile; 
           </div>
           <div>
             <p className="text-sm font-bold text-white">{s.name}</p>
-            <p className="font-mono text-[10px] text-zinc-500">ID: {s.userId?.slice(0, 8)}</p>
           </div>
         </div>
         {s.rating != null && (

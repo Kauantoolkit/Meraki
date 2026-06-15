@@ -166,7 +166,6 @@ export default function DashboardEspecialista() {
                     {myBid?.status === 'WITHDRAWN' && (
                       <span className="font-mono text-[10px] text-zinc-400 border border-zinc-600/30 bg-zinc-600/10 px-2 py-0.5">RETIRADA</span>
                     )}
-                    <span className="font-mono text-[10px] text-zinc-500">{p.id.slice(0, 8)}</span>
                   </div>
                   <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
                   <p className="text-xs text-zinc-400 mb-4 line-clamp-2">{p.description || 'S/ Desc.'}</p>
@@ -211,7 +210,7 @@ export default function DashboardEspecialista() {
                       <span className="font-mono text-[10px] text-yellow-400 border border-yellow-400/30 bg-yellow-400/10 px-2 py-0.5">AGUARDANDO RESPOSTA</span>
                     </div>
                     <h3 className="text-sm font-bold text-white mb-3">
-                      {bidProjects.get(bid.projectId) ?? <span className="font-mono text-zinc-500 text-[10px]">{bid.projectId.slice(0, 8)}</span>}
+                      {bidProjects.get(bid.projectId) ?? <span className="font-mono text-zinc-500 text-[10px]">Projeto</span>}
                     </h3>
                     <div className="flex justify-between items-center">
                       <span className="font-mono text-[10px] text-zinc-400">{fmt(bid.amount)} · {bid.durationDays} dias</span>
@@ -241,7 +240,6 @@ export default function DashboardEspecialista() {
                   <span className="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 tracking-widest flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" /> {projectStatusLabel[p.status] ?? p.status}
                   </span>
-                  <span className="font-mono text-[10px] text-zinc-500">{p.id}</span>
                 </div>
                 <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
                 <div className="bg-[#000] border border-dark-border p-4 mb-4">
@@ -277,7 +275,7 @@ export default function DashboardEspecialista() {
                   <div key={bid.id} className="border-b border-dark-border/50 pb-2">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-zinc-400 truncate max-w-[140px]" title={bidProjects.get(bid.projectId)}>
-                        {bidProjects.get(bid.projectId) ?? bid.projectId.slice(0, 8)}
+                        {bidProjects.get(bid.projectId) ?? 'Projeto'}
                       </span>
                       <span className={bidStatusColor(bid.status)}>{bidStatusLabel[bid.status] ?? bid.status}</span>
                     </div>

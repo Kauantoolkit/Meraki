@@ -462,7 +462,6 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit, o
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-2 min-w-0">
           {isOpen ? <FolderCode className="w-4 h-4 text-zinc-500 shrink-0" /> : <FolderGit2 className="w-4 h-4 text-brand-500 shrink-0" />}
-          <span className="font-mono text-xs text-zinc-600 truncate">{p.id.slice(0, 12)}…</span>
         </div>
         <div className="flex items-center gap-2 shrink-0">
           <span className={`font-mono text-[10px] ${statusColor} px-2 py-1 tracking-widest flex items-center gap-1.5`}>

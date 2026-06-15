@@ -174,7 +174,7 @@ export default function Kanban() {
   return (
     <div className="bg-dark-bg bg-grid h-screen text-zinc-300 antialiased overflow-hidden flex flex-col">
       <div className="scanline" />
-      <Navbar backUrl="/dashboard" projectTitle={project ? `${project.id} // QUADRO_ENTREGAS` : undefined} />
+      <Navbar backUrl="/dashboard" projectTitle={project ? `${project.title} // QUADRO_ENTREGAS` : undefined} />
 
       {/* Project Header */}
       <header className="shrink-0 bg-dark-card border-b border-dark-border px-4 sm:px-6 lg:px-8 py-4">

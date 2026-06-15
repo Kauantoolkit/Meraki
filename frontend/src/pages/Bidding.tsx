@@ -272,9 +272,6 @@ export default function Bidding() {
               <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-zinc-500" />
 
               <div className="flex justify-between items-start mb-4">
-                <span className="font-mono text-[10px] text-zinc-400 border border-dark-border bg-dark-input px-2 py-1 tracking-widest">
-                  REF: {project?.id}
-                </span>
                 <span className={`font-mono text-[10px] px-2 py-1 tracking-widest flex items-center gap-1.5 border ${
                   project?.status === 'OPEN'
                     ? 'text-brand-500 border-brand-500/30 bg-brand-500/10'
@@ -795,9 +792,6 @@ export default function Bidding() {
                   <p className="text-xs font-mono text-brand-500 text-center mb-6">&gt; Proposta enviada com sucesso. Aguardando avaliação do cliente.</p>
                   <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-6">
                     <p className="font-mono text-[10px] text-zinc-500 mb-1">DETALHES DO REGISTO:</p>
-                    <div className="flex justify-between font-mono text-[10px]">
-                      <span className="text-zinc-400">ID:</span><span className="text-white">{submitted.id}</span>
-                    </div>
                     <div className="flex justify-between font-mono text-[10px]">
                       <span className="text-zinc-400">Status:</span><span className="text-blue-400">PENDING_REVIEW</span>
                     </div>

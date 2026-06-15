@@ -111,7 +111,6 @@ export default function AvaliarPropostas() {
                 }`}>
                   {hasAccepted ? 'ESPECIALISTA SELECIONADO' : `STATUS: ${projectStatusLabel[project?.status ?? ''] ?? project?.status ?? ''}`}
                 </span>
-                <span className="font-mono text-[10px] text-zinc-600 truncate">{project?.id?.slice(0, 12)}</span>
               </div>
               <h1 className="text-xl font-bold text-white truncate">{project?.title}</h1>
               <p className="text-sm text-zinc-400 font-mono mt-1 line-clamp-2">{project?.description}</p>
@@ -140,7 +139,7 @@ export default function AvaliarPropostas() {
             <div className="flex-1">
               <p className="font-mono text-xs font-bold text-brand-500 uppercase">Especialista Seleccionado</p>
               <p className="font-mono text-[10px] text-zinc-400 mt-0.5">
-                {accepted.specialistName ?? `ID: ${accepted.specialistId?.slice(0, 12)}`} —
+                {accepted.specialistName ?? 'Especialista'} —
                 {' '}{fmt(accepted.amount)} · {accepted.durationDays} dias
               </p>
             </div>
@@ -385,7 +384,7 @@ export default function AvaliarPropostas() {
               <div className="flex items-center gap-3 mb-3">
                 <User className="w-4 h-4 text-zinc-500" />
                 <p className="font-mono text-xs font-bold text-white">
-                  {confirmModal.bid.specialistName ?? `Especialista ID: ${confirmModal.bid.specialistId?.slice(0, 12)}`}
+                  {confirmModal.bid.specialistName ?? 'Especialista'}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">

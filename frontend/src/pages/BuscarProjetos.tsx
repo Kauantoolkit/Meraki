@@ -178,7 +178,6 @@ function ProjectCard({ project: p, myBid, onApply }: { project: Project; myBid?:
                 {BID_BADGE[myBid.status].label}
               </span>
             )}
-            <span className="font-mono text-[10px] text-zinc-600 truncate">{p.id.slice(0, 8)}</span>
           </div>
           <h3 className="text-lg font-bold text-white">{p.title}</h3>
         </div>

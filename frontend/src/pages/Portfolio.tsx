@@ -58,7 +58,6 @@ export default function Portfolio() {
                   </div>
                   <h2 className="text-xl font-bold text-white uppercase">{profile.name}</h2>
                   <p className="font-mono text-[10px] text-brand-500 mt-0.5 tracking-wider">Especialista Técnico</p>
-                  <p className="font-mono text-[10px] text-zinc-600 mt-0.5">ID: {profile.userId?.slice(0, 12)}</p>
                 </div>
 
                 {profile.bio && (
