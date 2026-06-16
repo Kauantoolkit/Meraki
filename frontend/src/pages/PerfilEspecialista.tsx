@@ -6,6 +6,16 @@ import { portfolioApi, PublicProfile, WorkHistoryItem, Review } from '../api/por
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
+/** Aceita apenas http(s) para evitar XSS via esquemas como javascript:/data:. */
+function safeHref(url: string): string | undefined {
+  try {
+    const u = new URL(url)
+    return u.protocol === 'http:' || u.protocol === 'https:' ? url : undefined
+  } catch {
+    return undefined
+  }
+}
+
 type Tab = 'history' | 'reviews' | 'repos'
 
 export default function PerfilEspecialista() {
@@ -218,7 +228,7 @@ export default function PerfilEspecialista() {
                   ) : profile.links.map((l, i) => (
                     <a
                       key={i}
-                      href={l.url}
+                      href={safeHref(l.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="bg-dark-card border border-dark-border p-5 flex items-center gap-4 hover:border-brand-500/40 transition-colors group"
