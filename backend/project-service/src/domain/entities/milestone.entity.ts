@@ -70,4 +70,11 @@ export class Milestone {
     }
     this.status = MilestoneStatus.IN_PROGRESS;
   }
+
+  dispute(): void {
+    if (this.status !== MilestoneStatus.IN_PROGRESS && this.status !== MilestoneStatus.SUBMITTED) {
+      throw new InvalidMilestoneTransitionError('abrir disputa', 'IN_PROGRESS or SUBMITTED');
+    }
+    this.status = MilestoneStatus.IN_DISPUTE;
+  }
 }

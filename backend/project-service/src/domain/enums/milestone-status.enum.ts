@@ -5,4 +5,5 @@ export enum MilestoneStatus {
   APPROVED = 'APPROVED',
   LEGALLY_ACCEPTED = 'LEGALLY_ACCEPTED',
   REJECTED = 'REJECTED',
+  IN_DISPUTE = 'IN_DISPUTE',
 }
