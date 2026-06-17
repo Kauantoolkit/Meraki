@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Star, Briefcase, User, Filter, ChevronRight } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -14,6 +14,11 @@ export default function ExplorarTalentos() {
   const [loading, setLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set())
+
+  // Skip auto-filtering until the user interacts (preserves the initial
+  // "search first" empty state); searchDebounce holds the pending timer.
+  const hasInteracted = useRef(false)
+  const searchDebounce = useRef<ReturnType<typeof setTimeout>>()
 
   // Load catalog skills on mount for filter chips
   useEffect(() => {
@@ -34,7 +39,7 @@ export default function ExplorarTalentos() {
       let result = pool
       if (searchVal.trim()) {
         const q = searchVal.toLowerCase()
-        result = result.filter(s => s.name.toLowerCase().includes(q) || s.bio?.toLowerCase().includes(q))
+        result = result.filter(s => s.name?.toLowerCase().includes(q) || s.bio?.toLowerCase().includes(q))
       }
       if (skills.size > 0) {
         result = result.filter(s =>
@@ -50,16 +55,27 @@ export default function ExplorarTalentos() {
     }
   }
 
+  // Debounce filtering (~300ms): collapses rapid keystrokes and skill-chip
+  // clicks into a single fetchAndFilter instead of one per interaction.
+  useEffect(() => {
+    if (!hasInteracted.current) return
+    searchDebounce.current = setTimeout(() => fetchAndFilter(search, selectedSkills), 300)
+    return () => clearTimeout(searchDebounce.current)
+  }, [search, selectedSkills])
+
+  // Enter / BUSCAR button: search now, cancelling any pending debounce.
   function handleSearch() {
+    hasInteracted.current = true
+    clearTimeout(searchDebounce.current)
     fetchAndFilter(search, selectedSkills)
   }
 
   function toggleSkill(skill: string) {
+    hasInteracted.current = true
     setSelectedSkills(prev => {
       const next = new Set(prev)
       if (next.has(skill)) next.delete(skill)
       else next.add(skill)
-      fetchAndFilter(search, next)
       return next
     })
   }
@@ -85,7 +101,7 @@ export default function ExplorarTalentos() {
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-zinc-500" />
               </div>
-              <input type="text" maxLength={100} value={search} onChange={e => setSearch(e.target.value)}
+              <input type="text" maxLength={100} value={search} onChange={e => { hasInteracted.current = true; setSearch(e.target.value) }}
                 onKeyDown={e => e.key === 'Enter' && handleSearch()}
                 placeholder="BUSCAR ESPECIALISTA..."
                 className="w-full pl-9 pr-3 py-2.5 bg-dark-input border border-dark-border text-xs font-mono text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-brand-500 rounded-none" />
@@ -143,9 +159,8 @@ export default function ExplorarTalentos() {
               {selectedSkills.size > 0 && (
                 <button
                   onClick={() => {
-                    const empty = new Set<string>()
-                    setSelectedSkills(empty)
-                    fetchAndFilter(search, empty)
+                    hasInteracted.current = true
+                    setSelectedSkills(new Set())
                   }}
                   className="w-full font-mono text-[10px] text-zinc-500 hover:text-zinc-300 py-1.5 border border-transparent hover:border-dark-border transition-colors uppercase tracking-widest"
                 >
