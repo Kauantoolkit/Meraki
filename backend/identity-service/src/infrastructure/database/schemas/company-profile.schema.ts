@@ -29,6 +29,10 @@ export const CompanyProfileSchema = new EntitySchema<CompanyProfile>({
       type: 'varchar',
       nullable: true,
     },
+    avatarUrl: {
+      type: 'varchar',
+      nullable: true,
+    },
     createdAt: {
       type: 'timestamp',
       createDate: true,

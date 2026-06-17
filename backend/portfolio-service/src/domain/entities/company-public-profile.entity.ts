@@ -10,6 +10,7 @@ export class CompanyPublicProfile {
   sector: string;
   totalProjectsCreated: number;
   rating: number;
+  avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 

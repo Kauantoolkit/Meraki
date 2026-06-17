@@ -14,6 +14,7 @@ export const CompanyPublicProfileSchema = new EntitySchema<CompanyPublicProfile>
     sector: { type: 'varchar', nullable: true },
     totalProjectsCreated: { type: 'int', default: 0 },
     rating: { type: 'decimal', precision: 3, scale: 2, default: 0 },
+    avatarUrl: { type: 'varchar', nullable: true },
     createdAt: { type: 'timestamp', createDate: true },
     updatedAt: { type: 'timestamp', updateDate: true },
   },

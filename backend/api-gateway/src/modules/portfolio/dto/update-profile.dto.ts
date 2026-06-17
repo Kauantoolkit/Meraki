@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { ArrayMaxSize, IsArray, IsEnum, IsNumber, IsOptional, IsPositive, IsString, MaxLength } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsEnum, IsNumber, IsOptional, IsPositive, IsString, IsUrl, MaxLength } from 'class-validator';
 
 export enum AvailabilityStatus {
   AVAILABLE = 'AVAILABLE',
@@ -32,4 +32,20 @@ export class UpdatePortfolioProfileDto {
   @IsOptional()
   @IsEnum(AvailabilityStatus)
   availability?: AvailabilityStatus;
+
+  @ApiPropertyOptional({ example: 'https://cdn.sanity.io/images/...' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  avatarUrl?: string;
+}
+
+export class UpdateCompanyProfileDto {
+  @ApiPropertyOptional({ example: 'https://cdn.sanity.io/images/...' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  avatarUrl?: string;
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
-import { UpdatePortfolioProfileDto } from './dto/update-profile.dto';
+import { UpdatePortfolioProfileDto, UpdateCompanyProfileDto } from './dto/update-profile.dto';
 import { AddSkillDto } from './dto/add-skill.dto';
 import { AddCertificationDto } from './dto/add-certification.dto';
 
@@ -16,6 +16,10 @@ export class PortfolioService {
 
   updateProfile(dto: UpdatePortfolioProfileDto, token: string) {
     return this.proxy.patch(`${PORTFOLIO_URL}/api/portfolio/me`, dto, this.proxy.authHeaders(token));
+  }
+
+  updateCompanyProfile(dto: UpdateCompanyProfileDto, token: string) {
+    return this.proxy.patch(`${PORTFOLIO_URL}/api/portfolio/me/company`, dto, this.proxy.authHeaders(token));
   }
 
   addSkill(dto: AddSkillDto, token: string) {

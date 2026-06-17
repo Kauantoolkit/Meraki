@@ -14,6 +14,7 @@ export interface MyPortfolioDto {
   skillBadges: Record<string, 'yellow' | 'green'>;
   rating: number;
   completedProjects: number;
+  avatarUrl: string | null;
   certifications: Array<{
     id: string;
     title: string;
@@ -70,6 +71,7 @@ export class GetMyPortfolioUseCase {
       skillBadges: profile.skillBadges ?? {},
       rating: Number(profile.rating ?? 0),
       completedProjects: profile.completedProjects ?? 0,
+      avatarUrl: profile.avatarUrl ?? null,
       certifications: certifications.map((c) => ({
         id: c.id,
         title: c.name,

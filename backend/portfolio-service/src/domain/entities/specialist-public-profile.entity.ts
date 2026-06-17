@@ -13,6 +13,7 @@ export class SpecialistPublicProfile {
   rating: number;
   totalProjects: number;
   completedProjects: number;
+  avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 

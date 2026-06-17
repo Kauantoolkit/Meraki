@@ -117,6 +117,10 @@ export class UpdateMyProfileDto {
   @ApiPropertyOptional({ type: [String] })
   @IsOptional() @IsArray()
   skills?: string[];
+
+  @ApiPropertyOptional({ example: 'https://cdn.sanity.io/images/...' })
+  @IsOptional() @IsString() @IsUrl()
+  avatarUrl?: string;
 }
 
 export class AddSkillDto {

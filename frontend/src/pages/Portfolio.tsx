@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
-import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle, Camera } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile } from '../api/portfolio'
 import { usersApi } from '../api/auth'
 import { skillsApi, Skill, SkillQuestion, SkillValidation, QuizResult } from '../api/skills'
 import { extractApiError } from '../api/client'
+import { uploadAvatar } from '../lib/sanity'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -52,8 +53,11 @@ export default function Portfolio() {
                 <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
 
                 <div className="flex flex-col items-center text-center mb-6">
-                  <div className="w-20 h-20 bg-dark-input border border-brand-500/30 flex items-center justify-center mb-3 relative">
-                    <User className="w-10 h-10 text-zinc-600" />
+                  <div className="w-20 h-20 bg-dark-input border border-brand-500/30 flex items-center justify-center mb-3 relative overflow-hidden">
+                    {profile.avatarUrl
+                      ? <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                      : <User className="w-10 h-10 text-zinc-600" />
+                    }
                     <div className="absolute bottom-0 right-0 w-4 h-4 bg-brand-500 border-2 border-dark-card" />
                   </div>
                   <h2 className="text-xl font-bold text-white uppercase">{profile.name}</h2>
@@ -580,16 +584,35 @@ function EditProfileModal({ profile, onClose, onSave }: {
   onSave: (updated: PublicProfile) => void
 }) {
   const [bio, setBio] = useState(profile?.bio ?? '')
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl ?? '')
+  const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setError('')
+    try {
+      const url = await uploadAvatar(file)
+      setAvatarUrl(url)
+    } catch {
+      setError('Erro ao enviar imagem. Verifique sua conexão e tente novamente.')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   async function handleSave() {
     setSaving(true)
     setError('')
     try {
       await Promise.all([
-        portfolioApi.updateProfile({ bio }),
-        usersApi.updateProfile({ bio }),
+        portfolioApi.updateProfile({ bio, ...(avatarUrl ? { avatarUrl } : {}) }),
+        usersApi.updateProfile({ bio, ...(avatarUrl ? { avatarUrl } : {}) }),
       ])
       const fresh = await portfolioApi.getMyProfile()
       onSave(fresh.data)
@@ -614,6 +637,26 @@ function EditProfileModal({ profile, onClose, onSave }: {
         </div>
 
         <div className="space-y-5">
+          {/* Avatar upload */}
+          <div className="flex flex-col items-center gap-3 py-4 border-b border-dark-border">
+            <div className="w-20 h-20 bg-dark-input border border-dark-border relative overflow-hidden">
+              {avatarUrl
+                ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                : <User className="w-10 h-10 text-zinc-600 absolute inset-0 m-auto" />
+              }
+              {uploading && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <span className="font-mono text-[9px] text-brand-500">enviando...</span>
+                </div>
+              )}
+            </div>
+            <label className={`font-mono text-[10px] border px-3 py-1.5 cursor-pointer transition-colors flex items-center gap-2 ${uploading ? 'text-zinc-600 border-zinc-700 pointer-events-none' : 'text-brand-500 border-brand-500/50 hover:border-brand-500'}`}>
+              <Camera className="w-3 h-3" />
+              {uploading ? 'Enviando...' : avatarUrl ? 'Alterar Foto' : 'Adicionar Foto'}
+              <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} disabled={uploading} className="hidden" />
+            </label>
+          </div>
+
           <div className="space-y-2">
             <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Bio / Apresentação</label>
             <textarea

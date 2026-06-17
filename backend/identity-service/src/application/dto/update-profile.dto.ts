@@ -186,4 +186,11 @@ export class UpdateProfileDto {
   @MaxLength(2048)
   @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
   website?: string;
+
+  @ApiPropertyOptional({ example: 'https://cdn.sanity.io/images/...', maxLength: 2048 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  avatarUrl?: string;
 }
