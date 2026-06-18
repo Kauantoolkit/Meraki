@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Star, Briefcase, User, Award, ChevronRight, ExternalLink, GitBranch, ArrowLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { portfolioApi, PublicProfile, WorkHistoryItem, Review } from '../api/portfolio'
+import { portfolioApi, PublicProfile, WorkHistoryItem, Review, Certification } from '../api/portfolio'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -13,6 +13,7 @@ export default function PerfilEspecialista() {
   const navigate = useNavigate()
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
+  const [certifications, setCertifications] = useState<Certification[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('history')
 
@@ -21,10 +22,12 @@ export default function PerfilEspecialista() {
     Promise.all([
       portfolioApi.getPublicProfile(id),
       portfolioApi.listReviews(id).catch(() => ({ data: [] as Review[] })),
+      portfolioApi.listCertifications(id).catch(() => ({ data: [] as Certification[] })),
     ])
-      .then(([pRes, rRes]) => {
+      .then(([pRes, rRes, cRes]) => {
         setProfile(pRes.data)
         setReviews(rRes.data)
+        setCertifications(cRes.data)
       })
       .finally(() => setLoading(false))
   }, [id])
@@ -123,22 +126,26 @@ export default function PerfilEspecialista() {
                 </div>
               )}
 
-              {/* Credentials */}
-              <div className="bg-dark-card border border-dark-border p-5">
-                <h3 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span className="w-1 h-4 bg-brand-500 inline-block" />
-                  Credenciais
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 bg-dark-input border border-dark-border p-3">
-                    <Award className="w-4 h-4 text-brand-500 shrink-0" />
-                    <div>
-                      <p className="font-mono text-[10px] text-white font-bold">AWS Certified Solutions Architect</p>
-                      <p className="font-mono text-[9px] text-zinc-500">Amazon Web Services</p>
-                    </div>
+              {/* Credentials — só aparece se o especialista tiver certificações reais */}
+              {certifications.length > 0 && (
+                <div className="bg-dark-card border border-dark-border p-5">
+                  <h3 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span className="w-1 h-4 bg-brand-500 inline-block" />
+                    Credenciais
+                  </h3>
+                  <div className="space-y-2">
+                    {certifications.map(cert => (
+                      <div key={cert.id} className="flex items-center gap-3 bg-dark-input border border-dark-border p-3">
+                        <Award className="w-4 h-4 text-brand-500 shrink-0" />
+                        <div>
+                          <p className="font-mono text-[10px] text-white font-bold">{cert.name}</p>
+                          <p className="font-mono text-[9px] text-zinc-500">{cert.issuer}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right: Work History / Repos */}
