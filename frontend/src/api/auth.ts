@@ -34,7 +34,7 @@ function normalizeUser(raw: AuthResponse['user']): UserProfile {
 }
 
 export const usersApi = {
-  updateProfile: (data: { bio?: string; skills?: string[] }) =>
+  updateProfile: (data: { bio?: string; skills?: string[]; avatarUrl?: string }) =>
     api.put<void>('/users/me/profile', data),
 }
 

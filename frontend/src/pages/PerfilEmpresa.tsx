@@ -37,8 +37,11 @@ export default function PerfilEmpresa() {
               <div className="h-20 bg-gradient-to-r from-dark-input to-dark-card border-b border-dark-border" />
               <div className="px-6 pb-6">
                 <div className="flex items-end gap-4 -mt-8 mb-4">
-                  <div className="w-16 h-16 bg-dark-input border border-dark-border flex items-center justify-center shrink-0">
-                    <Building2 className="w-8 h-8 text-zinc-500" />
+                  <div className="w-16 h-16 bg-dark-input border border-dark-border flex items-center justify-center shrink-0 overflow-hidden">
+                    {profile.avatarUrl
+                      ? <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                      : <Building2 className="w-8 h-8 text-zinc-500" />
+                    }
                   </div>
                   <div className="pb-1">
                     <div className="flex items-center gap-2">

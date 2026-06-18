@@ -9,6 +9,7 @@ export class SpecialistProfile {
   experience: number;
   hourlyRate: number;
   rating: number;
+  avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 

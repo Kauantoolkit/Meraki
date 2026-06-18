@@ -54,4 +54,20 @@ export class UpdatePortfolioProfileDto {
   @IsOptional()
   @IsEnum(AvailabilityStatus)
   availability?: AvailabilityStatus;
+
+  @ApiPropertyOptional({ example: 'https://cdn.sanity.io/images/...' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  avatarUrl?: string;
+}
+
+export class UpdateCompanyProfileDto {
+  @ApiPropertyOptional({ example: 'https://cdn.sanity.io/images/...' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  avatarUrl?: string;
 }

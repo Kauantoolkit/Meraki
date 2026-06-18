@@ -63,8 +63,11 @@ export default function PerfilEspecialista() {
 
                 {/* Avatar + Name */}
                 <div className="flex flex-col items-center text-center mb-6">
-                  <div className="w-20 h-20 bg-dark-input border border-brand-500/30 flex items-center justify-center mb-3 relative">
-                    <User className="w-10 h-10 text-zinc-600" />
+                  <div className="w-20 h-20 bg-dark-input border border-brand-500/30 flex items-center justify-center mb-3 relative overflow-hidden">
+                    {profile.avatarUrl
+                      ? <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                      : <User className="w-10 h-10 text-zinc-600" />
+                    }
                     <div className="absolute bottom-0 right-0 w-4 h-4 bg-brand-500 border-2 border-dark-card" />
                   </div>
                   <h2 className="text-xl font-bold text-white uppercase">{profile.name}</h2>

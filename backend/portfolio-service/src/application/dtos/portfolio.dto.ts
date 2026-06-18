@@ -133,6 +133,10 @@ export class UpdateMyProfileDto {
   @IsOptional() @IsArray() @ArrayMaxSize(10)
   @ValidateNested({ each: true }) @Type(() => ProfileLinkDto)
   links?: ProfileLinkDto[];
+
+  @ApiPropertyOptional({ example: 'https://cdn.sanity.io/images/...' })
+  @IsOptional() @IsString() @IsUrl()
+  avatarUrl?: string;
 }
 
 export class AddSkillDto {

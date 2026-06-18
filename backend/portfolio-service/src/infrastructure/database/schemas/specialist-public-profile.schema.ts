@@ -18,6 +18,7 @@ export const SpecialistPublicProfileSchema = new EntitySchema<SpecialistPublicPr
     rating: { type: 'decimal', precision: 3, scale: 2, default: 0 },
     totalProjects: { type: 'int', default: 0 },
     completedProjects: { type: 'int', default: 0 },
+    avatarUrl: { type: 'varchar', nullable: true },
     createdAt: { type: 'timestamp', createDate: true },
     updatedAt: { type: 'timestamp', updateDate: true },
   },

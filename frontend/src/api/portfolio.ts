@@ -17,6 +17,7 @@ export interface PublicProfile {
   rating?: number
   completedProjects?: number
   workHistory?: WorkHistoryItem[]
+  avatarUrl?: string
 }
 
 export interface WorkHistoryItem {
@@ -39,7 +40,8 @@ export interface Review {
 
 export const portfolioApi = {
   getMyProfile: () => api.get<PublicProfile>('/portfolio/me'),
-  updateProfile: (data: { bio?: string; skills?: string[]; links?: ProfileLink[] }) => api.patch<PublicProfile>('/portfolio/me', data),
+  updateProfile: (data: { bio?: string; skills?: string[]; links?: ProfileLink[]; avatarUrl?: string }) => api.patch<PublicProfile>('/portfolio/me', data),
+  updateCompanyProfile: (data: { avatarUrl?: string }) => api.patch<PublicProfile>('/portfolio/me/company', data),
   getPublicProfile: (specialistId: string) => api.get<PublicProfile>(`/portfolio/specialist/${specialistId}`),
   getCompanyProfile: (companyId: string) => api.get<PublicProfile>(`/portfolio/company/${companyId}`),
   listReviews: (specialistId: string) => api.get<Review[]>(`/reviews/specialist/${specialistId}`),
