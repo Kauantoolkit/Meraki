@@ -1,14 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../model/project_model.dart';
-import '../repository/project_repository.dart';
 
 class ProjectsViewModel extends AsyncNotifier<List<ProjectModel>> {
   @override
   Future<List<ProjectModel>> build() => _load();
 
-  Future<List<ProjectModel>> _load() =>
-      ref.read(projectRepositoryProvider).listProjects();
+  Future<List<ProjectModel>> _load() async {
+    final repo = ref.read(projectRepositoryProvider);
+    final storage = ref.read(storageServiceProvider);
+    try {
+      final projects = await repo.listProjects();
+      // Persiste no cache local para acesso offline
+      storage.saveProjects(projects.map((p) => p.toJson()).toList());
+      return projects;
+    } catch (e) {
+      // Fallback: tenta carregar do cache local
+      final cached = storage.getProjects();
+      if (cached.isNotEmpty) {
+        return cached.map((j) => ProjectModel.fromJson(j)).toList();
+      }
+      rethrow;
+    }
+  }
 
   Future<void> refresh() async {
     state = const AsyncLoading();

@@ -19,7 +19,12 @@ class ProjectsListScreen extends ConsumerStatefulWidget {
 class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   String? _statusFilter;
   final _searchController = TextEditingController();
+  final _skillFilterCtrl = TextEditingController();
+  final _minBudgetCtrl = TextEditingController();
+  final _maxBudgetCtrl = TextEditingController();
   String _searchQuery = '';
+  String _skillFilter = '';
+  bool _showFilters = false;
   bool _initialized = false;
 
   // Para empresa: começa sem filtro (ver todos os projetos delas)
@@ -44,6 +49,9 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
     _searchController.addListener(
       () => setState(() => _searchQuery = _searchController.text),
     );
+    _skillFilterCtrl.addListener(
+      () => setState(() => _skillFilter = _skillFilterCtrl.text),
+    );
   }
 
   @override
@@ -66,6 +74,9 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _skillFilterCtrl.dispose();
+    _minBudgetCtrl.dispose();
+    _maxBudgetCtrl.dispose();
     super.dispose();
   }
 
@@ -86,18 +97,24 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
               ref.read(projectsViewModelProvider.notifier).refresh(),
         ),
         data: (projects) {
-          // Filtro de busca client-side por título e descrição
-          final filtered = _searchQuery.isEmpty
-              ? projects
-              : projects
-                  .where((p) =>
-                      p.title
-                          .toLowerCase()
-                          .contains(_searchQuery.toLowerCase()) ||
-                      p.description
-                          .toLowerCase()
-                          .contains(_searchQuery.toLowerCase()))
-                  .toList();
+          // Filtro client-side
+          final minBudget = double.tryParse(_minBudgetCtrl.text.replaceAll(',', '.'));
+          final maxBudget = double.tryParse(_maxBudgetCtrl.text.replaceAll(',', '.'));
+          final filtered = projects.where((p) {
+            if (_searchQuery.isNotEmpty &&
+                !p.title.toLowerCase().contains(_searchQuery.toLowerCase()) &&
+                !p.description.toLowerCase().contains(_searchQuery.toLowerCase())) {
+              return false;
+            }
+            if (_skillFilter.isNotEmpty &&
+                !p.requirements.any((r) =>
+                    r.toLowerCase().contains(_skillFilter.toLowerCase()))) {
+              return false;
+            }
+            if (minBudget != null && p.budget < minBudget) return false;
+            if (maxBudget != null && p.budget > maxBudget) return false;
+            return true;
+          }).toList();
 
           return RefreshIndicator(
             onRefresh: () =>
@@ -160,6 +177,117 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                                 const EdgeInsets.symmetric(vertical: 14),
                           ),
                         ),
+                      ),
+                    ),
+                  ),
+
+                // ─── Advanced filters toggle (specialist) ──────────────────
+                if (isSpecialist)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                      child: Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () => setState(() => _showFilters = !_showFilters),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _showFilters ? Icons.filter_list_off : Icons.filter_list,
+                                  size: 16,
+                                  color: AppTheme.brand,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  _showFilters ? 'Ocultar filtros' : 'Filtros avançados',
+                                  style: const TextStyle(
+                                    color: AppTheme.brand,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          if (_showFilters) ...[
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: _skillFilterCtrl,
+                              style: const TextStyle(fontSize: 13, color: Colors.black87),
+                              decoration: InputDecoration(
+                                hintText: 'Filtrar por skill/tecnologia...',
+                                hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 13),
+                                prefixIcon: const Icon(Icons.code, size: 18, color: Color(0xFF9E9E9E)),
+                                filled: true,
+                                fillColor: Colors.white,
+                                isDense: true,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(color: AppTheme.slate200),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: const BorderSide(color: AppTheme.slate200),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: _minBudgetCtrl,
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                    onChanged: (_) => setState(() {}),
+                                    decoration: InputDecoration(
+                                      hintText: 'Min R\$',
+                                      hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 13),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      isDense: true,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: const BorderSide(color: AppTheme.slate200),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: const BorderSide(color: AppTheme.slate200),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _maxBudgetCtrl,
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                                    style: const TextStyle(fontSize: 13, color: Colors.black87),
+                                    onChanged: (_) => setState(() {}),
+                                    decoration: InputDecoration(
+                                      hintText: 'Max R\$',
+                                      hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 13),
+                                      filled: true,
+                                      fillColor: Colors.white,
+                                      isDense: true,
+                                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: const BorderSide(color: AppTheme.slate200),
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10),
+                                        borderSide: const BorderSide(color: AppTheme.slate200),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                   ),
@@ -436,7 +564,51 @@ class _ProjectCard extends StatelessWidget {
                               .bodySmall
                               ?.copyWith(color: AppTheme.slate500),
                         ),
-                        const SizedBox(height: 12),
+                        // Skill tags
+                        if (project.requirements.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 4,
+                            runSpacing: 4,
+                            children: [
+                              ...project.requirements.take(4).map(
+                                (s) => Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.brandLight,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    s,
+                                    style: const TextStyle(
+                                      color: AppTheme.brand,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              if (project.requirements.length > 4)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.slate100,
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    '+${project.requirements.length - 4}',
+                                    style: const TextStyle(
+                                      color: AppTheme.slate500,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
+                        const SizedBox(height: 8),
                         // Meta info
                         Wrap(
                           spacing: 14,

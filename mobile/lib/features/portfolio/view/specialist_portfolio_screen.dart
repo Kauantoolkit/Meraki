@@ -50,27 +50,38 @@ class _PublicProfileContent extends StatelessWidget {
                 child: const Icon(Icons.person, size: 32, color: AppTheme.brand),
               ),
               const SizedBox(width: 16),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.star, color: Colors.amber, size: 18),
-                      const SizedBox(width: 4),
-                      Text(
-                        portfolio.rating.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      portfolio.name,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
-                  Text(
-                    '${portfolio.completedProjects} projetos concluídos',
-                    style: const TextStyle(color: AppTheme.slate300, fontSize: 12),
-                  ),
-                ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.star, color: Colors.amber, size: 18),
+                        const SizedBox(width: 4),
+                        Text(
+                          portfolio.rating.toStringAsFixed(1),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      '${portfolio.completedProjects} projetos concluídos',
+                      style: const TextStyle(color: AppTheme.slate300, fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),

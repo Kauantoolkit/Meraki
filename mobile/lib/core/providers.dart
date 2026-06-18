@@ -7,6 +7,7 @@ import '../features/bidding/repository/bid_repository.dart';
 import '../features/delivery/repository/delivery_repository.dart';
 import '../features/payments/repository/payment_repository.dart';
 import '../features/portfolio/repository/portfolio_repository.dart';
+import '../features/skills/repository/skill_repository.dart';
 
 // ─── Camada 1: Core ────────────────────────────────────────────────────────
 
@@ -43,4 +44,8 @@ final paymentRepositoryProvider = Provider<PaymentRepository>((ref) {
 
 final portfolioRepositoryProvider = Provider<PortfolioRepository>((ref) {
   return PortfolioRepository(apiClient: ref.read(apiClientProvider));
+});
+
+final skillRepositoryProvider = Provider<SkillRepository>((ref) {
+  return SkillRepository(apiClient: ref.read(apiClientProvider));
 });

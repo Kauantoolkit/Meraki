@@ -63,12 +63,8 @@ class _CompanyDashboard extends ConsumerWidget {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () => context.push('/notifications'),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => context.push('/settings'),
+                  icon: const Icon(Icons.person_outline),
+                  onPressed: () => context.push('/profile'),
                 ),
               ],
             ),
@@ -184,6 +180,29 @@ class _CompanyDashboard extends ConsumerWidget {
                     ),
                   ),
 
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _ActionButton(
+                            label: 'GERENCIAR SKILLS',
+                            onTap: () => context.push('/skills'),
+                            outlined: true,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: _ActionButton(
+                            label: 'FINANCEIRO',
+                            onTap: () => context.push('/payments'),
+                            outlined: true,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
                   // ── Section header ─────────────────────────────────────
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 28, 16, 12),
@@ -280,12 +299,8 @@ class _SpecialistDashboard extends ConsumerWidget {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.notifications_outlined),
-                  onPressed: () => context.push('/notifications'),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.settings_outlined),
-                  onPressed: () => context.push('/settings'),
+                  icon: const Icon(Icons.person_outline),
+                  onPressed: () => context.push('/profile'),
                 ),
               ],
             ),
@@ -349,7 +364,7 @@ class _SpecialistDashboard extends ConsumerWidget {
                         Expanded(
                           child: _StatBox(
                             label: 'PROPOSTAS',
-                            value: stats.completed.toString().padLeft(2, '0'),
+                            value: stats.bidCount.toString().padLeft(2, '0'),
                             icon: Icons.description_outlined,
                             color: AppTheme.info,
                           ),
