@@ -32,12 +32,16 @@ class _CompanyShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int selectedIndex = 0;
-    if (location.startsWith('/projects') ||
-        location.startsWith('/dashboard')) selectedIndex = 0;
-    if (location.startsWith('/inbox')) selectedIndex = 1;
-    if (location.startsWith('/payments')) selectedIndex = 2;
-    if (location.startsWith('/profile') ||
-        location.startsWith('/portfolio')) selectedIndex = 3;
+    if (location.startsWith('/dashboard')) {
+      selectedIndex = 0;
+    } else if (location.startsWith('/projects')) {
+      selectedIndex = 1;
+    } else if (location.startsWith('/payments')) {
+      selectedIndex = 2;
+    } else if (location.startsWith('/profile') ||
+        location.startsWith('/portfolio')) {
+      selectedIndex = 3;
+    }
 
     return Scaffold(
       body: child,
@@ -45,16 +49,16 @@ class _CompanyShell extends StatelessWidget {
         selectedIndex: selectedIndex,
         destinations: [
           _NavDest(
+            icon: Icons.dashboard_outlined,
+            activeIcon: Icons.dashboard_rounded,
+            label: 'DASHBOARD',
+            onTap: () => context.go('/dashboard'),
+          ),
+          _NavDest(
             icon: Icons.folder_outlined,
             activeIcon: Icons.folder_rounded,
             label: 'PROJETOS',
             onTap: () => context.go('/projects'),
-          ),
-          _NavDest(
-            icon: Icons.mail_outline_rounded,
-            activeIcon: Icons.mail_rounded,
-            label: 'INBOX',
-            onTap: () => context.go('/inbox'),
           ),
           _NavDest(
             icon: Icons.account_balance_wallet_outlined,
@@ -84,13 +88,16 @@ class _SpecialistShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     int selectedIndex = 0;
-    if (location.startsWith('/projects') ||
-        location.startsWith('/dashboard')) selectedIndex = 0;
-    if (location.startsWith('/bids')) selectedIndex = 1;
-    if (location.startsWith('/inbox')) selectedIndex = 2;
-    if (location.startsWith('/payments')) selectedIndex = 3;
-    if (location.startsWith('/profile') ||
-        location.startsWith('/portfolio')) selectedIndex = 4;
+    if (location.startsWith('/dashboard')) {
+      selectedIndex = 0;
+    } else if (location.startsWith('/projects')) {
+      selectedIndex = 1;
+    } else if (location.startsWith('/payments')) {
+      selectedIndex = 2;
+    } else if (location.startsWith('/profile') ||
+        location.startsWith('/portfolio')) {
+      selectedIndex = 3;
+    }
 
     return Scaffold(
       body: child,
@@ -98,22 +105,16 @@ class _SpecialistShell extends StatelessWidget {
         selectedIndex: selectedIndex,
         destinations: [
           _NavDest(
+            icon: Icons.dashboard_outlined,
+            activeIcon: Icons.dashboard_rounded,
+            label: 'DASHBOARD',
+            onTap: () => context.go('/dashboard'),
+          ),
+          _NavDest(
             icon: Icons.explore_outlined,
             activeIcon: Icons.explore_rounded,
             label: 'EXPLORAR',
             onTap: () => context.go('/projects'),
-          ),
-          _NavDest(
-            icon: Icons.description_outlined,
-            activeIcon: Icons.description_rounded,
-            label: 'PROPOSTAS',
-            onTap: () => context.go('/bids'),
-          ),
-          _NavDest(
-            icon: Icons.mail_outline_rounded,
-            activeIcon: Icons.mail_rounded,
-            label: 'INBOX',
-            onTap: () => context.go('/inbox'),
           ),
           _NavDest(
             icon: Icons.account_balance_wallet_outlined,

@@ -25,4 +25,25 @@ class PaymentRepository {
     if (data is Map) return [PaymentModel.fromJson(data as Map<String, dynamic>)];
     return [];
   }
+
+  Future<List<PaymentModel>> listByCompany() async {
+    final response = await _apiClient.get<dynamic>('/payments/company');
+    final data = response.data;
+    // Backend may return { data: [...] } or direct array
+    List list;
+    if (data is Map && data.containsKey('data')) {
+      list = data['data'] as List;
+    } else if (data is List) {
+      list = data;
+    } else {
+      list = [];
+    }
+    return list.map((e) => PaymentModel.fromJson(e as Map<String, dynamic>)).toList();
+  }
+
+  Future<void> releaseMilestone(String milestoneId) async {
+    await _apiClient.post('/payments/release', data: {
+      'milestoneId': milestoneId,
+    });
+  }
 }

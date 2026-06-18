@@ -1,15 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../projects/model/project_model.dart';
 import '../../payments/model/payment_model.dart';
+import '../../bidding/model/bid_model.dart';
 import '../../../core/providers.dart';
 
 class DashboardStats {
   final List<ProjectModel> projects;
   final List<PaymentModel> payments;
+  final int bidCount;
 
   const DashboardStats({
     this.projects = const [],
     this.payments = const [],
+    this.bidCount = 0,
   });
 
   int get inProgress => projects.where((p) => p.status == 'IN_PROGRESS').length;
@@ -34,15 +37,18 @@ class DashboardViewModel extends AsyncNotifier<DashboardStats> {
   Future<DashboardStats> _load() async {
     final projectRepo = ref.read(projectRepositoryProvider);
     final paymentRepo = ref.read(paymentRepositoryProvider);
+    final bidRepo = ref.read(bidRepositoryProvider);
 
     final results = await Future.wait([
       projectRepo.listProjects().catchError((_) => <ProjectModel>[]),
       paymentRepo.listMyPayments().catchError((_) => <PaymentModel>[]),
+      bidRepo.listMyBids().catchError((_) => <BidModel>[]),
     ]);
 
     return DashboardStats(
       projects: results[0] as List<ProjectModel>,
       payments: results[1] as List<PaymentModel>,
+      bidCount: (results[2] as List<BidModel>).length,
     );
   }
 

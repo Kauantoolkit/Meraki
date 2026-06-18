@@ -8,6 +8,8 @@ import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../model/portfolio_model.dart';
 import '../viewmodel/portfolio_viewmodel.dart';
+import '../../skills/viewmodel/skill_viewmodel.dart';
+import '../../skills/view/skill_quiz_dialog.dart';
 
 class PortfolioScreen extends ConsumerWidget {
   const PortfolioScreen({super.key});
@@ -240,37 +242,9 @@ class _SpecialistProfileScreen extends StatelessWidget {
               if (portfolio.skills.isEmpty)
                 _EmptySectionHint('Adicione suas habilidades técnicas')
               else
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: portfolio.skills.map((s) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.brandLight,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                            color: AppTheme.brand.withOpacity(0.2)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.circle,
-                              size: 6, color: AppTheme.brand),
-                          const SizedBox(width: 6),
-                          Text(
-                            s,
-                            style: const TextStyle(
-                              color: AppTheme.brand,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }).toList(),
+                _SkillBadgesSection(
+                  skills: portfolio.skills,
+                  ref: ref,
                 ),
 
               // ─── Certificações ───────────────────────────────────────
@@ -780,6 +754,134 @@ class _CompanyOwnProfileScreen extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─── Skill Badges ────────────────────────────────────────────────────────────
+
+class _SkillBadgesSection extends ConsumerWidget {
+  final List<String> skills;
+  final WidgetRef ref;
+
+  const _SkillBadgesSection({required this.skills, required this.ref});
+
+  @override
+  Widget build(BuildContext context, WidgetRef widgetRef) {
+    final validationsAsync = widgetRef.watch(myValidationsProvider);
+    final validations = validationsAsync.valueOrNull ?? [];
+
+    // Build a map: skillName -> badge type
+    final badgeMap = <String, String>{}; // 'quiz' = yellow, 'project' = green
+    for (final v in validations) {
+      if (v.passed) {
+        badgeMap[v.skillName.toLowerCase()] = 'quiz';
+      }
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: skills.map((s) {
+        final badge = badgeMap[s.toLowerCase()];
+        final badgeColor = badge == 'project'
+            ? AppTheme.brand
+            : badge == 'quiz'
+                ? Colors.amber
+                : null;
+
+        return GestureDetector(
+          onTap: badge == null
+              ? () => _openQuiz(context, widgetRef, s)
+              : null,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppTheme.brandLight,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: badgeColor?.withOpacity(0.4) ??
+                    AppTheme.brand.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (badgeColor != null) ...[
+                  Icon(
+                    badge == 'project'
+                        ? Icons.verified
+                        : Icons.workspace_premium,
+                    size: 14,
+                    color: badgeColor,
+                  ),
+                  const SizedBox(width: 4),
+                ] else ...[
+                  const Icon(Icons.circle, size: 6, color: AppTheme.brand),
+                  const SizedBox(width: 6),
+                ],
+                Text(
+                  s,
+                  style: TextStyle(
+                    color: badgeColor ?? AppTheme.brand,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (badge == null) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: AppTheme.slate200,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      'VALIDAR',
+                      style: GoogleFonts.sourceCodePro(
+                        color: AppTheme.slate500,
+                        fontSize: 7,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  void _openQuiz(BuildContext context, WidgetRef ref, String skillName) {
+    // Find the skill ID from the catalog
+    final catalog = ref.read(skillsCatalogProvider).valueOrNull ?? [];
+    final skill = catalog.where((s) =>
+        s.name.toLowerCase() == skillName.toLowerCase() ||
+        s.displayName.toLowerCase() == skillName.toLowerCase());
+    if (skill.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Skill não encontrada no catálogo')),
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.slate100,
+      builder: (_) => SkillQuizDialog(
+        skillId: skill.first.id,
+        skillName: skill.first.displayName,
+        mode: QuizMode.profile,
+        onCompleted: (result) {
+          ref.invalidate(myValidationsProvider);
+          Navigator.of(context).pop();
+        },
+      ),
     );
   }
 }

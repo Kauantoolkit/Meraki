@@ -171,30 +171,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               const SizedBox(height: 14),
 
                               // ─── Senha ───────────────────────────
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'SENHA',
-                                    style: GoogleFonts.sourceCodePro(
-                                      color: AppTheme.slate500,
-                                      fontSize: 10,
-                                      letterSpacing: 1.5,
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () => context
-                                        .go('/forgot-password'),
-                                    child: Text(
-                                      'Esquecer?',
-                                      style: GoogleFonts.sourceCodePro(
-                                        color: AppTheme.brand,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ),
-                                ],
+                              Text(
+                                'SENHA',
+                                style: GoogleFonts.sourceCodePro(
+                                  color: AppTheme.slate500,
+                                  fontSize: 10,
+                                  letterSpacing: 1.5,
+                                ),
                               ),
                               const SizedBox(height: 6),
                               TextFormField(
