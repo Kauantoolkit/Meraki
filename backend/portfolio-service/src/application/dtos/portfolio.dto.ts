@@ -1,5 +1,16 @@
-import { IsString, IsOptional, IsArray, IsUrl, IsDateString, IsNotEmpty, IsNumber, Min, Max, IsBoolean } from 'class-validator';
+import { IsString, IsOptional, IsArray, IsUrl, IsDateString, IsNotEmpty, IsNumber, Min, Max, IsBoolean, ValidateNested, MaxLength, ArrayMaxSize } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+export class ProfileLinkDto {
+  @ApiProperty({ example: 'GitHub' })
+  @IsString() @IsNotEmpty() @MaxLength(40)
+  label: string;
+
+  @ApiProperty({ example: 'https://github.com/usuario' })
+  @IsUrl()
+  url: string;
+}
 
 export class CreatePortfolioItemDto {
   @ApiProperty()
@@ -117,6 +128,11 @@ export class UpdateMyProfileDto {
   @ApiPropertyOptional({ type: [String] })
   @IsOptional() @IsArray()
   skills?: string[];
+
+  @ApiPropertyOptional({ type: [ProfileLinkDto], description: 'Links pessoais (GitHub, LinkedIn, repos...)' })
+  @IsOptional() @IsArray() @ArrayMaxSize(10)
+  @ValidateNested({ each: true }) @Type(() => ProfileLinkDto)
+  links?: ProfileLinkDto[];
 }
 
 export class AddSkillDto {

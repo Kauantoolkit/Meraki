@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { portfolioApi, PublicProfile } from '../api/portfolio'
+import { portfolioApi, PublicProfile, ProfileLink } from '../api/portfolio'
 import { usersApi } from '../api/auth'
 import { skillsApi, Skill, SkillQuestion, SkillValidation, QuizResult } from '../api/skills'
 import { extractApiError } from '../api/client'
@@ -580,15 +580,33 @@ function EditProfileModal({ profile, onClose, onSave }: {
   onSave: (updated: PublicProfile) => void
 }) {
   const [bio, setBio] = useState(profile?.bio ?? '')
+  const [links, setLinks] = useState<ProfileLink[]>(profile?.links ?? [])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  function addLink() {
+    if (links.length >= 10) return
+    setLinks(prev => [...prev, { label: '', url: '' }])
+  }
+
+  function updateLink(i: number, field: 'label' | 'url', value: string) {
+    setLinks(prev => prev.map((l, idx) => idx === i ? { ...l, [field]: value } : l))
+  }
+
+  function removeLink(i: number) {
+    setLinks(prev => prev.filter((_, idx) => idx !== i))
+  }
+
   async function handleSave() {
+    // Descarta linhas incompletas (sem rótulo ou sem URL).
+    const cleanLinks = links
+      .map(l => ({ label: l.label.trim(), url: l.url.trim() }))
+      .filter(l => l.label && l.url)
     setSaving(true)
     setError('')
     try {
       await Promise.all([
-        portfolioApi.updateProfile({ bio }),
+        portfolioApi.updateProfile({ bio, links: cleanLinks }),
         usersApi.updateProfile({ bio }),
       ])
       const fresh = await portfolioApi.getMyProfile()
@@ -623,6 +641,46 @@ function EditProfileModal({ profile, onClose, onSave }: {
               placeholder="Conte sobre sua experiência, especialidades e o que você pode oferecer..."
               className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none h-28 resize-none"
             />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Links (GitHub, LinkedIn, repositórios...)</label>
+              <button
+                type="button" onClick={addLink} disabled={links.length >= 10}
+                className="font-mono text-[10px] text-brand-500 border border-brand-500/40 px-2 py-1 hover:bg-brand-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Adicionar
+              </button>
+            </div>
+            {links.length === 0 ? (
+              <p className="font-mono text-[10px] text-zinc-600">Nenhum link cadastrado.</p>
+            ) : (
+              <div className="space-y-2">
+                {links.map((l, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="text" maxLength={40} value={l.label}
+                      onChange={e => updateLink(i, 'label', e.target.value)}
+                      placeholder="Rótulo (ex: GitHub)"
+                      className="w-32 shrink-0 px-2 py-1.5 bg-[#000] border border-dark-border text-[11px] font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+                    />
+                    <input
+                      type="url" maxLength={200} value={l.url}
+                      onChange={e => updateLink(i, 'url', e.target.value)}
+                      placeholder="https://..."
+                      className="flex-1 min-w-0 px-2 py-1.5 bg-[#000] border border-dark-border text-[11px] font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+                    />
+                    <button
+                      type="button" onClick={() => removeLink(i)}
+                      className="text-zinc-600 hover:text-red-400 transition-colors shrink-0" aria-label="Remover link"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="bg-dark-input border border-dark-border p-3">

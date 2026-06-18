@@ -6,6 +6,16 @@ import { portfolioApi, PublicProfile, WorkHistoryItem, Review } from '../api/por
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
+/** Aceita apenas http(s) para evitar XSS via esquemas como javascript:/data:. */
+function safeHref(url: string): string | undefined {
+  try {
+    const u = new URL(url)
+    return u.protocol === 'http:' || u.protocol === 'https:' ? url : undefined
+  } catch {
+    return undefined
+  }
+}
+
 type Tab = 'history' | 'reviews' | 'repos'
 
 export default function PerfilEspecialista() {
@@ -173,7 +183,7 @@ export default function PerfilEspecialista() {
                       : 'text-zinc-500 border-transparent hover:text-zinc-300'
                   }`}
                 >
-                  Repositórios Públicos
+                  Links & Repositórios
                 </button>
               </div>
 
@@ -211,17 +221,26 @@ export default function PerfilEspecialista() {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="bg-dark-card border border-dark-border p-5 flex items-center gap-4 hover:border-brand-500/40 transition-colors">
-                    <GitBranch className="w-5 h-5 text-brand-500 shrink-0" />
-                    <div className="flex-1">
-                      <p className="font-mono text-sm font-bold text-white">Repositório de Exemplo</p>
-                      <p className="font-mono text-[10px] text-zinc-500 mt-0.5">Repositório público de exemplo para demonstração.</p>
+                  {!profile.links || profile.links.length === 0 ? (
+                    <div className="py-12 text-center border border-dashed border-zinc-700 font-mono text-zinc-600">
+                      Nenhum link cadastrado.
                     </div>
-                    <ExternalLink className="w-4 h-4 text-zinc-600 hover:text-brand-500 cursor-pointer transition-colors" />
-                  </div>
-                  <div className="py-6 text-center border border-dashed border-zinc-700 font-mono text-zinc-600 text-xs">
-                    Repositórios públicos serão sincronizados via integração GitHub.
-                  </div>
+                  ) : profile.links.map((l, i) => (
+                    <a
+                      key={i}
+                      href={safeHref(l.url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-dark-card border border-dark-border p-5 flex items-center gap-4 hover:border-brand-500/40 transition-colors group"
+                    >
+                      <GitBranch className="w-5 h-5 text-brand-500 shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-mono text-sm font-bold text-white">{l.label}</p>
+                        <p className="font-mono text-[10px] text-zinc-500 mt-0.5 truncate">{l.url}</p>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-zinc-600 group-hover:text-brand-500 transition-colors shrink-0" />
+                    </a>
+                  ))}
                 </div>
               )}
             </div>

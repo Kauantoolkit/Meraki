@@ -191,6 +191,7 @@ export class MyPortfolioController {
     if (!profile) throw new NotFoundException('Perfil não encontrado');
     if (body.bio !== undefined) profile.bio = body.bio;
     if (body.skills !== undefined) profile.skills = body.skills;
+    if (body.links !== undefined) profile.links = body.links;
     return this.profileRepo.save(profile);
   }
 
