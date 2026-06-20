@@ -18,6 +18,9 @@ import AvaliarPropostas from './pages/AvaliarPropostas'
 import BuscarProjetos from './pages/BuscarProjetos'
 import GerenciarSkills from './pages/GerenciarSkills'
 import SignContract from './pages/SignContract'
+import PasswordRecovery from './pages/PasswordRecovery'
+import ResetPassword from './pages/ResetPassword'
+import VerifyEmail from './pages/VerifyEmail'
 
 function DashboardRoute() {
   const { user } = useAuth()
@@ -42,6 +45,9 @@ function AppRoutes() {
       <Route path="/" element={<Navigate to="/login" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
+      <Route path="/password-recovery" element={<PasswordRecovery />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Protected */}
       <Route path="/dashboard" element={<ProtectedRoute><DashboardRoute /></ProtectedRoute>} />

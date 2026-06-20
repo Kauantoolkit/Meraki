@@ -3,6 +3,7 @@ import {
   ConflictException,
   Inject,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 import { IUserRepository } from '../../domain/repositories/user.repository.interface';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserResponseDto } from '../dto/user-response.dto';
@@ -10,6 +11,7 @@ import { UserType } from '../../domain/enums/user-type.enum';
 import { UserFactory } from '../../domain/factories/user.factory';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
 import { UserRegisteredEvent } from '../../domain/events/user-registered.event';
+import { EmailService } from '../../infrastructure/email/email.service';
 
 @Injectable()
 export class RegisterUserUseCase {
@@ -18,6 +20,7 @@ export class RegisterUserUseCase {
     private readonly userRepository: IUserRepository,
     private readonly eventPublisher: EventPublisherService,
     private readonly userFactory: UserFactory,
+    private readonly emailService: EmailService,
   ) {}
 
   async execute(dto: CreateUserDto): Promise<UserResponseDto> {
@@ -38,6 +41,11 @@ export class RegisterUserUseCase {
 
     // Hash via Value Object — plaintext nunca sai do VO
     user.passwordHash = await validatedPassword.hash();
+
+    // Email verification: conta nasce inativa
+    const verificationToken = crypto.randomBytes(32).toString('hex');
+    user.isActive = false;
+    user.emailVerificationToken = verificationToken;
 
     // Persiste o User
     const savedUser = await this.userRepository.create(user);
@@ -71,6 +79,13 @@ export class RegisterUserUseCase {
       companyName: dto.companyName,
     });
     await this.eventPublisher.publishUserRegistered(event.payload);
+
+    // Envia email de verificação
+    await this.emailService.sendVerificationEmail(
+      savedUser.email,
+      savedUser.name,
+      verificationToken,
+    );
 
     return {
       id: savedUser.id,

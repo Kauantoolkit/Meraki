@@ -15,6 +15,9 @@ export class User {
   specialistId: string;
   companyId: string;
   isActive: boolean;
+  passwordResetToken: string | null;
+  passwordResetExpiresAt: Date | null;
+  emailVerificationToken: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

@@ -25,4 +25,16 @@ export class AuthService {
   logout(dto: RefreshTokenDto) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/logout`, dto);
   }
+
+  verifyEmail(dto: { token: string }) {
+    return this.proxy.post(`${IDENTITY_URL}/api/auth/verify-email`, dto);
+  }
+
+  forgotPassword(dto: { email: string }) {
+    return this.proxy.post(`${IDENTITY_URL}/api/auth/forgot-password`, dto);
+  }
+
+  resetPassword(dto: { token: string; newPassword: string }) {
+    return this.proxy.post(`${IDENTITY_URL}/api/auth/reset-password`, dto);
+  }
 }

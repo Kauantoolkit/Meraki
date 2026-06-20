@@ -38,6 +38,12 @@ export const usersApi = {
     api.put<void>('/users/me/profile', data),
 }
 
+export const passwordApi = {
+  forgotPassword: (email: string) => api.post('/auth/forgot-password', { email }),
+  resetPassword: (token: string, newPassword: string) => api.post('/auth/reset-password', { token, newPassword }),
+  verifyEmail: (token: string) => api.post('/auth/verify-email', { token }),
+}
+
 export const authApi = {
   login: async (data: LoginPayload) => {
     const res = await api.post<AuthResponse>('/auth/login', data)
@@ -45,9 +51,6 @@ export const authApi = {
   },
   register: async (data: RegisterPayload) => {
     await api.post('/auth/register', data)
-    // Backend register does not return a token — login after registration
-    const loginRes = await api.post<AuthResponse>('/auth/login', { email: data.email, password: data.password })
-    return { token: loginRes.data.accessToken, user: normalizeUser(loginRes.data.user) }
   },
   me: () => api.get<UserProfile>('/users/me'),
 }

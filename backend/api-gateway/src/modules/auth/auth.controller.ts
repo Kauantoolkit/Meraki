@@ -45,4 +45,30 @@ export class AuthController {
   logout(@Body() body: RefreshTokenDto) {
     return this.authService.logout(body);
   }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verificar email usando token recebido após cadastro' })
+  @ApiResponse({ status: 200, description: 'Email verificado' })
+  @ApiResponse({ status: 400, description: 'Token inválido' })
+  verifyEmail(@Body() body: { token: string }) {
+    return this.authService.verifyEmail(body);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Solicitar redefinição de senha — envia email com link' })
+  @ApiResponse({ status: 200, description: 'Link enviado se email existir' })
+  forgotPassword(@Body() body: { email: string }) {
+    return this.authService.forgotPassword(body);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Redefinir senha com token recebido por email' })
+  @ApiResponse({ status: 200, description: 'Senha redefinida' })
+  @ApiResponse({ status: 400, description: 'Token inválido ou expirado' })
+  resetPassword(@Body() body: { token: string; newPassword: string }) {
+    return this.authService.resetPassword(body);
+  }
 }

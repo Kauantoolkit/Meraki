@@ -22,6 +22,7 @@ import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 import { RabbitMQModule } from './infrastructure/rabbitmq/rabbitmq.module';
 import { EventPublisherService } from './infrastructure/rabbitmq/event-publisher.service';
 import { XssSanitizerService } from './infrastructure/security/xss-sanitizer.service';
+import { EmailService } from './infrastructure/email/email.service';
 
 // Domain Factories
 import { UserFactory } from './domain/factories/user.factory';
@@ -44,6 +45,9 @@ import { GetSkillsUseCase } from './application/use-cases/get-skills.use-case';
 import { GetMySkillValidationsUseCase } from './application/use-cases/get-my-skill-validations.use-case';
 import { AttemptProfileSkillQuizUseCase } from './application/use-cases/attempt-profile-skill-quiz.use-case';
 import { AttemptProjectSkillQuizUseCase } from './application/use-cases/attempt-project-skill-quiz.use-case';
+import { ForgotPasswordUseCase } from './application/use-cases/forgot-password.use-case';
+import { ResetPasswordUseCase } from './application/use-cases/reset-password.use-case';
+import { VerifyEmailUseCase } from './application/use-cases/verify-email.use-case';
 
 // Controllers
 import { AuthController } from './interfaces/controllers/auth.controller';
@@ -101,6 +105,9 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
     // Events
     EventPublisherService,
 
+    // Email
+    EmailService,
+
     // Domain Factories (registradas sem @Injectable — domain puro)
     { provide: UserFactory, useFactory: () => new UserFactory() },
 
@@ -116,6 +123,9 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
     RefreshTokenUseCase,
     LogoutUseCase,
     DeleteUserUseCase,
+    ForgotPasswordUseCase,
+    ResetPasswordUseCase,
+    VerifyEmailUseCase,
 
     // Skill Use Cases
     CreateSkillUseCase,

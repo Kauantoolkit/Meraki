@@ -38,6 +38,18 @@ export const UserSchema = new EntitySchema<User>({
       type: 'boolean',
       default: true,
     },
+    passwordResetToken: {
+      type: 'varchar',
+      nullable: true,
+    },
+    passwordResetExpiresAt: {
+      type: 'timestamp',
+      nullable: true,
+    },
+    emailVerificationToken: {
+      type: 'varchar',
+      nullable: true,
+    },
     createdAt: {
       type: 'timestamp',
       createDate: true,
