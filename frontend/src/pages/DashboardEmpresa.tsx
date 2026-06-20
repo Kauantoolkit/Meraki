@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, Inbox, Wallet, PlusSquare, FolderCode, FolderGit2, Users, Search, Trash2, X, AlertTriangle, Pencil, Plus, BookOpen, Building2, Camera } from 'lucide-react'
+import { Activity, Inbox, Wallet, PlusSquare, FolderCode, FolderGit2, Users, Search, Trash2, X, AlertTriangle, Pencil, Plus, BookOpen, Building2, Camera, Star } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { portfolioApi } from '../api/portfolio'
@@ -26,6 +26,7 @@ export default function DashboardEmpresa() {
   const [cancelError, setCancelError] = useState('')
   const [editTarget, setEditTarget] = useState<Project | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
+  const [reviewTarget, setReviewTarget] = useState<Project | null>(null)
   const [companyAvatarUrl, setCompanyAvatarUrl] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -260,6 +261,7 @@ export default function DashboardEmpresa() {
                 onCancel={() => { setCancelTarget(p); setCancelError('') }}
                 onEdit={() => setEditTarget(p)}
                 onComplete={() => handleComplete(p.id)}
+                onReview={() => setReviewTarget(p)}
                 completing={completing === p.id}
               />
             ))}
@@ -276,6 +278,15 @@ export default function DashboardEmpresa() {
             setProjects(prev => prev.map(p => p.id === updated.id ? updated : p))
             setEditTarget(null)
           }}
+        />
+      )}
+
+      {/* Review modal */}
+      {reviewTarget && (
+        <ReviewModal
+          project={reviewTarget}
+          reviewerId={user?.id ?? ''}
+          onClose={() => setReviewTarget(null)}
         />
       )}
 
@@ -481,7 +492,110 @@ function EditProjectModal({ project, onClose, onSave }: {
   )
 }
 
-function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onCancel, onEdit, onComplete, completing }: {
+function ReviewModal({ project, reviewerId, onClose }: {
+  project: Project
+  reviewerId: string
+  onClose: () => void
+}) {
+  const [rating, setRating] = useState(0)
+  const [comment, setComment] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [success, setSuccess] = useState(false)
+
+  async function handleSubmit() {
+    if (rating < 1 || rating > 5) { setError('Selecione uma nota de 1 a 5.'); return }
+    setSaving(true)
+    setError('')
+    try {
+      await portfolioApi.createReview({
+        specialistId: project.specialistId!,
+        projectId: project.id,
+        reviewerId,
+        rating,
+        comment: comment.trim(),
+      })
+      setSuccess(true)
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao enviar avaliação.'))
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={() => !saving && onClose()} />
+      <div className="relative bg-dark-card border border-dark-border w-full max-w-md p-6 shadow-2xl z-10">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-orange-500" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-orange-500" />
+
+        <div className="flex items-center justify-between mb-5 border-b border-dark-border pb-4">
+          <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">Avaliar Especialista</h2>
+          <button onClick={onClose} disabled={saving} className="text-zinc-500 hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {success ? (
+          <div className="text-center py-6">
+            <Star className="w-10 h-10 text-orange-400 fill-orange-400 mx-auto mb-3" />
+            <p className="font-mono text-sm text-white font-bold mb-1">Avaliação enviada!</p>
+            <p className="font-mono text-[10px] text-zinc-500">A avaliação aparecerá no portfólio do especialista.</p>
+            <button onClick={onClose} className="mt-4 font-mono text-xs text-brand-500 border border-brand-500/40 px-4 py-2 hover:bg-brand-500/10 transition-colors">
+              Fechar
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <div>
+              <p className="font-mono text-[10px] text-zinc-500 uppercase mb-1">Projeto</p>
+              <p className="font-mono text-xs text-white font-bold">{project.title}</p>
+            </div>
+
+            <div>
+              <p className="font-mono text-[10px] text-orange-400 uppercase tracking-wider mb-2">Nota</p>
+              <div className="flex items-center gap-2">
+                {[1,2,3,4,5].map(n => (
+                  <button key={n} onClick={() => setRating(n)} className="transition-transform hover:scale-110">
+                    <Star className={`w-7 h-7 ${n <= rating ? 'text-orange-400 fill-orange-400' : 'text-zinc-700'} transition-colors`} />
+                  </button>
+                ))}
+                {rating > 0 && <span className="font-mono text-sm text-zinc-400 ml-2">{rating}/5</span>}
+              </div>
+            </div>
+
+            <div>
+              <p className="font-mono text-[10px] text-orange-400 uppercase tracking-wider mb-2">Comentário</p>
+              <textarea
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                maxLength={500}
+                rows={3}
+                placeholder="Como foi trabalhar com este especialista?"
+                className="w-full px-3 py-2 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-orange-500 rounded-none resize-none"
+              />
+            </div>
+
+            {error && <p className="font-mono text-xs text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2">{error}</p>}
+
+            <div className="flex justify-end gap-3 pt-2 border-t border-dark-border">
+              <button onClick={onClose} disabled={saving} className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase">
+                Cancelar
+              </button>
+              <button onClick={handleSubmit} disabled={saving || rating === 0}
+                className="btn-sharp bg-orange-500 text-dark-bg font-mono font-bold text-xs px-5 py-2 border border-orange-500 hover:bg-orange-400 transition-colors uppercase disabled:opacity-50 flex items-center gap-1.5">
+                <Star className="w-3.5 h-3.5" />
+                {saving ? 'Enviando...' : 'Enviar Avaliação'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onCancel, onEdit, onComplete, onReview, completing }: {
   project: Project
   onViewBids: () => void
   onOpenKanban: () => void
@@ -489,6 +603,7 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onC
   onCancel: () => void
   onEdit: () => void
   onComplete: () => void
+  onReview: () => void
   completing: boolean
 }) {
   const isOpen      = p.status === 'OPEN'
@@ -613,6 +728,18 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onC
             >
               {completing ? 'Completando...' : 'MARCAR_COMPLETO()'}
             </button>
+          </div>
+        ) : p.status === 'COMPLETED' ? (
+          <div className="flex items-center justify-between border-t border-dark-border pt-4 mt-2">
+            <span className="font-mono text-[10px] text-zinc-500 uppercase">Projeto concluído</span>
+            {p.specialistId && (
+              <button
+                onClick={onReview}
+                className="btn-sharp bg-orange-500 text-dark-bg hover:bg-orange-400 font-mono font-bold text-xs px-4 py-2 border border-orange-500 transition-colors flex items-center gap-1.5"
+              >
+                <Star className="w-3.5 h-3.5" /> AVALIAR()
+              </button>
+            )}
           </div>
         ) : (
           <div className="border-t border-dark-border pt-4 mt-2">

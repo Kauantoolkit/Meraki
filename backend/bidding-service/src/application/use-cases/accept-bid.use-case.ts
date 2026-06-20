@@ -40,6 +40,7 @@ export class AcceptBidUseCase {
         bidId: winner.id,
         projectId: winner.projectId,
         specialistId: winner.specialistId,
+        proposedBudget: winner.proposedBudget,
       }),
     );
 

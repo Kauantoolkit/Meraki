@@ -17,9 +17,9 @@ export class BidAcceptedConsumer implements OnModuleInit {
       'project.events.bid-accepted',
       'bid.accepted',
       async (message) => {
-        const { projectId, specialistId, bidId } = message.payload || message;
+        const { projectId, specialistId, bidId, proposedBudget } = message.payload || message;
         this.logger.log(`bid.accepted recebido: project=${projectId} specialist=${specialistId}`);
-        await this.assignSpecialist.execute(projectId, specialistId, bidId);
+        await this.assignSpecialist.execute(projectId, specialistId, bidId, proposedBudget);
       },
     );
   }

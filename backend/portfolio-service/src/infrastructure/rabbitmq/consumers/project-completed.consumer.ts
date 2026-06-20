@@ -32,13 +32,20 @@ export class ProjectCompletedConsumer implements OnModuleInit {
             if (profile) {
               const badges = profile.skillBadges ?? {};
               let changed = false;
+              const skills = profile.skills ?? [];
               for (const skillName of requirements as string[]) {
                 const normalized = skillName.trim().toLowerCase();
-                if (badges[normalized] === 'yellow') {
+                if (badges[normalized] !== 'green') {
                   badges[normalized] = 'green';
                   changed = true;
                 }
+                // Adiciona a skill ao perfil se ainda não existe
+                if (!skills.some(s => s.toLowerCase() === normalized)) {
+                  skills.push(skillName.trim());
+                  changed = true;
+                }
               }
+              profile.skills = skills;
               if (changed) {
                 profile.skillBadges = badges;
                 await this.profileRepo.save(profile);
