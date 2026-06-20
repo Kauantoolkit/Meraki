@@ -1,0 +1,166 @@
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { RabbitMQConfigService } from '../rabbitmq-config.service';
+import { NotificationRepository } from '../../repositories/notification.repository';
+
+@Injectable()
+export class NotificationConsumer implements OnModuleInit {
+  private readonly logger = new Logger(NotificationConsumer.name);
+
+  constructor(
+    private readonly rabbitmq: RabbitMQConfigService,
+    private readonly notificationRepo: NotificationRepository,
+  ) {}
+
+  async onModuleInit() {
+    // Empresa recebe: nova proposta, proposta retirada, entrega submetida
+    await this.rabbitmq.subscribe('messaging.events.bid-submitted', 'bid.submitted', (msg) =>
+      this.handleBidSubmitted(msg),
+    );
+    await this.rabbitmq.subscribe('messaging.events.bid-withdrawn', 'bid.withdrawn', (msg) =>
+      this.handleBidWithdrawn(msg),
+    );
+    await this.rabbitmq.subscribe('messaging.events.delivery-submitted', 'delivery.submitted', (msg) =>
+      this.handleDeliverySubmitted(msg),
+    );
+
+    // Especialista recebe: proposta aceita/rejeitada, milestone aprovada, pagamento, skill validada
+    await this.rabbitmq.subscribe('messaging.events.bid-accepted', 'bid.accepted', (msg) =>
+      this.handleBidAccepted(msg),
+    );
+    await this.rabbitmq.subscribe('messaging.events.bid-rejected', 'bid.rejected', (msg) =>
+      this.handleBidRejected(msg),
+    );
+    await this.rabbitmq.subscribe('messaging.events.milestone-validated', 'milestone.validated', (msg) =>
+      this.handleMilestoneValidated(msg),
+    );
+    await this.rabbitmq.subscribe('messaging.events.payment-released', 'payment.released', (msg) =>
+      this.handlePaymentReleased(msg),
+    );
+    await this.rabbitmq.subscribe('messaging.events.skill-validated', 'skill.validated', (msg) =>
+      this.handleSkillValidated(msg),
+    );
+    await this.rabbitmq.subscribe('messaging.events.project-completed', 'project.completed', (msg) =>
+      this.handleProjectCompleted(msg),
+    );
+  }
+
+  // ─── Notificações para EMPRESA ──────────────────────────────────────────────
+
+  private async handleBidSubmitted(msg: any) {
+    const { projectId, specialistId } = msg.payload ?? msg;
+    // Não temos companyId no evento bid.submitted — salvamos com projectId no metadata
+    // O frontend resolve via contexto do projeto
+    this.logger.log(`bid.submitted: projeto ${projectId}`);
+    // Como não temos companyId direto, usamos o projectId como referência
+    // A notificação será buscada via API que consulta o project-service
+    await this.notificationRepo.create({
+      userId: projectId, // placeholder — será resolvido pelo gateway
+      type: 'bid.submitted',
+      title: 'Nova proposta recebida',
+      message: 'Um especialista enviou uma proposta para seu projeto.',
+      metadata: { projectId, specialistId },
+    });
+  }
+
+  private async handleBidWithdrawn(msg: any) {
+    const { projectId, specialistId } = msg.payload ?? msg;
+    await this.notificationRepo.create({
+      userId: projectId,
+      type: 'bid.withdrawn',
+      title: 'Proposta retirada',
+      message: 'Um especialista retirou sua proposta.',
+      metadata: { projectId, specialistId },
+    });
+  }
+
+  private async handleDeliverySubmitted(msg: any) {
+    const { projectId, milestoneId } = msg.payload ?? msg;
+    await this.notificationRepo.create({
+      userId: projectId,
+      type: 'delivery.submitted',
+      title: 'Entrega submetida',
+      message: 'Uma milestone foi submetida para validação.',
+      metadata: { projectId, milestoneId },
+    });
+  }
+
+  // ─── Notificações para ESPECIALISTA ─────────────────────────────────────────
+
+  private async handleBidAccepted(msg: any) {
+    const { specialistId, projectId } = msg.payload ?? msg;
+    await this.notificationRepo.create({
+      userId: specialistId,
+      type: 'bid.accepted',
+      title: 'Proposta aceita!',
+      message: 'Sua proposta foi aceita. Você pode iniciar o projeto.',
+      metadata: { projectId },
+    });
+  }
+
+  private async handleBidRejected(msg: any) {
+    const { specialistId, projectId } = msg.payload ?? msg;
+    await this.notificationRepo.create({
+      userId: specialistId,
+      type: 'bid.rejected',
+      title: 'Proposta rejeitada',
+      message: 'Sua proposta foi rejeitada pela empresa.',
+      metadata: { projectId },
+    });
+  }
+
+  private async handleMilestoneValidated(msg: any) {
+    const { specialistId, projectId, milestoneId } = msg.payload ?? msg;
+    await this.notificationRepo.create({
+      userId: specialistId,
+      type: 'milestone.validated',
+      title: 'Milestone aprovada',
+      message: 'Sua entrega foi aprovada e o pagamento será liberado.',
+      metadata: { projectId, milestoneId },
+    });
+  }
+
+  private async handlePaymentReleased(msg: any) {
+    const { specialistId, amount, specialistAmount } = msg.payload ?? msg;
+    const value = specialistAmount ?? amount;
+    await this.notificationRepo.create({
+      userId: specialistId,
+      type: 'payment.released',
+      title: 'Pagamento liberado',
+      message: `R$ ${Number(value).toFixed(2)} foi liberado para sua conta.`,
+      metadata: { amount: value },
+    });
+  }
+
+  private async handleSkillValidated(msg: any) {
+    const { specialistId, skillName } = msg.payload ?? msg;
+    await this.notificationRepo.create({
+      userId: specialistId,
+      type: 'skill.validated',
+      title: 'Habilidade validada',
+      message: `Sua skill "${skillName}" foi validada com sucesso.`,
+      metadata: { skillName },
+    });
+  }
+
+  private async handleProjectCompleted(msg: any) {
+    const { specialistId, companyId, projectId } = msg.payload ?? msg;
+    if (specialistId) {
+      await this.notificationRepo.create({
+        userId: specialistId,
+        type: 'project.completed',
+        title: 'Projeto concluído',
+        message: 'O projeto foi marcado como concluído. Parabéns!',
+        metadata: { projectId },
+      });
+    }
+    if (companyId) {
+      await this.notificationRepo.create({
+        userId: companyId,
+        type: 'project.completed',
+        title: 'Projeto concluído',
+        message: 'Seu projeto foi concluído com sucesso.',
+        metadata: { projectId },
+      });
+    }
+  }
+}

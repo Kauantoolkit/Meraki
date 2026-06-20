@@ -12,6 +12,7 @@ import { MilestonesModule } from './modules/milestones/milestones.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PortfolioModule } from './modules/portfolio/portfolio.module';
 import { SkillsModule } from './modules/skills/skills.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
 
 @Module({
@@ -34,6 +35,7 @@ import { JwtStrategy } from './infrastructure/auth/jwt.strategy';
     PaymentsModule,
     PortfolioModule,
     SkillsModule,
+    NotificationsModule,
   ],
   providers: [JwtStrategy],
 })
