@@ -29,7 +29,7 @@ export default function DashboardEspecialista() {
       mySkills.length > 0 ? projectsApi.listOpen() : Promise.resolve(null),
     ]).then(([mine, bids, open]) => {
       const bidList: Bid[] = bids.data
-      setMyProjects(mine.data.data.filter((p: Project) => p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
+      setMyProjects(mine.data.data.filter((p: Project) => p.status === 'SIGNING' || p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
       setMyBids(bidList)
       if (open) setOpenProjects(open.data.data)
       const uniqueIds = [...new Set(bidList.map((b: Bid) => b.projectId))]
@@ -236,12 +236,18 @@ export default function DashboardEspecialista() {
             {myProjects.length === 0 ? (
               <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">Nenhum trabalho em execução no momento.</div>
             ) : myProjects.map(p => (
-              <div key={p.id} className="bg-dark-card border border-dark-border p-5 hover:border-brand-500/50 transition-colors">
+              <div key={p.id} className={`bg-dark-card border p-5 transition-colors ${p.status === 'SIGNING' ? 'border-yellow-500/50 hover:border-yellow-500' : 'border-dark-border hover:border-brand-500/50'}`}>
                 <div className="flex items-center gap-2 mb-3">
-                  <span className="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 tracking-widest flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" /> {projectStatusLabel[p.status] ?? p.status}
-                  </span>
-                  <span className="font-mono text-[10px] text-zinc-500">{p.id}</span>
+                  {p.status === 'SIGNING' ? (
+                    <span className="font-mono text-[10px] text-yellow-400 border border-yellow-400/30 bg-yellow-400/10 px-2 py-0.5 tracking-widest flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-yellow-400 animate-pulse" /> AGUARDANDO ASSINATURA
+                    </span>
+                  ) : (
+                    <span className="font-mono text-[10px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 tracking-widest flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" /> {projectStatusLabel[p.status] ?? p.status}
+                    </span>
+                  )}
+                  <span className="font-mono text-[10px] text-zinc-500">{p.id.slice(0, 8)}</span>
                 </div>
                 <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
                 <div className="bg-[#000] border border-dark-border p-4 mb-4">
@@ -251,12 +257,21 @@ export default function DashboardEspecialista() {
                   </div>
                   <h4 className="font-mono text-sm text-white font-bold">Orçamento: {fmt(p.budget)}</h4>
                 </div>
-                <button
-                  onClick={() => navigate(`/kanban/${p.id}`)}
-                  className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-2 hover:bg-brand-400 border border-brand-500 transition-colors shadow-[2px_2px_0px_rgba(85,202,124,0.2)]"
-                >
-                  ABRIR_KANBAN()
-                </button>
+                {p.status === 'SIGNING' ? (
+                  <button
+                    onClick={() => navigate(`/contract/${p.id}`)}
+                    className="btn-sharp bg-yellow-500 text-dark-bg font-bold font-mono text-xs px-4 py-2 hover:bg-yellow-400 border border-yellow-500 transition-colors shadow-[2px_2px_0px_rgba(234,179,8,0.2)]"
+                  >
+                    ASSINAR_CONTRATO()
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate(`/kanban/${p.id}`)}
+                    className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-2 hover:bg-brand-400 border border-brand-500 transition-colors shadow-[2px_2px_0px_rgba(85,202,124,0.2)]"
+                  >
+                    ABRIR_KANBAN()
+                  </button>
+                )}
               </div>
             ))}
           </div>

@@ -43,4 +43,14 @@ export class ProjectsService {
   complete(id: string, token: string) {
     return this.proxy.put(`${PROJECT_URL}/api/projects/${id}/complete`, {}, this.proxy.authHeaders(token));
   }
+
+  signContract(id: string, body: any, token: string, ip: string, userAgent: string) {
+    return this.proxy.patch(`${PROJECT_URL}/api/projects/${id}/sign-contract`, body, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'x-forwarded-for': ip,
+        'user-agent': userAgent,
+      },
+    });
+  }
 }

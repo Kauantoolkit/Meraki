@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
-import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle, Camera } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { portfolioApi, PublicProfile } from '../api/portfolio'
+import { portfolioApi, PublicProfile, ProfileLink } from '../api/portfolio'
 import { usersApi } from '../api/auth'
 import { skillsApi, Skill, SkillQuestion, SkillValidation, QuizResult } from '../api/skills'
 import { extractApiError } from '../api/client'
+import { uploadAvatar } from '../lib/sanity'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -52,8 +53,11 @@ export default function Portfolio() {
                 <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
 
                 <div className="flex flex-col items-center text-center mb-6">
-                  <div className="w-20 h-20 bg-dark-input border border-brand-500/30 flex items-center justify-center mb-3 relative">
-                    <User className="w-10 h-10 text-zinc-600" />
+                  <div className="w-20 h-20 bg-dark-input border border-brand-500/30 flex items-center justify-center mb-3 relative overflow-hidden">
+                    {profile.avatarUrl
+                      ? <img src={profile.avatarUrl} alt={profile.name} className="w-full h-full object-cover" />
+                      : <User className="w-10 h-10 text-zinc-600" />
+                    }
                     <div className="absolute bottom-0 right-0 w-4 h-4 bg-brand-500 border-2 border-dark-card" />
                   </div>
                   <h2 className="text-xl font-bold text-white uppercase">{profile.name}</h2>
@@ -580,16 +584,53 @@ function EditProfileModal({ profile, onClose, onSave }: {
   onSave: (updated: PublicProfile) => void
 }) {
   const [bio, setBio] = useState(profile?.bio ?? '')
+  const [links, setLinks] = useState<ProfileLink[]>(profile?.links ?? [])
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl ?? '')
+  const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  async function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    setError('')
+    try {
+      const url = await uploadAvatar(file)
+      setAvatarUrl(url)
+    } catch {
+      setError('Erro ao enviar imagem. Verifique sua conexão e tente novamente.')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
+
+  function addLink() {
+    if (links.length >= 10) return
+    setLinks(prev => [...prev, { label: '', url: '' }])
+  }
+
+  function updateLink(i: number, field: 'label' | 'url', value: string) {
+    setLinks(prev => prev.map((l, idx) => idx === i ? { ...l, [field]: value } : l))
+  }
+
+  function removeLink(i: number) {
+    setLinks(prev => prev.filter((_, idx) => idx !== i))
+  }
 
   async function handleSave() {
+    // Descarta linhas incompletas (sem rótulo ou sem URL).
+    const cleanLinks = links
+      .map(l => ({ label: l.label.trim(), url: l.url.trim() }))
+      .filter(l => l.label && l.url)
     setSaving(true)
     setError('')
     try {
       await Promise.all([
-        portfolioApi.updateProfile({ bio }),
-        usersApi.updateProfile({ bio }),
+        portfolioApi.updateProfile({ bio, links: cleanLinks, ...(avatarUrl ? { avatarUrl } : {}) }),
+        usersApi.updateProfile({ bio, ...(avatarUrl ? { avatarUrl } : {}) }),
       ])
       const fresh = await portfolioApi.getMyProfile()
       onSave(fresh.data)
@@ -614,6 +655,26 @@ function EditProfileModal({ profile, onClose, onSave }: {
         </div>
 
         <div className="space-y-5">
+          {/* Avatar upload */}
+          <div className="flex flex-col items-center gap-3 py-4 border-b border-dark-border">
+            <div className="w-20 h-20 bg-dark-input border border-dark-border relative overflow-hidden">
+              {avatarUrl
+                ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                : <User className="w-10 h-10 text-zinc-600 absolute inset-0 m-auto" />
+              }
+              {uploading && (
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                  <span className="font-mono text-[9px] text-brand-500">enviando...</span>
+                </div>
+              )}
+            </div>
+            <label className={`font-mono text-[10px] border px-3 py-1.5 cursor-pointer transition-colors flex items-center gap-2 ${uploading ? 'text-zinc-600 border-zinc-700 pointer-events-none' : 'text-brand-500 border-brand-500/50 hover:border-brand-500'}`}>
+              <Camera className="w-3 h-3" />
+              {uploading ? 'Enviando...' : avatarUrl ? 'Alterar Foto' : 'Adicionar Foto'}
+              <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} disabled={uploading} className="hidden" />
+            </label>
+          </div>
+
           <div className="space-y-2">
             <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Bio / Apresentação</label>
             <textarea
@@ -623,6 +684,46 @@ function EditProfileModal({ profile, onClose, onSave }: {
               placeholder="Conte sobre sua experiência, especialidades e o que você pode oferecer..."
               className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none h-28 resize-none"
             />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Links (GitHub, LinkedIn, repositórios...)</label>
+              <button
+                type="button" onClick={addLink} disabled={links.length >= 10}
+                className="font-mono text-[10px] text-brand-500 border border-brand-500/40 px-2 py-1 hover:bg-brand-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Adicionar
+              </button>
+            </div>
+            {links.length === 0 ? (
+              <p className="font-mono text-[10px] text-zinc-600">Nenhum link cadastrado.</p>
+            ) : (
+              <div className="space-y-2">
+                {links.map((l, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input
+                      type="text" maxLength={40} value={l.label}
+                      onChange={e => updateLink(i, 'label', e.target.value)}
+                      placeholder="Rótulo (ex: GitHub)"
+                      className="w-32 shrink-0 px-2 py-1.5 bg-[#000] border border-dark-border text-[11px] font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+                    />
+                    <input
+                      type="url" maxLength={200} value={l.url}
+                      onChange={e => updateLink(i, 'url', e.target.value)}
+                      placeholder="https://..."
+                      className="flex-1 min-w-0 px-2 py-1.5 bg-[#000] border border-dark-border text-[11px] font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+                    />
+                    <button
+                      type="button" onClick={() => removeLink(i)}
+                      className="text-zinc-600 hover:text-red-400 transition-colors shrink-0" aria-label="Remover link"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="bg-dark-input border border-dark-border p-3">

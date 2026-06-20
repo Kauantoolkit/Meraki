@@ -5,7 +5,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
-import { UpdatePortfolioProfileDto } from './dto/update-profile.dto';
+import { UpdatePortfolioProfileDto, UpdateCompanyProfileDto } from './dto/update-profile.dto';
 import { AddSkillDto } from './dto/add-skill.dto';
 import { AddCertificationDto } from './dto/add-certification.dto';
 
@@ -29,9 +29,16 @@ export class PortfolioController {
 
   @Patch('me')
   @Roles('SPECIALIST')
-  @ApiOperation({ summary: 'Atualizar bio e/ou skills' })
+  @ApiOperation({ summary: 'Atualizar bio, skills e/ou avatar (especialista)' })
   updateProfile(@Body() body: UpdatePortfolioProfileDto, @Req() req: Request) {
     return this.portfolioService.updateProfile(body, this.token(req));
+  }
+
+  @Patch('me/company')
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Atualizar avatar da empresa' })
+  updateCompanyProfile(@Body() body: UpdateCompanyProfileDto, @Req() req: Request) {
+    return this.portfolioService.updateCompanyProfile(body, this.token(req));
   }
 
   @Post('me/skills')

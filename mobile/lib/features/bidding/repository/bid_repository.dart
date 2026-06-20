@@ -23,9 +23,16 @@ class BidRepository {
   }
 
   Future<BidModel> submitBid(Map<String, dynamic> dto) async {
-    final response =
-        await _apiClient.post<Map<String, dynamic>>('/bids', data: dto);
+    final projectId = dto['projectId'];
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      '/bids/project/$projectId',
+      data: dto,
+    );
     return BidModel.fromJson(response.data!);
+  }
+
+  Future<void> withdrawBid(String bidId) async {
+    await _apiClient.put<void>('/bids/$bidId/withdraw');
   }
 
   Future<BidModel> acceptBid(String bidId) async {

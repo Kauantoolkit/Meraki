@@ -3,24 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'features/auth/view/login_screen.dart';
 import 'features/auth/view/register_screen.dart';
-import 'features/auth/view/forgot_password_screen.dart';
 import 'features/auth/viewmodel/auth_viewmodel.dart';
 import 'features/dashboard/view/dashboard_screen.dart';
-import 'features/inbox/view/inbox_screen.dart';
 import 'features/projects/view/projects_list_screen.dart';
 import 'features/projects/view/project_detail_screen.dart';
 import 'features/projects/view/create_project_screen.dart';
 import 'features/bidding/view/project_bids_screen.dart';
 import 'features/bidding/view/submit_bid_screen.dart';
 import 'features/delivery/view/kanban_board_screen.dart';
-import 'features/delivery/view/project_history_screen.dart';
-import 'features/bidding/view/my_bids_screen.dart';
 import 'features/delivery/view/deliver_milestone_screen.dart';
 import 'features/payments/view/payments_screen.dart';
 import 'features/portfolio/view/portfolio_screen.dart';
 import 'features/portfolio/view/specialist_portfolio_screen.dart';
 import 'features/portfolio/view/company_profile_screen.dart';
 import 'features/portfolio/view/specialists_list_screen.dart';
+import 'features/skills/view/gerenciar_skills_screen.dart';
 import 'shared/widgets/main_shell.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -42,7 +39,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = ref.read(authViewModelProvider).isAuthenticated;
       final loc = state.matchedLocation;
-      final isPublic = loc == '/login' || loc == '/register' || loc == '/forgot-password';
+      final isPublic = loc == '/login' || loc == '/register';
       if (!isAuthenticated && !isPublic) return '/login';
       if (isAuthenticated && isPublic) return '/dashboard';
       return null;
@@ -50,8 +47,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
-      GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
-
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => MainShell(child: child),
@@ -60,12 +55,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/dashboard',
             builder: (_, __) => const DashboardScreen(),
-          ),
-
-          // ─── Inbox ────────────────────────────────────────────────────
-          GoRoute(
-            path: '/inbox',
-            builder: (_, __) => const InboxScreen(),
           ),
 
           // ─── Projetos ─────────────────────────────────────────────────
@@ -102,13 +91,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 KanbanBoardScreen(projectId: state.pathParameters['id']!),
           ),
 
-          // ─── Histórico de entregas (RF11) ─────────────────────────────
-          GoRoute(
-            path: '/projects/:id/history',
-            builder: (_, state) =>
-                ProjectHistoryScreen(projectId: state.pathParameters['id']!),
-          ),
-
           // ─── Entrega de milestone ──────────────────────────────────────
           GoRoute(
             path: '/projects/:projectId/milestones/:milestoneId/deliver',
@@ -118,8 +100,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ),
           ),
 
-          // ─── Minhas propostas (especialista) ──────────────────────────
-          GoRoute(path: '/bids', builder: (_, __) => const MyBidsScreen()),
+          // ─── Skills ─────────────────────────────────────────────────────
+          GoRoute(
+            path: '/skills',
+            builder: (_, __) => const GerenciarSkillsScreen(),
+          ),
 
           // ─── Pagamentos ───────────────────────────────────────────────
           GoRoute(

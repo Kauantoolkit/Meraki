@@ -14,6 +14,7 @@
     "test:integration:headed": "playwright test --config=playwright.integration.config.ts --headed"
   },
   "dependencies": {
+    "@sanity/client": "^7.22.1",
     "axios": "^1.7.2",
     "lucide-react": "^0.417.0",
     "react": "^18.3.1",

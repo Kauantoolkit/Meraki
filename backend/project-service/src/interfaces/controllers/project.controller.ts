@@ -1,7 +1,8 @@
 import {
   Controller, Get, Post, Put, Patch, Delete,
-  Body, Param, Query, UseGuards, HttpCode, HttpStatus,
+  Body, Param, Query, Req, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
+import { Request } from 'express';
 import {
   ApiTags, ApiOperation, ApiBearerAuth, ApiQuery,
   ApiParam, ApiResponse,
@@ -125,8 +126,10 @@ export class ProjectController {
   sign(
     @Param('id') id: string,
     @Body() dto: SignContractDto,
-    @CurrentUser('companyId') companyId: string,
+    @Req() req: Request,
   ) {
+    dto.ipAddress = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip;
+    dto.userAgent = req.headers['user-agent'] || 'unknown';
     return this.signContract.execute(id, dto);
   }
 }

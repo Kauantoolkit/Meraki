@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsPhoneNumber, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsArray, IsOptional, IsPhoneNumber, IsString, IsUrl, MaxLength, MinLength } from 'class-validator';
 
 export class UpdateProfileDto {
   @ApiPropertyOptional({ example: 'João Silva' })
@@ -24,4 +24,11 @@ export class UpdateProfileDto {
   @IsString({ each: true })
   @MaxLength(50, { each: true })
   skills?: string[];
+
+  @ApiPropertyOptional({ example: 'https://cdn.sanity.io/images/...' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(2048)
+  @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
+  avatarUrl?: string;
 }

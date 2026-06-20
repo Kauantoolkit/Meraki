@@ -1,15 +1,18 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Activity, Inbox, Wallet, PlusSquare, FolderCode, FolderGit2, Users, Search, Trash2, X, AlertTriangle, Pencil, Plus, BookOpen } from 'lucide-react'
+import { Activity, Inbox, Wallet, PlusSquare, FolderCode, FolderGit2, Users, Search, Trash2, X, AlertTriangle, Pencil, Plus, BookOpen, Building2, Camera } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
+import { portfolioApi } from '../api/portfolio'
+import { usersApi } from '../api/auth'
 import { extractApiError } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import { projectStatusLabel } from '../lib/labels'
+import { uploadAvatar } from '../lib/sanity'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
-const STATUS_FILTERS = ['ALL', 'OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
+const STATUS_FILTERS = ['ALL', 'OPEN', 'SIGNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
 
 export default function DashboardEmpresa() {
   const navigate = useNavigate()
@@ -23,6 +26,9 @@ export default function DashboardEmpresa() {
   const [cancelError, setCancelError] = useState('')
   const [editTarget, setEditTarget] = useState<Project | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
+  const [companyAvatarUrl, setCompanyAvatarUrl] = useState('')
+  const [avatarUploading, setAvatarUploading] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   function loadProjects() {
     projectsApi.listByCompany()
@@ -38,6 +44,33 @@ export default function DashboardEmpresa() {
   }
 
   useEffect(() => { loadProjects() }, [user?.companyId])
+
+  useEffect(() => {
+    if (!user?.id) return
+    // Portfolio-service chaveia company_profiles por userId (sub do token), não pelo companyId.
+    portfolioApi.getCompanyProfile(user.id)
+      .then(res => { if (res.data?.avatarUrl) setCompanyAvatarUrl(res.data.avatarUrl) })
+      .catch(() => {})
+  }, [user?.id])
+
+  async function handleCompanyAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setAvatarUploading(true)
+    try {
+      const url = await uploadAvatar(file)
+      setCompanyAvatarUrl(url)
+      await Promise.all([
+        portfolioApi.updateCompanyProfile({ avatarUrl: url }),
+        usersApi.updateProfile({ avatarUrl: url }),
+      ])
+    } catch {
+      alert('Erro ao fazer upload da foto. Tente novamente.')
+    } finally {
+      setAvatarUploading(false)
+      if (avatarInputRef.current) avatarInputRef.current.value = ''
+    }
+  }
 
   async function handleComplete(id: string) {
     setCompleting(id)
@@ -89,13 +122,33 @@ export default function DashboardEmpresa() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <div className="w-2 h-2 bg-brand-500 animate-pulse" />
-              <span className="font-mono text-[10px] tracking-widest text-brand-500 uppercase">Status: Online</span>
+          <div className="flex items-center gap-4">
+            {/* Company avatar */}
+            <div className="relative group shrink-0">
+              <div className="w-14 h-14 bg-dark-input border border-dark-border overflow-hidden flex items-center justify-center">
+                {companyAvatarUrl
+                  ? <img src={companyAvatarUrl} alt="" className="w-full h-full object-cover" />
+                  : <Building2 className="w-7 h-7 text-zinc-600" />
+                }
+                {avatarUploading && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <span className="font-mono text-[8px] text-brand-500">...</span>
+                  </div>
+                )}
+              </div>
+              <label className="absolute -bottom-1 -right-1 w-5 h-5 bg-dark-card border border-dark-border flex items-center justify-center cursor-pointer hover:border-brand-500 transition-colors">
+                <Camera className="w-2.5 h-2.5 text-zinc-500 hover:text-brand-500" />
+                <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleCompanyAvatarChange} disabled={avatarUploading} className="hidden" />
+              </label>
             </div>
-            <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Meus Projetos</h1>
-            <p className="text-sm text-zinc-400 font-mono mt-2">Gerencie licitações, acompanhe milestones e aprove entregas.</p>
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-2 h-2 bg-brand-500 animate-pulse" />
+                <span className="font-mono text-[10px] tracking-widest text-brand-500 uppercase">Status: Online</span>
+              </div>
+              <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Meus Projetos</h1>
+              <p className="text-sm text-zinc-400 font-mono mt-2">Gerencie licitações, acompanhe milestones e aprove entregas.</p>
+            </div>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -203,6 +256,7 @@ export default function DashboardEmpresa() {
                 project={p}
                 onViewBids={() => navigate(`/projects/${p.id}/bids`)}
                 onOpenKanban={() => navigate(`/kanban/${p.id}`)}
+                onSignContract={() => navigate(`/contract/${p.id}`)}
                 onCancel={() => { setCancelTarget(p); setCancelError('') }}
                 onEdit={() => setEditTarget(p)}
                 onComplete={() => handleComplete(p.id)}
@@ -427,26 +481,30 @@ function EditProjectModal({ project, onClose, onSave }: {
   )
 }
 
-function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit, onComplete, completing }: {
+function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onCancel, onEdit, onComplete, completing }: {
   project: Project
   onViewBids: () => void
   onOpenKanban: () => void
+  onSignContract: () => void
   onCancel: () => void
   onEdit: () => void
   onComplete: () => void
   completing: boolean
 }) {
   const isOpen      = p.status === 'OPEN'
+  const isSigning   = p.status === 'SIGNING'
   const isCancelled = p.status === 'CANCELLED'
-  const canCancel   = p.status === 'OPEN' || p.status === 'IN_PROGRESS'
+  const canCancel   = p.status === 'OPEN' || p.status === 'SIGNING' || p.status === 'IN_PROGRESS'
 
   const statusColor = isCancelled
     ? 'text-red-400 border-red-400/30 bg-red-400/10'
-    : isOpen
-      ? 'text-blue-400 border-blue-400/30 bg-blue-400/10'
-      : p.status === 'COMPLETED'
-        ? 'text-zinc-400 border-zinc-400/30 bg-zinc-400/10'
-        : 'text-brand-500 border-brand-500/30 bg-brand-500/10'
+    : isSigning
+      ? 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10'
+      : isOpen
+        ? 'text-blue-400 border-blue-400/30 bg-blue-400/10'
+        : p.status === 'COMPLETED'
+          ? 'text-zinc-400 border-zinc-400/30 bg-zinc-400/10'
+          : 'text-brand-500 border-brand-500/30 bg-brand-500/10'
 
   return (
     <div className={`bg-dark-card border p-6 transition-colors relative group flex flex-col shadow-[inset_0px_0px_20px_rgba(85,202,124,0.02)] ${
@@ -518,6 +576,19 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit, o
               className="btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs px-4 py-2 border border-brand-500 transition-colors"
             >
               VER_PROPOSTAS()
+            </button>
+          </div>
+        ) : isSigning ? (
+          <div className="flex items-center justify-between border-t border-dark-border pt-4 mt-2">
+            <div>
+              <p className="font-mono text-[10px] text-zinc-500 uppercase">Especialista selecionado</p>
+              <p className="font-mono text-xs text-white">{p.specialistId?.slice(0, 8) ?? 'N/A'}</p>
+            </div>
+            <button
+              onClick={onSignContract}
+              className="btn-sharp bg-yellow-500 text-dark-bg hover:bg-yellow-400 font-mono font-bold text-xs px-4 py-2 border border-yellow-500 transition-colors"
+            >
+              ASSINAR_CONTRATO()
             </button>
           </div>
         ) : p.status === 'IN_PROGRESS' ? (

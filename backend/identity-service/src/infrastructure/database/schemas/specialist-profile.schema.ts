@@ -46,6 +46,10 @@ export const SpecialistProfileSchema = new EntitySchema<SpecialistProfile>({
       scale: 2,
       default: 0,
     },
+    avatarUrl: {
+      type: 'varchar',
+      nullable: true,
+    },
     createdAt: {
       type: 'timestamp',
       createDate: true,

@@ -12,6 +12,7 @@ import { GetPublicProfileUseCase } from '../../application/use-cases/get-public-
 import { GetCompanyProfileUseCase } from '../../application/use-cases/get-company-profile.use-case';
 import { GetMyPortfolioUseCase } from '../../application/use-cases/get-my-portfolio.use-case';
 import { SpecialistProfileRepository } from '../../infrastructure/repositories/specialist-profile.repository';
+import { CompanyProfileRepository } from '../../infrastructure/repositories/company-profile.repository';
 import {
   CreatePortfolioItemDto,
   UpdatePortfolioItemDto,
@@ -26,6 +27,7 @@ interface AuthUser {
   id: string;    // payload.sub — userId (User.id)
   sub?: string;  // kept for backwards compat, same as id
   specialistId?: string;
+  companyId?: string;
 }
 
 // ─── Portfolio ──────────────────────────────────────────────────────────────
@@ -168,6 +170,7 @@ export class MyPortfolioController {
   constructor(
     private readonly getMyPortfolioUseCase: GetMyPortfolioUseCase,
     private readonly profileRepo: SpecialistProfileRepository,
+    private readonly companyProfileRepo: CompanyProfileRepository,
     private readonly addCertificationUseCase: AddCertificationUseCase,
   ) {}
 
@@ -184,14 +187,27 @@ export class MyPortfolioController {
   }
 
   @Patch()
-  @ApiOperation({ summary: 'Atualizar bio e/ou skills' })
+  @ApiOperation({ summary: 'Atualizar bio, skills e/ou avatar (especialista)' })
   async updateProfile(@Req() req: Request, @Body() body: UpdateMyProfileDto) {
     const specialistId = this.specialistId(req);
     const profile = await this.profileRepo.findByUserId(specialistId);
     if (!profile) throw new NotFoundException('Perfil não encontrado');
     if (body.bio !== undefined) profile.bio = body.bio;
     if (body.skills !== undefined) profile.skills = body.skills;
+    if (body.links !== undefined) profile.links = body.links;
+    if (body.avatarUrl !== undefined) profile.avatarUrl = body.avatarUrl;
     return this.profileRepo.save(profile);
+  }
+
+  @Patch('company')
+  @ApiOperation({ summary: 'Atualizar avatar da empresa' })
+  async updateCompanyProfile(@Req() req: Request, @Body() body: UpdateMyProfileDto) {
+    const user = req.user as AuthUser;
+    const userId = user.id ?? user.sub;
+    const profile = await this.companyProfileRepo.findByUserId(userId);
+    if (!profile) throw new NotFoundException('Perfil de empresa não encontrado');
+    if (body.avatarUrl !== undefined) profile.avatarUrl = body.avatarUrl;
+    return this.companyProfileRepo.save(profile);
   }
 
   @Post('skills')

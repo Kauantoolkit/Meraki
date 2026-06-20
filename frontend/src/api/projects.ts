@@ -6,11 +6,16 @@ export interface Project {
   description: string
   budget: number
   deadline: string
-  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
+  status: 'OPEN' | 'SIGNING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
   companyId: string
   specialistId?: string
   skills?: string[]
   milestones?: Milestone[]
+  contractHash?: string
+  specialistSignedAt?: string
+  specialistSignedIp?: string
+  companySignedAt?: string
+  companySignedIp?: string
 }
 
 export interface Milestone {
@@ -58,11 +63,12 @@ export const projectsApi = {
   listByCompany:   () => api.get<any>('/projects').then(r => ({ ...r, data: mapPage(r.data) })),
   listBySpecialist:() =>
     Promise.all([
+      api.get<any>('/projects?status=SIGNING'),
       api.get<any>('/projects?status=IN_PROGRESS'),
       api.get<any>('/projects?status=COMPLETED'),
-    ]).then(([ip, co]) => {
-      const combined = [...(ip.data.data ?? []), ...(co.data.data ?? [])]
-      return { ...ip, data: mapPage({ data: combined, total: combined.length }) }
+    ]).then(([sg, ip, co]) => {
+      const combined = [...(sg.data.data ?? []), ...(ip.data.data ?? []), ...(co.data.data ?? [])]
+      return { ...sg, data: mapPage({ data: combined, total: combined.length }) }
     }),
 
   getById: (id: string) =>
@@ -78,4 +84,7 @@ export const projectsApi = {
     api.post<any>('/projects', data).then(r => ({ ...r, data: mapProject(r.data) })),
 
   getMilestones: (projectId: string) => api.get<Milestone[]>(`/projects/${projectId}/milestones`),
+
+  signContract: (projectId: string, data: { contractHash: string; role: 'SPECIALIST' | 'COMPANY' }) =>
+    api.patch<any>(`/projects/${projectId}/sign-contract`, data).then(r => ({ ...r, data: mapProject(r.data) })),
 }

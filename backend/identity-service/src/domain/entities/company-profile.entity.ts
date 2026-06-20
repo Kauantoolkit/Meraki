@@ -7,6 +7,7 @@ export class CompanyProfile {
   industry: string;
   companySize: string;
   website: string;
+  avatarUrl?: string;
   createdAt: Date;
   updatedAt: Date;
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Filter, Calendar, Wallet, Tag, ArrowRight, ListChecks } from 'lucide-react'
+import { Search, Filter, Calendar, Wallet, Tag, ArrowRight, ListChecks, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { bidsApi, Bid } from '../api/bids'
@@ -15,7 +15,8 @@ export default function BuscarProjetos() {
   const [search, setSearch] = useState('')
   const [minBudget, setMinBudget] = useState('')
   const [maxBudget, setMaxBudget] = useState('')
-  const [skillFilter, setSkillFilter] = useState('')
+  const [skillTags, setSkillTags] = useState<string[]>([])
+  const [skillInput, setSkillInput] = useState('')
 
   useEffect(() => {
     Promise.all([
@@ -29,11 +30,23 @@ export default function BuscarProjetos() {
     }).finally(() => setLoading(false))
   }, [])
 
+  function addSkillTag(raw: string) {
+    const tag = raw.trim()
+    if (!tag) return
+    setSkillTags(prev => prev.some(t => t.toLowerCase() === tag.toLowerCase()) ? prev : [...prev, tag])
+    setSkillInput('')
+  }
+
+  function removeSkillTag(tag: string) {
+    setSkillTags(prev => prev.filter(t => t !== tag))
+  }
+
   const filtered = projects.filter(p => {
     const matchSearch = !search || p.title.toLowerCase().includes(search.toLowerCase()) || p.description?.toLowerCase().includes(search.toLowerCase())
     const matchMin = !minBudget || p.budget >= Number(minBudget)
     const matchMax = !maxBudget || p.budget <= Number(maxBudget)
-    const matchSkill = !skillFilter || (p.skills ?? []).some(s => s.toLowerCase().includes(skillFilter.toLowerCase()))
+    // Filtro AND: o projeto precisa conter TODAS as skills selecionadas.
+    const matchSkill = skillTags.every(tag => (p.skills ?? []).some(s => s.toLowerCase().includes(tag.toLowerCase())))
     return matchSearch && matchMin && matchMax && matchSkill
   })
 
@@ -75,12 +88,25 @@ export default function BuscarProjetos() {
                   <input
                     type="text"
                     maxLength={40}
-                    value={skillFilter}
-                    onChange={e => setSkillFilter(e.target.value)}
-                    placeholder="Ex: React, NestJS..."
+                    value={skillInput}
+                    onChange={e => setSkillInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addSkillTag(skillInput) } }}
+                    placeholder="Ex: React, NestJS... (Enter)"
                     className="w-full pl-7 pr-3 py-1.5 bg-dark-input border border-dark-border text-[10px] font-mono text-zinc-200 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
                   />
                 </div>
+                {skillTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {skillTags.map(tag => (
+                      <span key={tag} className="flex items-center gap-1 text-[10px] font-mono border border-brand-500/40 bg-brand-500/10 text-brand-500 px-2 py-0.5">
+                        {tag}
+                        <button onClick={() => removeSkillTag(tag)} className="hover:text-white transition-colors" aria-label={`Remover ${tag}`}>
+                          <X className="w-2.5 h-2.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="mb-5">
@@ -104,9 +130,9 @@ export default function BuscarProjetos() {
                 </div>
               </div>
 
-              {(skillFilter || minBudget || maxBudget) && (
+              {(skillTags.length > 0 || minBudget || maxBudget) && (
                 <button
-                  onClick={() => { setSkillFilter(''); setMinBudget(''); setMaxBudget('') }}
+                  onClick={() => { setSkillTags([]); setMinBudget(''); setMaxBudget('') }}
                   className="w-full font-mono text-[10px] text-zinc-500 hover:text-zinc-300 py-1.5 border border-transparent hover:border-dark-border transition-colors uppercase tracking-widest"
                 >
                   Limpar filtros

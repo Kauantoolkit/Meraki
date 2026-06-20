@@ -17,11 +17,49 @@ class KanbanViewModel extends AsyncNotifier<List<KanbanColumnModel>> {
     );
   }
 
-  Future<bool> submitDelivery(String milestoneId, String description) async {
+  Future<bool> submitDelivery(
+    String milestoneId, {
+    required List<String> deliveredFiles,
+    String? deliveryNotes,
+  }) async {
+    try {
+      await ref.read(deliveryRepositoryProvider).submitDelivery(
+            milestoneId,
+            deliveredFiles: deliveredFiles,
+            deliveryNotes: deliveryNotes,
+          );
+      await load(projectId);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> startMilestone(String milestoneId) async {
+    try {
+      await ref.read(deliveryRepositoryProvider).startMilestone(milestoneId);
+      await load(projectId);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> approveMilestone(String milestoneId) async {
+    try {
+      await ref.read(deliveryRepositoryProvider).approveMilestone(milestoneId);
+      await load(projectId);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> rejectMilestone(String milestoneId, String reason) async {
     try {
       await ref
           .read(deliveryRepositoryProvider)
-          .submitDelivery(milestoneId, description);
+          .rejectMilestone(milestoneId, reason);
       await load(projectId);
       return true;
     } catch (_) {
@@ -62,13 +100,16 @@ class DeliverMilestoneViewModel extends Notifier<DeliverMilestoneState> {
 
   Future<void> submit({
     required String milestoneId,
-    required String description,
+    required List<String> deliveredFiles,
+    String? deliveryNotes,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await ref
-          .read(deliveryRepositoryProvider)
-          .submitDelivery(milestoneId, description);
+      await ref.read(deliveryRepositoryProvider).submitDelivery(
+            milestoneId,
+            deliveredFiles: deliveredFiles,
+            deliveryNotes: deliveryNotes,
+          );
       state = state.copyWith(isLoading: false, success: true);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

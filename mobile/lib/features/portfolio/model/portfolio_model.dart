@@ -117,6 +117,7 @@ class ReviewModel {
 class PortfolioModel {
   final String id;
   final String specialistId;
+  final String name;
   final String bio;
   final List<String> skills;
   final double rating;
@@ -128,6 +129,7 @@ class PortfolioModel {
   const PortfolioModel({
     required this.id,
     required this.specialistId,
+    required this.name,
     required this.bio,
     required this.skills,
     required this.rating,
@@ -140,6 +142,7 @@ class PortfolioModel {
   factory PortfolioModel.fromJson(Map<String, dynamic> json) => PortfolioModel(
         id: json['id'] as String? ?? '',
         specialistId: json['specialistId'] as String? ?? '',
+        name: json['name'] as String? ?? 'Especialista',
         bio: json['bio'] as String? ?? '',
         skills: (json['skills'] as List<dynamic>?)
                 ?.map((e) => e as String)

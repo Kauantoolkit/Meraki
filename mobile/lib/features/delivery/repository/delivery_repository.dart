@@ -18,14 +18,33 @@ class DeliveryRepository {
   }
 
   Future<DeliveryModel> submitDelivery(
-    String milestoneId,
-    String description,
-  ) async {
+    String milestoneId, {
+    required List<String> deliveredFiles,
+    String? deliveryNotes,
+  }) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       '/milestones/$milestoneId/submit',
-      data: {'description': description},
+      data: {
+        'deliveredFiles': deliveredFiles,
+        if (deliveryNotes != null && deliveryNotes.isNotEmpty)
+          'deliveryNotes': deliveryNotes,
+      },
     );
     return DeliveryModel.fromJson(response.data!);
+  }
+
+  Future<void> startMilestone(String milestoneId) async {
+    await _apiClient.put('/milestones/$milestoneId/start');
+  }
+
+  Future<void> approveMilestone(String milestoneId) async {
+    await _apiClient.put('/milestones/$milestoneId/approve');
+  }
+
+  Future<void> rejectMilestone(String milestoneId, String reason) async {
+    await _apiClient.put('/milestones/$milestoneId/reject', data: {
+      'reason': reason,
+    });
   }
 
   Future<List<ProjectHistoryModel>> getProjectHistory(String projectId) async {

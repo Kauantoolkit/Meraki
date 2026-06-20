@@ -3,6 +3,7 @@
 
 export const projectStatusLabel: Record<string, string> = {
   OPEN: 'Aberto',
+  SIGNING: 'Aguardando Assinatura',
   IN_PROGRESS: 'Em Andamento',
   COMPLETED: 'Concluído',
   CANCELLED: 'Cancelado',
