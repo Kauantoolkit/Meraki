@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Star, Briefcase, User, Award, ChevronRight, ExternalLink, GitBranch, ArrowLeft } from 'lucide-react'
+import { Star, Briefcase, User, Award, ExternalLink, GitBranch, ArrowLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile, WorkHistoryItem, Review } from '../api/portfolio'
 
@@ -111,12 +111,6 @@ export default function PerfilEspecialista() {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => navigate('/projects/new')}
-                  className="w-full btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs py-3 border border-brand-500 transition-colors uppercase tracking-widest flex items-center justify-center gap-2 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]"
-                >
-                  <ChevronRight className="w-4 h-4" /> Iniciar Projeto
-                </button>
               </div>
 
               {/* Stack */}

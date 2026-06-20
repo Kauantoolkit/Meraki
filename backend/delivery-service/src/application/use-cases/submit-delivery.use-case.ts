@@ -1,5 +1,5 @@
 import { Injectable, ConflictException } from '@nestjs/common';
-import { DeliveryStatus } from '../../domain/entities/delivery.entity';
+import { Delivery, DeliveryStatus } from '../../domain/entities/delivery.entity';
 import { DeliveryFactory, CreateDeliveryData } from '../../domain/factories/delivery.factory';
 import { DeliveryRepository } from '../../infrastructure/repositories/delivery.repository';
 import { HistoryRepository } from '../../infrastructure/repositories/history.repository';
@@ -33,16 +33,27 @@ export class SubmitDeliveryUseCase {
       throw new ConflictException('Já existe uma entrega pendente de revisão para este milestone');
     }
 
-    const deliveryData: CreateDeliveryData = {
-      milestoneId: dto.milestoneId,
-      projectId: dto.projectId,
-      specialistId,
-      deliveryNotes: dto.deliveryNotes,
-      deliveredFiles: dto.deliveredFiles,
-    };
+    // Resubmissão: se existe uma entrega REJECTED, atualiza ela em vez de criar nova
+    const rejected = await this.deliveryRepo.findByMilestoneAndStatus(
+      dto.milestoneId,
+      DeliveryStatus.REJECTED,
+    );
 
-    const delivery = this.deliveryFactory.create(deliveryData);
-    const saved = await this.deliveryRepo.save(delivery);
+    let saved: Delivery;
+    if (rejected) {
+      rejected.submit(dto.deliveredFiles ?? [], dto.deliveryNotes);
+      saved = await this.deliveryRepo.save(rejected);
+    } else {
+      const deliveryData: CreateDeliveryData = {
+        milestoneId: dto.milestoneId,
+        projectId: dto.projectId,
+        specialistId,
+        deliveryNotes: dto.deliveryNotes,
+        deliveredFiles: dto.deliveredFiles,
+      };
+      const delivery = this.deliveryFactory.create(deliveryData);
+      saved = await this.deliveryRepo.save(delivery);
+    }
 
     // RN07: registrar histórico automaticamente
     const history = await this.historyRepo.save({
