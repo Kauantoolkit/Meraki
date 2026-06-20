@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { PortfolioService } from './portfolio.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -77,6 +77,31 @@ export class PortfolioController {
   @ApiOperation({ summary: 'Perfil público da empresa (RF13)' })
   getCompanyProfile(@Param('companyId') companyId: string, @Req() req: Request) {
     return this.portfolioService.getCompanyProfile(companyId, this.token(req));
+  }
+}
+
+@ApiTags('Certifications')
+@Controller('certifications')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
+export class CertificationsController {
+  constructor(private readonly portfolioService: PortfolioService) {}
+
+  private token(req: Request): string {
+    return req.headers.authorization?.split(' ')[1];
+  }
+
+  @Get('specialist/:specialistId')
+  @ApiOperation({ summary: 'Listar certificações do especialista' })
+  listCertifications(@Param('specialistId') specialistId: string, @Req() req: Request) {
+    return this.portfolioService.listCertifications(specialistId, this.token(req));
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Remover certificação' })
+  deleteCertification(@Param('id') id: string, @Req() req: Request) {
+    return this.portfolioService.deleteCertification(id, this.token(req));
   }
 }
 

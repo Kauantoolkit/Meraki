@@ -30,6 +30,14 @@ export class PortfolioService {
     return this.proxy.post(`${PORTFOLIO_URL}/api/portfolio/me/certifications`, dto, this.proxy.authHeaders(token));
   }
 
+  listCertifications(specialistId: string, token: string) {
+    return this.proxy.get(`${PORTFOLIO_URL}/api/certifications/specialist/${specialistId}`, this.proxy.authHeaders(token));
+  }
+
+  deleteCertification(id: string, token: string) {
+    return this.proxy.delete(`${PORTFOLIO_URL}/api/certifications/${id}`, this.proxy.authHeaders(token));
+  }
+
   listSpecialists(token: string) {
     return this.proxy.get(`${PORTFOLIO_URL}/api/profiles/specialists`, this.proxy.authHeaders(token));
   }
