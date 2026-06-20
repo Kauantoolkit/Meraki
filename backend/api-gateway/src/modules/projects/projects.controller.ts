@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Put, Delete,
+  Controller, Get, Post, Put, Patch, Delete,
   Body, Param, Query, UseGuards, Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -75,5 +75,13 @@ export class ProjectsController {
   @ApiOperation({ summary: 'Concluir projeto — valida todas as milestones APPROVED' })
   complete(@Param('id') id: string, @Req() req: Request) {
     return this.projectsService.complete(id, this.token(req));
+  }
+
+  @Patch(':id/sign-contract')
+  @ApiOperation({ summary: 'Firmar contrato do projeto (empresa ou especialista)' })
+  signContract(@Param('id') id: string, @Body() body: any, @Req() req: Request) {
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.ip;
+    const userAgent = req.headers['user-agent'] || 'unknown';
+    return this.projectsService.signContract(id, body, this.token(req), ip, userAgent);
   }
 }

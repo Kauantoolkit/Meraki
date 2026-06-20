@@ -13,7 +13,11 @@ export class Project {
 
   contractHash: string | null = null;
   specialistSignedAt: Date | null = null;
+  specialistSignedIp: string | null = null;
+  specialistSignedUserAgent: string | null = null;
   companySignedAt: Date | null = null;
+  companySignedIp: string | null = null;
+  companySignedUserAgent: string | null = null;
 
   /** FK para Identity Context — referência externa */
   companyId: string;

@@ -12,7 +12,7 @@ import { uploadAvatar } from '../lib/sanity'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
-const STATUS_FILTERS = ['ALL', 'OPEN', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
+const STATUS_FILTERS = ['ALL', 'OPEN', 'SIGNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
 
 export default function DashboardEmpresa() {
   const navigate = useNavigate()
@@ -256,6 +256,7 @@ export default function DashboardEmpresa() {
                 project={p}
                 onViewBids={() => navigate(`/projects/${p.id}/bids`)}
                 onOpenKanban={() => navigate(`/kanban/${p.id}`)}
+                onSignContract={() => navigate(`/contract/${p.id}`)}
                 onCancel={() => { setCancelTarget(p); setCancelError('') }}
                 onEdit={() => setEditTarget(p)}
                 onComplete={() => handleComplete(p.id)}
@@ -480,26 +481,30 @@ function EditProjectModal({ project, onClose, onSave }: {
   )
 }
 
-function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit, onComplete, completing }: {
+function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onCancel, onEdit, onComplete, completing }: {
   project: Project
   onViewBids: () => void
   onOpenKanban: () => void
+  onSignContract: () => void
   onCancel: () => void
   onEdit: () => void
   onComplete: () => void
   completing: boolean
 }) {
   const isOpen      = p.status === 'OPEN'
+  const isSigning   = p.status === 'SIGNING'
   const isCancelled = p.status === 'CANCELLED'
-  const canCancel   = p.status === 'OPEN' || p.status === 'IN_PROGRESS'
+  const canCancel   = p.status === 'OPEN' || p.status === 'SIGNING' || p.status === 'IN_PROGRESS'
 
   const statusColor = isCancelled
     ? 'text-red-400 border-red-400/30 bg-red-400/10'
-    : isOpen
-      ? 'text-blue-400 border-blue-400/30 bg-blue-400/10'
-      : p.status === 'COMPLETED'
-        ? 'text-zinc-400 border-zinc-400/30 bg-zinc-400/10'
-        : 'text-brand-500 border-brand-500/30 bg-brand-500/10'
+    : isSigning
+      ? 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10'
+      : isOpen
+        ? 'text-blue-400 border-blue-400/30 bg-blue-400/10'
+        : p.status === 'COMPLETED'
+          ? 'text-zinc-400 border-zinc-400/30 bg-zinc-400/10'
+          : 'text-brand-500 border-brand-500/30 bg-brand-500/10'
 
   return (
     <div className={`bg-dark-card border p-6 transition-colors relative group flex flex-col shadow-[inset_0px_0px_20px_rgba(85,202,124,0.02)] ${
@@ -571,6 +576,19 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onCancel, onEdit, o
               className="btn-sharp bg-brand-500 text-dark-bg hover:bg-brand-400 font-mono font-bold text-xs px-4 py-2 border border-brand-500 transition-colors"
             >
               VER_PROPOSTAS()
+            </button>
+          </div>
+        ) : isSigning ? (
+          <div className="flex items-center justify-between border-t border-dark-border pt-4 mt-2">
+            <div>
+              <p className="font-mono text-[10px] text-zinc-500 uppercase">Especialista selecionado</p>
+              <p className="font-mono text-xs text-white">{p.specialistId?.slice(0, 8) ?? 'N/A'}</p>
+            </div>
+            <button
+              onClick={onSignContract}
+              className="btn-sharp bg-yellow-500 text-dark-bg hover:bg-yellow-400 font-mono font-bold text-xs px-4 py-2 border border-yellow-500 transition-colors"
+            >
+              ASSINAR_CONTRATO()
             </button>
           </div>
         ) : p.status === 'IN_PROGRESS' ? (

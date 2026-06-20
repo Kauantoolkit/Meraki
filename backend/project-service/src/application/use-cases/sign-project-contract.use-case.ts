@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common';
 import { IProjectRepository, PROJECT_REPOSITORY } from '../../domain/repositories/project.repository.interface';
 import { ProjectStatus } from '../../domain/enums/project-status.enum';
 import { SignContractDto } from '../dto/sign-contract.dto';
@@ -18,17 +18,29 @@ export class SignProjectContractUseCase {
     }
 
     if (project.status !== ProjectStatus.SIGNING) {
-      throw new Error('O projeto deve estar no status SIGNING para que o contrato seja firmado');
+      throw new BadRequestException('O projeto deve estar no status SIGNING para que o contrato seja firmado');
     }
 
     project.contractHash = dto.contractHash;
+    const now = new Date();
 
     if (dto.role === SignerRole.SPECIALIST) {
-      project.specialistSignedAt = new Date();
+      if (project.specialistSignedAt) {
+        throw new BadRequestException('O especialista já assinou este contrato');
+      }
+      project.specialistSignedAt = now;
+      project.specialistSignedIp = dto.ipAddress ?? null;
+      project.specialistSignedUserAgent = dto.userAgent ?? null;
     } else if (dto.role === SignerRole.COMPANY) {
-      project.companySignedAt = new Date();
+      if (project.companySignedAt) {
+        throw new BadRequestException('A empresa já assinou este contrato');
+      }
+      project.companySignedAt = now;
+      project.companySignedIp = dto.ipAddress ?? null;
+      project.companySignedUserAgent = dto.userAgent ?? null;
     }
 
+    // Ambas as partes assinaram — projeto entra em andamento
     if (project.specialistSignedAt && project.companySignedAt) {
       project.status = ProjectStatus.IN_PROGRESS;
     }

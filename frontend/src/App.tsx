@@ -17,6 +17,7 @@ import PerfilEspecialista from './pages/PerfilEspecialista'
 import AvaliarPropostas from './pages/AvaliarPropostas'
 import BuscarProjetos from './pages/BuscarProjetos'
 import GerenciarSkills from './pages/GerenciarSkills'
+import SignContract from './pages/SignContract'
 
 function DashboardRoute() {
   const { user } = useAuth()
@@ -47,6 +48,7 @@ function AppRoutes() {
       <Route path="/projects/new" element={<ProtectedRoute><CreateProject /></ProtectedRoute>} />
       <Route path="/bidding/:projectId" element={<ProtectedRoute><Bidding /></ProtectedRoute>} />
       <Route path="/projects/:projectId/bids" element={<ProtectedRoute><AvaliarPropostas /></ProtectedRoute>} />
+      <Route path="/contract/:projectId" element={<ProtectedRoute><SignContract /></ProtectedRoute>} />
       <Route path="/kanban/:projectId?" element={<ProtectedRoute><Kanban /></ProtectedRoute>} />
       <Route path="/financial" element={<ProtectedRoute><Financeiro /></ProtectedRoute>} />
       <Route path="/earnings" element={<ProtectedRoute><GanhosEspecialista /></ProtectedRoute>} />
