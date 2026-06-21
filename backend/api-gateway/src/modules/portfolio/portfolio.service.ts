@@ -53,4 +53,8 @@ export class PortfolioService {
   listReviews(specialistId: string, token: string) {
     return this.proxy.get(`${PORTFOLIO_URL}/api/reviews/specialist/${specialistId}`, this.proxy.authHeaders(token));
   }
+
+  listCertifications(specialistId: string, token: string) {
+    return this.proxy.get(`${PORTFOLIO_URL}/api/certifications/specialist/${specialistId}`, this.proxy.authHeaders(token));
+  }
 }

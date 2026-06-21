@@ -38,6 +38,17 @@ export interface Review {
   createdAt: string
 }
 
+export interface Certification {
+  id: string
+  specialistId: string
+  name: string
+  issuer: string
+  issueDate?: string
+  expiryDate?: string
+  credentialId?: string
+  credentialUrl?: string
+}
+
 export const portfolioApi = {
   getMyProfile: () => api.get<PublicProfile>('/portfolio/me'),
   updateProfile: (data: { bio?: string; skills?: string[]; links?: ProfileLink[]; avatarUrl?: string }) => api.patch<PublicProfile>('/portfolio/me', data),
@@ -45,6 +56,7 @@ export const portfolioApi = {
   getPublicProfile: (specialistId: string) => api.get<PublicProfile>(`/portfolio/specialist/${specialistId}`),
   getCompanyProfile: (companyId: string) => api.get<PublicProfile>(`/portfolio/company/${companyId}`),
   listReviews: (specialistId: string) => api.get<Review[]>(`/reviews/specialist/${specialistId}`),
+  listCertifications: (specialistId: string) => api.get<Certification[]>(`/certifications/specialist/${specialistId}`),
   createReview: (data: { specialistId: string; projectId: string; reviewerId: string; rating: number; comment: string }) =>
     api.post<Review>('/reviews', data),
   listSpecialists: (search?: string, skills?: string) => {
