@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, ChevronDown, ChevronUp, X, BookOpen, Pencil, Trash2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
@@ -222,13 +222,67 @@ function CreateSkillModal({ onClose, onCreated }: {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
+  // Autocomplete state
+  const [suggestions, setSuggestions] = useState<Skill[]>([])
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedExistingSkill, setSelectedExistingSkill] = useState<Skill | null>(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null!)
+
+  const handleNameChange = useCallback((value: string) => {
+    setDisplayName(value)
+    setSelectedExistingSkill(null)
+
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    if (value.trim().length < 2) {
+      setSuggestions([])
+      setShowSuggestions(false)
+      return
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setSearchLoading(true)
+      try {
+        const res = await skillsApi.search(value.trim())
+        setSuggestions(res.data)
+        setShowSuggestions(res.data.length > 0)
+      } catch {
+        setSuggestions([])
+        setShowSuggestions(false)
+      } finally {
+        setSearchLoading(false)
+      }
+    }, 300)
+  }, [])
+
+  function selectExistingSkill(skill: Skill) {
+    setSelectedExistingSkill(skill)
+    setDisplayName(skill.displayName)
+    setShowSuggestions(false)
+    setSuggestions([])
+    setQuestions([emptyQuestion()])
+  }
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowSuggestions(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
   function addQuestion() {
     if (questions.length >= 20) return
     setQuestions(prev => [...prev, emptyQuestion()])
   }
 
   function removeQuestion(i: number) {
-    if (questions.length <= 10) return
+    if (questions.length <= (selectedExistingSkill ? 1 : 10)) return
     setQuestions(prev => prev.filter((_, idx) => idx !== i))
   }
 
@@ -247,7 +301,8 @@ function CreateSkillModal({ onClose, onCreated }: {
 
   async function handleSave() {
     if (!displayName.trim()) { setError('Nome da skill é obrigatório.'); return }
-    if (questions.length < 10) { setError('Mínimo de 10 questões.'); return }
+    const minQuestions = selectedExistingSkill ? 1 : 10
+    if (questions.length < minQuestions) { setError(`Mínimo de ${minQuestions} questão(ões).`); return }
     for (const q of questions) {
       if (!q.text.trim()) { setError('Todas as questões devem ter enunciado.'); return }
       if (q.options.some(o => !o.trim())) { setError('Todas as opções devem ser preenchidas.'); return }
@@ -260,8 +315,15 @@ function CreateSkillModal({ onClose, onCreated }: {
         options: q.options.map(o => o.trim()),
         correctIndex: q.correctIndex,
       }))
-      const res = await skillsApi.create({ displayName: displayName.trim(), questions: dto })
-      onCreated(res.data)
+
+      if (selectedExistingSkill) {
+        // Add questions to existing skill
+        await skillsApi.addQuestions(selectedExistingSkill.id, dto)
+        onCreated(selectedExistingSkill)
+      } else {
+        const res = await skillsApi.create({ displayName: displayName.trim(), questions: dto })
+        onCreated(res.data)
+      }
     } catch (err) {
       setError(extractApiError(err, 'Erro ao criar skill.'))
       setSaving(false)
@@ -269,10 +331,10 @@ function CreateSkillModal({ onClose, onCreated }: {
   }
 
   return <QuestionFormModal
-    title="Criar Nova Skill"
+    title={selectedExistingSkill ? `Adicionar Questões — ${selectedExistingSkill.displayName}` : 'Criar Nova Skill'}
     showNameField
     displayName={displayName}
-    onDisplayNameChange={setDisplayName}
+    onDisplayNameChange={handleNameChange}
     questions={questions}
     onAddQuestion={addQuestion}
     onRemoveQuestion={removeQuestion}
@@ -282,7 +344,16 @@ function CreateSkillModal({ onClose, onCreated }: {
     onClose={onClose}
     saving={saving}
     error={error}
-    saveLabel="Criar Skill"
+    saveLabel={selectedExistingSkill ? 'Adicionar Questões' : 'Criar Skill'}
+    autocomplete={{
+      suggestions,
+      showSuggestions,
+      searchLoading,
+      selectedExistingSkill,
+      onSelect: selectExistingSkill,
+      onClearSelection: () => { setSelectedExistingSkill(null); setDisplayName(''); setQuestions(Array.from({ length: 10 }, emptyQuestion)) },
+      dropdownRef,
+    }}
   />
 }
 
@@ -359,6 +430,16 @@ function AddQuestionsModal({ skillId, skillName, onClose, onAdded }: {
 
 // ─── QuestionFormModal (shared UI) ───────────────────────────────────────────
 
+interface AutocompleteProps {
+  suggestions: Skill[]
+  showSuggestions: boolean
+  searchLoading: boolean
+  selectedExistingSkill: Skill | null
+  onSelect: (skill: Skill) => void
+  onClearSelection: () => void
+  dropdownRef: React.RefObject<HTMLDivElement>
+}
+
 interface QuestionFormModalProps {
   title: string
   showNameField?: boolean
@@ -374,12 +455,13 @@ interface QuestionFormModalProps {
   saving: boolean
   error: string
   saveLabel: string
+  autocomplete?: AutocompleteProps
 }
 
 function QuestionFormModal({
   title, showNameField, displayName, onDisplayNameChange,
   questions, onAddQuestion, onRemoveQuestion, onUpdateQuestion, onUpdateOption,
-  onSave, onClose, saving, error, saveLabel,
+  onSave, onClose, saving, error, saveLabel, autocomplete,
 }: QuestionFormModalProps) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -397,11 +479,61 @@ function QuestionFormModal({
           {showNameField && (
             <div className="space-y-2">
               <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Nome da Skill</label>
-              <input
-                type="text" maxLength={50} value={displayName} onChange={e => onDisplayNameChange?.(e.target.value)}
-                placeholder="Ex: React, Spring Boot, Flutter..."
-                className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
-              />
+              <div className="relative" ref={autocomplete?.dropdownRef}>
+                {autocomplete?.selectedExistingSkill ? (
+                  <div className="flex items-center gap-2 w-full px-4 py-3 bg-brand-500/10 border border-brand-500 text-sm font-mono text-white">
+                    <span className="flex-1">{autocomplete.selectedExistingSkill.displayName}</span>
+                    <span className="text-[10px] text-brand-400 border border-brand-500/40 px-2 py-0.5">EXISTENTE</span>
+                    <button
+                      type="button"
+                      onClick={autocomplete.onClearSelection}
+                      className="text-zinc-400 hover:text-white ml-1"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <input
+                    type="text" maxLength={50} value={displayName} onChange={e => onDisplayNameChange?.(e.target.value)}
+                    placeholder="Ex: React, Spring Boot, Flutter..."
+                    className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+                  />
+                )}
+                {autocomplete?.searchLoading && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin" />
+                  </div>
+                )}
+                {autocomplete?.showSuggestions && autocomplete.suggestions.length > 0 && (
+                  <div className="absolute z-20 w-full mt-1 bg-dark-card border border-dark-border shadow-xl max-h-48 overflow-y-auto">
+                    <div className="px-3 py-1.5 border-b border-dark-border">
+                      <span className="font-mono text-[10px] text-zinc-500 uppercase">Skills existentes</span>
+                    </div>
+                    {autocomplete.suggestions.map(skill => (
+                      <button
+                        key={skill.id}
+                        type="button"
+                        onClick={() => autocomplete.onSelect(skill)}
+                        className="w-full text-left px-4 py-2.5 font-mono text-sm text-zinc-300 hover:bg-brand-500/10 hover:text-white transition-colors flex items-center gap-2 border-b border-dark-border last:border-b-0"
+                      >
+                        <div className="w-1.5 h-1.5 bg-brand-500 shrink-0" />
+                        <span>{skill.displayName}</span>
+                        <span className="text-[10px] text-zinc-600 ml-auto">{skill.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {autocomplete?.selectedExistingSkill && (
+                <p className="font-mono text-[10px] text-brand-400">
+                  Skill existente selecionada. As questoes abaixo serao adicionadas a ela.
+                </p>
+              )}
+              {!autocomplete?.selectedExistingSkill && (displayName ?? '').trim().length >= 2 && !autocomplete?.searchLoading && autocomplete?.suggestions.length === 0 && (
+                <p className="font-mono text-[10px] text-zinc-500">
+                  Nenhuma skill existente encontrada. Uma nova sera criada.
+                </p>
+              )}
             </div>
           )}
 

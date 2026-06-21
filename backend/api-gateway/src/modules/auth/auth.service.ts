@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
-import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL as string;
 
@@ -10,31 +7,31 @@ const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL as string;
 export class AuthService {
   constructor(private readonly proxy: HttpProxyService) {}
 
-  register(dto: RegisterDto) {
+  register(dto: Record<string, any>) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/register`, dto);
   }
 
-  login(dto: LoginDto) {
+  login(dto: Record<string, any>) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/login`, dto);
   }
 
-  refresh(dto: RefreshTokenDto) {
+  refresh(dto: Record<string, any>) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/refresh`, dto);
   }
 
-  logout(dto: RefreshTokenDto) {
+  logout(dto: Record<string, any>) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/logout`, dto);
   }
 
-  verifyEmail(dto: { token: string }) {
+  verifyEmail(dto: Record<string, any>) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/verify-email`, dto);
   }
 
-  forgotPassword(dto: { email: string }) {
+  forgotPassword(dto: Record<string, any>) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/forgot-password`, dto);
   }
 
-  resetPassword(dto: { token: string; newPassword: string }) {
+  resetPassword(dto: Record<string, any>) {
     return this.proxy.post(`${IDENTITY_URL}/api/auth/reset-password`, dto);
   }
 }

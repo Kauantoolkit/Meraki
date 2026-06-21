@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
-import { CreateProjectDto } from './dto/create-project.dto';
-import { UpdateProjectDto } from './dto/update-project.dto';
-import { CreateMilestoneDto } from './dto/create-milestone.dto';
-import { ListProjectsQueryDto } from './dto/list-projects-query.dto';
 
 const PROJECT_URL = process.env.PROJECT_SERVICE_URL as string;
 
@@ -11,11 +7,11 @@ const PROJECT_URL = process.env.PROJECT_SERVICE_URL as string;
 export class ProjectsService {
   constructor(private readonly proxy: HttpProxyService) {}
 
-  create(dto: CreateProjectDto, token: string) {
+  create(dto: Record<string, any>, token: string) {
     return this.proxy.post(`${PROJECT_URL}/api/projects`, dto, this.proxy.authHeaders(token));
   }
 
-  findAll(query: ListProjectsQueryDto, token: string) {
+  findAll(query: Record<string, any>, token: string) {
     const params = new URLSearchParams(query as Record<string, string>).toString();
     return this.proxy.get(`${PROJECT_URL}/api/projects?${params}`, this.proxy.authHeaders(token));
   }
@@ -24,7 +20,7 @@ export class ProjectsService {
     return this.proxy.get(`${PROJECT_URL}/api/projects/${id}`, this.proxy.authHeaders(token));
   }
 
-  update(id: string, dto: UpdateProjectDto, token: string) {
+  update(id: string, dto: Record<string, any>, token: string) {
     return this.proxy.put(`${PROJECT_URL}/api/projects/${id}`, dto, this.proxy.authHeaders(token));
   }
 
@@ -32,7 +28,7 @@ export class ProjectsService {
     return this.proxy.delete(`${PROJECT_URL}/api/projects/${id}`, this.proxy.authHeaders(token));
   }
 
-  createMilestone(projectId: string, dto: CreateMilestoneDto, token: string) {
+  createMilestone(projectId: string, dto: Record<string, any>, token: string) {
     return this.proxy.post(`${PROJECT_URL}/api/projects/${projectId}/milestones`, dto, this.proxy.authHeaders(token));
   }
 

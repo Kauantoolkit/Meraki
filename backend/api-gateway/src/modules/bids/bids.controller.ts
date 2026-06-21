@@ -5,9 +5,15 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
-import { SubmitBidDto } from './dto/submit-bid.dto';
-import { UpdateBidDto } from './dto/update-bid.dto';
 
+/**
+ * Gateway Bids Controller — proxy pass-through with ACL orchestration.
+ *
+ * Architecture decision (#89): The gateway does NOT validate domain DTOs.
+ * Bodies are forwarded as-is to the bidding-service, which owns the BC.
+ * The gateway only handles cross-BC orchestration (e.g., checking project
+ * ownership via the project-service before forwarding to bidding-service).
+ */
 @ApiTags('Bids')
 @Controller('bids')
 @ApiBearerAuth()
@@ -22,7 +28,7 @@ export class BidsController {
   @Post('project/:projectId')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Submeter proposta (especialista)' })
-  submit(@Param('projectId') projectId: string, @Body() body: SubmitBidDto, @Req() req: Request) {
+  submit(@Param('projectId') projectId: string, @Body() body: Record<string, any>, @Req() req: Request) {
     return this.bidsService.submit(projectId, body, this.token(req));
   }
 
@@ -49,7 +55,7 @@ export class BidsController {
   @Put(':id')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Atualizar proposta PENDING (especialista)' })
-  update(@Param('id') id: string, @Body() body: UpdateBidDto, @Req() req: Request) {
+  update(@Param('id') id: string, @Body() body: Record<string, any>, @Req() req: Request) {
     return this.bidsService.update(id, body, this.token(req));
   }
 

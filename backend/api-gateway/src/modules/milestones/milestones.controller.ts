@@ -5,11 +5,16 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Request } from 'express';
-import { SubmitDeliveryDto } from './dto/submit-delivery.dto';
-import { ApproveDeliveryDto } from './dto/approve-delivery.dto';
-import { RejectDeliveryDto } from './dto/reject-delivery.dto';
-import { AddCommentDto } from './dto/add-comment.dto';
 
+/**
+ * Gateway Milestones Controller — proxy with cross-service orchestration.
+ *
+ * Architecture decision (#89): The gateway does NOT validate domain DTOs.
+ * Bodies are forwarded as-is to downstream services (delivery-service,
+ * project-service, payment-service). Each service owns its own BC validation.
+ * The gateway retains orchestration logic (e.g., approve triggers payment
+ * release + delivery approve + milestone status update across 3 services).
+ */
 @ApiTags('Milestones / Deliveries')
 @Controller('milestones')
 @ApiBearerAuth()
@@ -31,21 +36,21 @@ export class MilestonesController {
   @Post(':id/submit')
   @Roles('SPECIALIST')
   @ApiOperation({ summary: 'Submeter entrega de milestone (especialista)' })
-  submitDelivery(@Param('id') id: string, @Body() body: SubmitDeliveryDto, @Req() req: Request) {
+  submitDelivery(@Param('id') id: string, @Body() body: Record<string, any>, @Req() req: Request) {
     return this.milestonesService.submitDelivery(id, body, this.token(req));
   }
 
   @Put(':id/approve')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Aprovar entrega do milestone (empresa)' })
-  approveDelivery(@Param('id') id: string, @Body() body: ApproveDeliveryDto, @Req() req: Request) {
+  approveDelivery(@Param('id') id: string, @Body() body: Record<string, any>, @Req() req: Request) {
     return this.milestonesService.approveDelivery(id, body.amount, this.token(req));
   }
 
   @Put(':id/reject')
   @Roles('COMPANY')
   @ApiOperation({ summary: 'Rejeitar entrega do milestone (empresa)' })
-  rejectDelivery(@Param('id') id: string, @Body() body: RejectDeliveryDto, @Req() req: Request) {
+  rejectDelivery(@Param('id') id: string, @Body() body: Record<string, any>, @Req() req: Request) {
     return this.milestonesService.rejectDelivery(id, body.reason, this.token(req));
   }
 
@@ -57,7 +62,7 @@ export class MilestonesController {
 
   @Post(':id/comments')
   @ApiOperation({ summary: 'Adicionar comentário ao milestone' })
-  addComment(@Param('id') id: string, @Body() body: AddCommentDto, @Req() req: Request) {
+  addComment(@Param('id') id: string, @Body() body: Record<string, any>, @Req() req: Request) {
     return this.milestonesService.addComment(id, body.comment, this.token(req));
   }
 

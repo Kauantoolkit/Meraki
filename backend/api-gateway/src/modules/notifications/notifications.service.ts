@@ -7,15 +7,15 @@ const MESSAGING_URL = process.env.MESSAGING_SERVICE_URL as string;
 export class NotificationsService {
   constructor(private readonly proxy: HttpProxyService) {}
 
-  list(userId: string) {
-    return this.proxy.get(`${MESSAGING_URL}/api/notifications?userId=${userId}`);
+  list(userIds: string[]) {
+    return this.proxy.get(`${MESSAGING_URL}/api/notifications?userIds=${userIds.join(',')}`);
   }
 
-  markAsRead(id: string, userId: string) {
-    return this.proxy.patch(`${MESSAGING_URL}/api/notifications/${id}/read?userId=${userId}`, {});
+  markAsRead(id: string, userIds: string[]) {
+    return this.proxy.patch(`${MESSAGING_URL}/api/notifications/${id}/read?userIds=${userIds.join(',')}`, {});
   }
 
-  markAllAsRead(userId: string) {
-    return this.proxy.patch(`${MESSAGING_URL}/api/notifications/read-all?userId=${userId}`, {});
+  markAllAsRead(userIds: string[]) {
+    return this.proxy.patch(`${MESSAGING_URL}/api/notifications/read-all?userIds=${userIds.join(',')}`, {});
   }
 }

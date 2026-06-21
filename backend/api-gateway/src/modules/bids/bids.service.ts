@@ -1,7 +1,5 @@
 import { Injectable, ForbiddenException, UnprocessableEntityException } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
-import { SubmitBidDto } from './dto/submit-bid.dto';
-import { UpdateBidDto } from './dto/update-bid.dto';
 
 const BIDDING_URL    = process.env.BIDDING_SERVICE_URL    as string;
 const PROJECT_URL    = process.env.PROJECT_SERVICE_URL    as string;
@@ -12,7 +10,7 @@ const PORTFOLIO_URL  = process.env.PORTFOLIO_SERVICE_URL  as string;
 export class BidsService {
   constructor(private readonly proxy: HttpProxyService) {}
 
-  async submit(projectId: string, dto: SubmitBidDto, token: string) {
+  async submit(projectId: string, dto: Record<string, any>, token: string) {
     // ACL: verifica se o projeto está OPEN antes de encaminhar ao bidding-service
     const project = await this.proxy.get<any>(
       `${PROJECT_URL}/api/projects/${projectId}`,
@@ -81,7 +79,7 @@ export class BidsService {
     return this.proxy.put(`${BIDDING_URL}/api/bids/${bidId}/reject`, {}, this.proxy.authHeaders(token));
   }
 
-  update(bidId: string, dto: UpdateBidDto, token: string) {
+  update(bidId: string, dto: Record<string, any>, token: string) {
     return this.proxy.put(`${BIDDING_URL}/api/bids/${bidId}`, dto, this.proxy.authHeaders(token));
   }
 

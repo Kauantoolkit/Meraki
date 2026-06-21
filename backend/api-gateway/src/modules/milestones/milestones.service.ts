@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
-import { SubmitDeliveryDto } from './dto/submit-delivery.dto';
 
 const DELIVERY_URL = process.env.DELIVERY_SERVICE_URL as string;
 const PROJECT_URL = process.env.PROJECT_SERVICE_URL as string;
@@ -14,7 +13,7 @@ export class MilestonesService {
     return this.proxy.put(`${PROJECT_URL}/api/projects/milestones/${milestoneId}/start`, {}, this.proxy.authHeaders(token));
   }
 
-  async submitDelivery(milestoneId: string, dto: SubmitDeliveryDto, token: string) {
+  async submitDelivery(milestoneId: string, dto: Record<string, any>, token: string) {
     const result = await this.proxy.post(`${DELIVERY_URL}/api/deliveries`, { ...dto, milestoneId }, this.proxy.authHeaders(token));
     await this.proxy.put(`${PROJECT_URL}/api/projects/milestones/${milestoneId}/submit`, {}, this.proxy.authHeaders(token)).catch(() => {});
     return result;

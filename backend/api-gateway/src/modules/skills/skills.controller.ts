@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -29,6 +30,12 @@ export class SkillsController {
   @ApiOperation({ summary: 'Listar catálogo de skills (público)' })
   listSkills() {
     return this.skillsService.listSkills();
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Buscar skills por nome (autocomplete)' })
+  searchSkills(@Query('q') q: string) {
+    return this.skillsService.searchSkills(q);
   }
 
   // IMPORTANT: declared before /:skillId routes to avoid conflict

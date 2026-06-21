@@ -26,6 +26,7 @@ export interface ISkillRepository {
   findAll(): Promise<Skill[]>;
   findById(id: string): Promise<Skill | null>;
   findByName(name: string): Promise<Skill | null>;
+  searchByName(search: string): Promise<Skill[]>;
   createSkill(data: CreateSkillData, questions: CreateQuestionData[]): Promise<Skill>;
   addQuestions(skillId: string, questions: CreateQuestionData[]): Promise<void>;
   getQuestionsBySkillId(skillId: string): Promise<SkillQuestion[]>;

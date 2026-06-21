@@ -40,6 +40,8 @@ export interface CreateQuestionDto {
 export const skillsApi = {
   getAll: () => api.get<Skill[]>('/skills'),
 
+  search: (q: string) => api.get<Skill[]>(`/skills/search?q=${encodeURIComponent(q)}`),
+
   create: (data: { displayName: string; questions: CreateQuestionDto[] }) =>
     api.post<Skill>('/skills', data),
 

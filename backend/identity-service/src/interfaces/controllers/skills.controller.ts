@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   ParseUUIDPipe,
   BadRequestException,
@@ -52,6 +53,13 @@ export class SkillsController {
   @ApiOperation({ summary: 'Listar todas as skills do catálogo' })
   listSkills() {
     return this.getSkillsUseCase.execute();
+  }
+
+  @Get('search')
+  @ApiOperation({ summary: 'Buscar skills por nome (autocomplete)' })
+  searchSkills(@Query('q') q: string) {
+    if (!q || q.trim().length === 0) return [];
+    return this.skillRepo.searchByName(q.trim());
   }
 
   // IMPORTANT: this must be declared BEFORE /:skillId/... routes

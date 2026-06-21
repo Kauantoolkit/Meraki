@@ -2,6 +2,9 @@ import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { RabbitMQConfigService } from '../rabbitmq-config.service';
 import { NotificationRepository } from '../../repositories/notification.repository';
 
+const PROJECT_SERVICE_URL = process.env.PROJECT_SERVICE_URL || 'http://project-service:3002';
+const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY || 'meraki-internal-key';
+
 @Injectable()
 export class NotificationConsumer implements OnModuleInit {
   private readonly logger = new Logger(NotificationConsumer.name);
@@ -10,6 +13,27 @@ export class NotificationConsumer implements OnModuleInit {
     private readonly rabbitmq: RabbitMQConfigService,
     private readonly notificationRepo: NotificationRepository,
   ) {}
+
+  /**
+   * Busca o companyId do projeto via API interna do project-service.
+   */
+  private async fetchCompanyIdByProject(projectId: string): Promise<string | null> {
+    try {
+      const res = await fetch(
+        `${PROJECT_SERVICE_URL}/api/internal/projects/${projectId}`,
+        { headers: { 'X-API-Key': INTERNAL_API_KEY } },
+      );
+      if (!res.ok) {
+        this.logger.warn(`Falha ao buscar projeto ${projectId}: status ${res.status}`);
+        return null;
+      }
+      const project = await res.json();
+      return project.companyId ?? null;
+    } catch (err) {
+      this.logger.error(`Erro ao buscar companyId do projeto ${projectId}`, err);
+      return null;
+    }
+  }
 
   async onModuleInit() {
     // Empresa recebe: nova proposta, proposta retirada, entrega submetida
@@ -48,13 +72,14 @@ export class NotificationConsumer implements OnModuleInit {
 
   private async handleBidSubmitted(msg: any) {
     const { projectId, specialistId } = msg.payload ?? msg;
-    // Não temos companyId no evento bid.submitted — salvamos com projectId no metadata
-    // O frontend resolve via contexto do projeto
     this.logger.log(`bid.submitted: projeto ${projectId}`);
-    // Como não temos companyId direto, usamos o projectId como referência
-    // A notificação será buscada via API que consulta o project-service
+    const companyId = await this.fetchCompanyIdByProject(projectId);
+    if (!companyId) {
+      this.logger.warn(`bid.submitted: companyId não encontrado para projeto ${projectId}, notificação descartada`);
+      return;
+    }
     await this.notificationRepo.create({
-      userId: projectId, // placeholder — será resolvido pelo gateway
+      userId: companyId,
       type: 'bid.submitted',
       title: 'Nova proposta recebida',
       message: 'Um especialista enviou uma proposta para seu projeto.',
@@ -64,8 +89,13 @@ export class NotificationConsumer implements OnModuleInit {
 
   private async handleBidWithdrawn(msg: any) {
     const { projectId, specialistId } = msg.payload ?? msg;
+    const companyId = await this.fetchCompanyIdByProject(projectId);
+    if (!companyId) {
+      this.logger.warn(`bid.withdrawn: companyId não encontrado para projeto ${projectId}, notificação descartada`);
+      return;
+    }
     await this.notificationRepo.create({
-      userId: projectId,
+      userId: companyId,
       type: 'bid.withdrawn',
       title: 'Proposta retirada',
       message: 'Um especialista retirou sua proposta.',
@@ -75,8 +105,13 @@ export class NotificationConsumer implements OnModuleInit {
 
   private async handleDeliverySubmitted(msg: any) {
     const { projectId, milestoneId } = msg.payload ?? msg;
+    const companyId = await this.fetchCompanyIdByProject(projectId);
+    if (!companyId) {
+      this.logger.warn(`delivery.submitted: companyId não encontrado para projeto ${projectId}, notificação descartada`);
+      return;
+    }
     await this.notificationRepo.create({
-      userId: projectId,
+      userId: companyId,
       type: 'delivery.submitted',
       title: 'Entrega submetida',
       message: 'Uma milestone foi submetida para validação.',

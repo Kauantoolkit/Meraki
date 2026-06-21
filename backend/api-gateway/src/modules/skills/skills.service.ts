@@ -11,6 +11,10 @@ export class SkillsService {
     return this.proxy.get(`${IDENTITY_URL}/api/skills`);
   }
 
+  searchSkills(q: string) {
+    return this.proxy.get(`${IDENTITY_URL}/api/skills/search?q=${encodeURIComponent(q || '')}`);
+  }
+
   createSkill(dto: Record<string, unknown>, token: string) {
     return this.proxy.post(`${IDENTITY_URL}/api/skills`, dto, this.proxy.authHeaders(token));
   }

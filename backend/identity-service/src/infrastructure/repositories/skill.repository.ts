@@ -37,6 +37,15 @@ export class SkillRepository implements ISkillRepository {
     await this.questionRepo.update(id, { deletedAt: new Date() });
   }
 
+  async searchByName(search: string): Promise<Skill[]> {
+    return this.skillRepo
+      .createQueryBuilder('skill')
+      .where('skill.displayName ILIKE :search', { search: `%${search}%` })
+      .orderBy('skill.displayName', 'ASC')
+      .limit(10)
+      .getMany();
+  }
+
   findById(id: string): Promise<Skill | null> {
     return this.skillRepo.findOne({ where: { id } });
   }

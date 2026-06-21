@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { HttpProxyService } from '../../proxy/http-proxy.service';
-import { UpdatePortfolioProfileDto, UpdateCompanyProfileDto } from './dto/update-profile.dto';
-import { AddSkillDto } from './dto/add-skill.dto';
-import { AddCertificationDto } from './dto/add-certification.dto';
 
 const PORTFOLIO_URL = process.env.PORTFOLIO_SERVICE_URL as string;
 
@@ -14,19 +11,19 @@ export class PortfolioService {
     return this.proxy.get(`${PORTFOLIO_URL}/api/portfolio/me`, this.proxy.authHeaders(token));
   }
 
-  updateProfile(dto: UpdatePortfolioProfileDto, token: string) {
+  updateProfile(dto: Record<string, any>, token: string) {
     return this.proxy.patch(`${PORTFOLIO_URL}/api/portfolio/me`, dto, this.proxy.authHeaders(token));
   }
 
-  updateCompanyProfile(dto: UpdateCompanyProfileDto, token: string) {
+  updateCompanyProfile(dto: Record<string, any>, token: string) {
     return this.proxy.patch(`${PORTFOLIO_URL}/api/portfolio/me/company`, dto, this.proxy.authHeaders(token));
   }
 
-  addSkill(dto: AddSkillDto, token: string) {
+  addSkill(dto: Record<string, any>, token: string) {
     return this.proxy.post(`${PORTFOLIO_URL}/api/portfolio/me/skills`, dto, this.proxy.authHeaders(token));
   }
 
-  addCertification(dto: AddCertificationDto, token: string) {
+  addCertification(dto: Record<string, any>, token: string) {
     return this.proxy.post(`${PORTFOLIO_URL}/api/portfolio/me/certifications`, dto, this.proxy.authHeaders(token));
   }
 

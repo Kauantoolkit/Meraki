@@ -13,18 +13,28 @@ export class NotificationsController {
   @Get()
   @ApiOperation({ summary: 'Listar notificações do usuário autenticado' })
   list(@Req() req: any) {
-    return this.notificationsService.list(req.user.sub);
+    const userIds = this.collectUserIds(req.user);
+    return this.notificationsService.list(userIds);
   }
 
   @Patch(':id/read')
   @ApiOperation({ summary: 'Marcar notificação como lida' })
   markAsRead(@Param('id') id: string, @Req() req: any) {
-    return this.notificationsService.markAsRead(id, req.user.sub);
+    const userIds = this.collectUserIds(req.user);
+    return this.notificationsService.markAsRead(id, userIds);
   }
 
   @Patch('read-all')
   @ApiOperation({ summary: 'Marcar todas como lidas' })
   markAllAsRead(@Req() req: any) {
-    return this.notificationsService.markAllAsRead(req.user.sub);
+    const userIds = this.collectUserIds(req.user);
+    return this.notificationsService.markAllAsRead(userIds);
+  }
+
+  private collectUserIds(user: any): string[] {
+    const ids = [user.id];
+    if (user.companyId) ids.push(user.companyId);
+    if (user.specialistId) ids.push(user.specialistId);
+    return ids;
   }
 }
