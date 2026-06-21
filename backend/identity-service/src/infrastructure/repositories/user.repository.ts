@@ -34,6 +34,14 @@ export class UserRepository implements IUserRepository {
     return this.userRepo.findOne({ where: { email } });
   }
 
+  findByResetToken(token: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { passwordResetToken: token } });
+  }
+
+  findByVerificationToken(token: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { emailVerificationToken: token } });
+  }
+
   async create(data: Partial<User>): Promise<User> {
     const user = this.userRepo.create(data);
     return this.userRepo.save(user);
@@ -46,6 +54,10 @@ export class UserRepository implements IUserRepository {
 
   async softDelete(id: string): Promise<void> {
     await this.userRepo.softDelete(id);
+  }
+
+  async hardDelete(id: string): Promise<void> {
+    await this.userRepo.delete(id);
   }
 
   // ─── SpecialistProfile ────────────────────────────────────────────────────

@@ -1,23 +1,24 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsPositive, IsString, IsUrl, Max, Min } from 'class-validator';
+import { IsDateString, IsNotEmpty, IsOptional, IsString, IsUrl } from 'class-validator';
 
 export class AddCertificationDto {
   @ApiProperty({ example: 'AWS Solutions Architect' })
   @IsString()
-  name: string;
+  @IsNotEmpty()
+  title: string;
 
   @ApiProperty({ example: 'Amazon Web Services' })
   @IsString()
+  @IsNotEmpty()
   institution: string;
 
-  @ApiProperty({ example: 2024 })
-  @IsInt()
-  @Min(1990)
-  @Max(2100)
-  year: number;
+  @ApiPropertyOptional({ example: '2024-01-15' })
+  @IsOptional()
+  @IsDateString()
+  issuedAt?: string;
 
   @ApiPropertyOptional({ example: 'https://credly.com/badges/xyz' })
   @IsOptional()
   @IsUrl()
-  url?: string;
+  credentialUrl?: string;
 }

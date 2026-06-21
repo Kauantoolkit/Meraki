@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Star, Briefcase, User, Award, ExternalLink, GitBranch, ArrowLeft } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { portfolioApi, PublicProfile, WorkHistoryItem, Review } from '../api/portfolio'
+import { portfolioApi, PublicProfile, WorkHistoryItem, Review, Certification } from '../api/portfolio'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -23,6 +23,7 @@ export default function PerfilEspecialista() {
   const navigate = useNavigate()
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
+  const [certifications, setCertifications] = useState<Certification[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('history')
 
@@ -31,10 +32,12 @@ export default function PerfilEspecialista() {
     Promise.all([
       portfolioApi.getPublicProfile(id),
       portfolioApi.listReviews(id).catch(() => ({ data: [] as Review[] })),
+      portfolioApi.listCertifications(id).catch(() => ({ data: [] as Certification[] })),
     ])
-      .then(([pRes, rRes]) => {
+      .then(([pRes, rRes, cRes]) => {
         setProfile(pRes.data)
         setReviews(rRes.data)
+        setCertifications(cRes.data)
       })
       .finally(() => setLoading(false))
   }, [id])
@@ -121,31 +124,58 @@ export default function PerfilEspecialista() {
                     Stack Tecnológica
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
-                    {profile.skills.map(s => (
-                      <span key={s} className="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">
-                        {s}
-                      </span>
-                    ))}
+                    {profile.skills.map(s => {
+                      const badge = profile.skillBadges?.[s]
+                      const cls = badge === 'green'
+                        ? 'border-green-500 text-green-400'
+                        : badge === 'yellow'
+                        ? 'border-yellow-500 text-yellow-400'
+                        : 'border-zinc-700 text-zinc-300'
+                      return (
+                        <span key={s} className={`text-[10px] font-mono border bg-dark-input px-2 py-1 ${cls}`}>
+                          {s}
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
               )}
 
               {/* Credentials */}
-              <div className="bg-dark-card border border-dark-border p-5">
-                <h3 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
-                  <span className="w-1 h-4 bg-brand-500 inline-block" />
-                  Credenciais
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3 bg-dark-input border border-dark-border p-3">
-                    <Award className="w-4 h-4 text-brand-500 shrink-0" />
-                    <div>
-                      <p className="font-mono text-[10px] text-white font-bold">AWS Certified Solutions Architect</p>
-                      <p className="font-mono text-[9px] text-zinc-500">Amazon Web Services</p>
-                    </div>
+              {certifications.length > 0 && (
+                <div className="bg-dark-card border border-dark-border p-5">
+                  <h3 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
+                    <span className="w-1 h-4 bg-brand-500 inline-block" />
+                    Credenciais
+                  </h3>
+                  <div className="space-y-2">
+                    {certifications.map(cert => (
+                      <div key={cert.id} className="flex items-start gap-3 bg-dark-input border border-dark-border p-3">
+                        <Award className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="font-mono text-[10px] text-white font-bold truncate">{cert.name}</p>
+                          <p className="font-mono text-[9px] text-zinc-500">{cert.issuer}</p>
+                          {cert.issueDate && (
+                            <p className="font-mono text-[9px] text-zinc-600 mt-0.5">
+                              {new Date(cert.issueDate).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                          {cert.credentialUrl && safeHref(cert.credentialUrl) && (
+                            <a
+                              href={safeHref(cert.credentialUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-[9px] text-brand-500 hover:underline mt-0.5 block truncate"
+                            >
+                              Ver credencial
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right: Work History / Repos */}

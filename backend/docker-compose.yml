@@ -95,6 +95,22 @@ services:
       timeout: 5s
       retries: 5
 
+  # ─── MESSAGING SERVICE DB ───────────────────────────────────────────────────
+  messaging-db:
+    image: postgres:15-alpine
+    container_name: meraki-messaging-db
+    environment:
+      POSTGRES_DB: ${MESSAGING_DB_NAME:-messaging_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+    volumes:
+      - messaging-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-postgres}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # ─── RABBITMQ ──────────────────────────────────────────────────────────────
   rabbitmq:
     image: rabbitmq:3-management-alpine
@@ -120,6 +136,8 @@ services:
     container_name: meraki-identity-service
     ports:
       - '3001:3001'
+    env_file:
+      - ./identity-service/.env
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: 3001
@@ -132,6 +150,11 @@ services:
       JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:?RABBITMQ_USER não definido}:${RABBITMQ_PASS:?RABBITMQ_PASS não definido}@rabbitmq:5672
+      SMTP_HOST: ${SMTP_HOST:-live.smtp.mailtrap.io}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:?SMTP_USER não definido}
+      SMTP_PASS: ${SMTP_PASS:?SMTP_PASS não definido}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
     depends_on:
       identity-db:
         condition: service_healthy
@@ -153,6 +176,7 @@ services:
       DELIVERY_SERVICE_URL: http://delivery-service:3004
       PAYMENT_SERVICE_URL: http://payment-service:3005
       PORTFOLIO_SERVICE_URL: http://portfolio-service:3006
+      MESSAGING_SERVICE_URL: http://messaging-service:3007
     depends_on:
       - identity-service
 
@@ -265,6 +289,26 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  messaging-service:
+    build: ./messaging-service
+    container_name: meraki-messaging-service
+    ports:
+      - '3007:3007'
+    environment:
+      NODE_ENV: development
+      PORT: 3007
+      DB_HOST: messaging-db
+      DB_PORT: 5432
+      DB_NAME: ${MESSAGING_DB_NAME:-messaging_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASS: ${DB_PASS:-postgres}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+    depends_on:
+      messaging-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
 volumes:
   identity-db:
   project-db:
@@ -272,4 +316,5 @@ volumes:
   delivery-db:
   payment-db:
   portfolio-db:
+  messaging-db:
   rabbitmq:

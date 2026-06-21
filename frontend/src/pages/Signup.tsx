@@ -1,11 +1,9 @@
 import { useState, FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShieldCheck, User, Mail, Key, UserPlus, Building2, Braces } from 'lucide-react'
-import { useAuth } from '../contexts/AuthContext'
+import { ShieldCheck, User, Mail, Key, UserPlus, Building2, Braces, CheckCircle } from 'lucide-react'
 import { authApi } from '../api/auth'
 
 export default function Signup() {
-  const { login } = useAuth()
   const navigate = useNavigate()
   const [type, setType] = useState<'company' | 'specialist'>('company')
   const [name, setName] = useState('')
@@ -13,15 +11,15 @@ export default function Signup() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [registered, setRegistered] = useState(false)
 
   async function handleSignup(e: FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
     try {
-      const { token, user } = await authApi.register({ name, email, password, userType: type === 'company' ? 'COMPANY' : 'SPECIALIST', companyName: type === 'company' ? name : undefined })
-      login(token, user)
-      navigate('/dashboard')
+      await authApi.register({ name, email, password, userType: type === 'company' ? 'COMPANY' : 'SPECIALIST', companyName: type === 'company' ? name : undefined })
+      setRegistered(true)
     } catch {
       setError('Erro ao criar conta. Verifique os dados e tente novamente.')
     } finally {
@@ -47,6 +45,21 @@ export default function Signup() {
           <p className="text-xs text-zinc-500 mt-1 font-mono tracking-wider">SISTEMA.CADASTRO // INICIAR</p>
         </div>
 
+        {registered ? (
+          <div className="text-center space-y-4">
+            <CheckCircle className="w-12 h-12 text-brand-500 mx-auto" strokeWidth={1.5} />
+            <p className="text-sm text-zinc-300 font-mono">
+              Enviamos um email de verificação para <span className="text-brand-500">{email}</span>.
+            </p>
+            <p className="text-xs text-zinc-500 font-mono">Clique no link do email para ativar sua conta.</p>
+            <button
+              onClick={() => navigate('/login')}
+              className="btn-sharp w-full bg-brand-500 text-dark-bg font-bold uppercase tracking-widest py-3.5 hover:bg-brand-400 border border-brand-500 transition-colors duration-200 mt-4 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]"
+            >
+              Ir para o Login
+            </button>
+          </div>
+        ) : (<>
         {/* Type selector */}
         <div className="grid grid-cols-2 gap-4 mb-8">
           <button
@@ -123,6 +136,7 @@ export default function Signup() {
             RETORNAR AO LOGIN
           </button>
         </p>
+        </>)}
       </div>
     </div>
   )

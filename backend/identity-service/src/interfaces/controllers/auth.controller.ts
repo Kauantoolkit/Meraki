@@ -12,9 +12,14 @@ import { RegisterUserUseCase } from '../../application/use-cases/register-user.u
 import { AuthenticateUseCase } from '../../application/use-cases/authenticate.use-case';
 import { RefreshTokenUseCase } from '../../application/use-cases/refresh-token.use-case';
 import { LogoutUseCase } from '../../application/use-cases/logout.use-case';
+import { ForgotPasswordUseCase } from '../../application/use-cases/forgot-password.use-case';
+import { ResetPasswordUseCase } from '../../application/use-cases/reset-password.use-case';
+import { VerifyEmailUseCase } from '../../application/use-cases/verify-email.use-case';
 import { CreateUserDto } from '../../application/dto/create-user.dto';
 import { LoginDto } from '../../application/dto/login.dto';
 import { RefreshTokenDto } from '../../application/dto/refresh-token.dto';
+import { ForgotPasswordDto } from '../../application/dto/forgot-password.dto';
+import { ResetPasswordDto } from '../../application/dto/reset-password.dto';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -25,6 +30,9 @@ export class AuthController {
     private readonly authenticateUseCase: AuthenticateUseCase,
     private readonly refreshTokenUseCase: RefreshTokenUseCase,
     private readonly logoutUseCase: LogoutUseCase,
+    private readonly forgotPasswordUseCase: ForgotPasswordUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
+    private readonly verifyEmailUseCase: VerifyEmailUseCase,
   ) {}
 
   @Post('register')
@@ -78,5 +86,37 @@ export class AuthController {
   @ApiResponse({ status: 204, description: 'Refresh-token revogado (ou já estava)' })
   async logout(@Body() dto: RefreshTokenDto) {
     await this.logoutUseCase.execute(dto.refreshToken);
+  }
+
+  @Post('verify-email')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Verificar email usando token recebido após cadastro' })
+  @ApiResponse({ status: 200, description: 'Email verificado com sucesso' })
+  @ApiResponse({ status: 400, description: 'Token inválido' })
+  async verifyEmail(@Body() body: { token: string }) {
+    await this.verifyEmailUseCase.execute(body.token);
+    return { message: 'Email verificado com sucesso. Você já pode fazer login.' };
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Solicitar redefinição de senha — envia email com link' })
+  @ApiResponse({ status: 200, description: 'Se o email existir, um link será enviado' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    await this.forgotPasswordUseCase.execute(dto.email);
+    return { message: 'Se o email estiver cadastrado, você receberá um link de redefinição.' };
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60_000 } })
+  @ApiOperation({ summary: 'Redefinir senha usando token recebido por email' })
+  @ApiResponse({ status: 200, description: 'Senha redefinida com sucesso' })
+  @ApiResponse({ status: 400, description: 'Token inválido ou expirado' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    await this.resetPasswordUseCase.execute(dto.token, dto.newPassword);
+    return { message: 'Senha redefinida com sucesso.' };
   }
 }
