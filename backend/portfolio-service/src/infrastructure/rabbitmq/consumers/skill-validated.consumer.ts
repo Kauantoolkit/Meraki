@@ -22,7 +22,7 @@ export class SkillValidatedConsumer implements OnModuleInit {
         this.logger.log(`skill.validated: specialist=${specialistId} skill=${skillName} badge=${badge}`);
 
         try {
-          const profile = await this.profileRepo.findByUserId(specialistId);
+          const profile = await this.profileRepo.findByAnyId(specialistId);
           if (!profile) return;
 
           const badges = profile.skillBadges ?? {};

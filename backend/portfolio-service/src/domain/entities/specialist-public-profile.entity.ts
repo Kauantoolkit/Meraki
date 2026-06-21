@@ -10,6 +10,7 @@ export interface ProfileLink {
 export class SpecialistPublicProfile {
   id: string;
   userId: string;
+  identitySpecialistId: string; // SpecialistProfile.id do identity-service (usado em reviews/work_history)
   name: string;
   bio: string;
   skills: string[];

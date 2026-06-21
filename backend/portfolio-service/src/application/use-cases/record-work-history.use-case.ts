@@ -25,7 +25,7 @@ export class RecordWorkHistoryUseCase {
       completedAt: new Date(),
     });
 
-    const profile = await this.profileRepo.findByUserId(dto.specialistId);
+    const profile = await this.profileRepo.findByAnyId(dto.specialistId);
     if (profile) {
       profile.completedProjects += 1;
       profile.totalProjects += 1;

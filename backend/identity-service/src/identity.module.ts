@@ -52,6 +52,7 @@ import { VerifyEmailUseCase } from './application/use-cases/verify-email.use-cas
 // Controllers
 import { AuthController } from './interfaces/controllers/auth.controller';
 import { UserController } from './interfaces/controllers/user.controller';
+import { InternalUserController } from './interfaces/controllers/internal-user.controller';
 import { SkillsController } from './interfaces/controllers/skills.controller';
 
 // Guards
@@ -81,7 +82,7 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
     ]),
     RabbitMQModule,
   ],
-  controllers: [AuthController, UserController, SkillsController],
+  controllers: [AuthController, UserController, InternalUserController, SkillsController],
   providers: [
     // Repository implementations + tokens de injeção
     UserRepository,

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Star, Briefcase, User, Award, ExternalLink, GitBranch, ArrowLeft } from 'lucide-react'
+import { Star, Briefcase, User, Award, ExternalLink, GitBranch, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile, WorkHistoryItem, Review, Certification } from '../api/portfolio'
 
@@ -16,31 +16,56 @@ function safeHref(url: string): string | undefined {
   }
 }
 
+interface ProjectGroup {
+  projectId: string
+  projectTitle: string
+  companyName: string
+  completedAt: string
+  totalAmount: number
+  entries: WorkHistoryItem[]
+}
+
+function groupByProject(items: WorkHistoryItem[]): ProjectGroup[] {
+  const map = new Map<string, ProjectGroup>()
+  for (const w of items) {
+    const existing = map.get(w.projectId)
+    if (existing) {
+      existing.totalAmount += w.amount
+      existing.entries.push(w)
+      if (w.completedAt > existing.completedAt) existing.completedAt = w.completedAt
+    } else {
+      map.set(w.projectId, {
+        projectId: w.projectId,
+        projectTitle: w.projectTitle || 'Projeto',
+        companyName: w.companyName,
+        completedAt: w.completedAt,
+        totalAmount: w.amount,
+        entries: [w],
+      })
+    }
+  }
+  return [...map.values()].sort((a, b) => b.completedAt.localeCompare(a.completedAt))
+}
+
 type Tab = 'history' | 'reviews' | 'repos'
 
 export default function PerfilEspecialista() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [profile, setProfile] = useState<PublicProfile | null>(null)
-  const [reviews, setReviews] = useState<Review[]>([])
-  const [certifications, setCertifications] = useState<Certification[]>([])
+  const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('history')
 
   useEffect(() => {
     if (!id) return
-    Promise.all([
-      portfolioApi.getPublicProfile(id),
-      portfolioApi.listReviews(id).catch(() => ({ data: [] as Review[] })),
-      portfolioApi.listCertifications(id).catch(() => ({ data: [] as Certification[] })),
-    ])
-      .then(([pRes, rRes, cRes]) => {
-        setProfile(pRes.data)
-        setReviews(rRes.data)
-        setCertifications(cRes.data)
-      })
+    portfolioApi.getPublicProfile(id)
+      .then((res) => setProfile(res.data))
+      .catch(() => setProfile(null))
       .finally(() => setLoading(false))
   }, [id])
+
+  const reviews: Review[] = profile?.reviews ?? []
+  const certifications: Certification[] = profile?.certifications ?? []
 
   if (loading) return (
     <div className="bg-dark-bg min-h-screen flex items-center justify-center">
@@ -109,8 +134,12 @@ export default function PerfilEspecialista() {
                     <p className="font-mono text-[9px] text-zinc-500 uppercase">Taxa Entrega</p>
                   </div>
                   <div className="bg-dark-input border border-dark-border p-3 text-center">
-                    <p className="font-mono font-bold text-brand-500 text-sm mb-1">R$—/h</p>
-                    <p className="font-mono text-[9px] text-zinc-500 uppercase">Hora</p>
+                    <p className="font-mono font-bold text-brand-500 text-sm mb-1">
+                      {profile.workHistory && profile.workHistory.length > 0
+                        ? fmt(profile.workHistory.reduce((s, w) => s + w.amount, 0) / profile.workHistory.length)
+                        : 'R$—'}
+                    </p>
+                    <p className="font-mono text-[9px] text-zinc-500 uppercase">Média/Milestone</p>
                   </div>
                 </div>
 
@@ -242,8 +271,8 @@ export default function PerfilEspecialista() {
                     <div className="py-12 text-center border border-dashed border-zinc-700 font-mono text-zinc-600">
                       Nenhum projeto concluído ainda.
                     </div>
-                  ) : profile.workHistory.map((w, i) => (
-                    <WorkHistoryCard key={i} item={w} />
+                  ) : groupByProject(profile.workHistory).map((g) => (
+                    <WorkHistoryCard key={g.projectId} item={g} review={reviews.find((r: Review) => r.projectId === g.projectId)} />
                   ))}
                 </div>
               ) : (
@@ -278,30 +307,61 @@ export default function PerfilEspecialista() {
   )
 }
 
-function WorkHistoryCard({ item: w }: { item: WorkHistoryItem }) {
-  return (
-    <div className="bg-dark-card border border-dark-border p-5 hover:border-brand-500/30 transition-colors">
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-mono text-[9px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 uppercase">CONCLUÍDO</span>
-            <span className="font-mono text-[10px] text-zinc-600">{w.companyName}</span>
-          </div>
-          <h3 className="text-sm font-bold text-white">{w.projectTitle}</h3>
-        </div>
-        <div className="text-right shrink-0">
-          <p className="font-mono text-sm font-bold text-brand-500">{fmt(w.amount)}</p>
-          <p className="font-mono text-[10px] text-zinc-600">{new Date(w.completedAt).toLocaleDateString('pt-BR')}</p>
-        </div>
-      </div>
+function WorkHistoryCard({ item: g, review }: { item: ProjectGroup; review?: Review }) {
+  const [open, setOpen] = useState(false)
+  const count = g.entries.length
 
-      {/* Mock rating */}
-      <div className="flex items-center gap-1 mb-3">
-        {[1,2,3,4,5].map(n => (
-          <Star key={n} className={`w-3 h-3 ${n <= 5 ? 'text-orange-400 fill-orange-400' : 'text-zinc-700'}`} />
-        ))}
-        <span className="font-mono text-[10px] text-zinc-500 ml-1">5.0</span>
-      </div>
+  return (
+    <div className="bg-dark-card border border-dark-border hover:border-brand-500/30 transition-colors">
+      <button onClick={() => setOpen(!open)} className="w-full p-5 text-left">
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-mono text-[9px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 uppercase">CONCLUÍDO</span>
+              {g.companyName && <span className="font-mono text-[10px] text-zinc-600">{g.companyName}</span>}
+            </div>
+            <h3 className="text-sm font-bold text-white">{g.projectTitle}</h3>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="font-mono text-sm font-bold text-brand-500">{fmt(g.totalAmount)}</p>
+            <p className="font-mono text-[10px] text-zinc-600">{new Date(g.completedAt).toLocaleDateString('pt-BR')}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {review && (
+              <div className="flex items-center gap-1">
+                {[1,2,3,4,5].map(n => (
+                  <Star key={n} className={`w-3 h-3 ${n <= review.rating ? 'text-orange-400 fill-orange-400' : 'text-zinc-700'}`} />
+                ))}
+                <span className="font-mono text-[10px] text-zinc-500 ml-1">{review.rating.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-zinc-500">
+            <span className="font-mono text-[10px]">{count} milestone{count > 1 ? 's' : ''}</span>
+            {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </div>
+        </div>
+      </button>
+
+      {open && (
+        <div className="border-t border-dark-border divide-y divide-dark-border">
+          {g.entries.map((e, i) => (
+            <div key={i} className="px-5 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-[9px] text-zinc-600 border border-zinc-700 px-1.5 py-0.5">M{i + 1}</span>
+                <span className="font-mono text-xs text-zinc-300">{e.projectTitle || `Milestone ${i + 1}`}</span>
+              </div>
+              <div className="flex items-center gap-4">
+                <span className="font-mono text-xs font-bold text-brand-500">{fmt(e.amount)}</span>
+                <span className="font-mono text-[10px] text-zinc-600">{new Date(e.completedAt).toLocaleDateString('pt-BR')}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -11,6 +11,7 @@ export interface Bid {
   projectId: string
   specialistId: string
   specialistName?: string
+  specialistUserId?: string
   amount: number
   durationDays: number
   proposalText: string
@@ -34,6 +35,7 @@ function mapBid(raw: any): Bid {
     projectId: raw.projectId,
     specialistId: raw.specialistId,
     specialistName: raw.specialistName,
+    specialistUserId: raw.specialistUserId,
     amount: raw.proposedBudget ?? raw.amount,
     durationDays: raw.estimatedDuration ?? raw.durationDays,
     proposalText: raw.proposal ?? raw.proposalText,

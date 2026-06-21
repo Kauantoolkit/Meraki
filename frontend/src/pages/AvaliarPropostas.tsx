@@ -213,7 +213,12 @@ export default function AvaliarPropostas() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-mono text-sm font-bold text-white truncate">
-                            {bid.specialistName ?? `Especialista #${idx + 1}`}
+                            <span
+                              className="hover:text-brand-500 cursor-pointer transition-colors"
+                              onClick={() => navigate(`/profile/specialist/${bid.specialistUserId ?? bid.specialistId}`)}
+                            >
+                              {bid.specialistName ?? `Especialista #${idx + 1}`}
+                            </span>
                           </p>
                           <p className="font-mono text-[10px] text-zinc-600 truncate">
                             BID_ID: {bid.id.slice(0, 12)} · {new Date(bid.createdAt).toLocaleDateString('pt-BR')}

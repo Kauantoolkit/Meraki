@@ -155,6 +155,7 @@ services:
       SMTP_USER: ${SMTP_USER:?SMTP_USER não definido}
       SMTP_PASS: ${SMTP_PASS:?SMTP_PASS não definido}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
     depends_on:
       identity-db:
         condition: service_healthy
@@ -177,6 +178,7 @@ services:
       PAYMENT_SERVICE_URL: http://payment-service:3005
       PORTFOLIO_SERVICE_URL: http://portfolio-service:3006
       MESSAGING_SERVICE_URL: http://messaging-service:3007
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
     depends_on:
       - identity-service
 

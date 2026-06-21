@@ -45,6 +45,7 @@ export interface Review {
   specialistId: string
   companyId: string
   companyName?: string
+  projectId?: string
   rating: number
   comment: string
   createdAt: string
