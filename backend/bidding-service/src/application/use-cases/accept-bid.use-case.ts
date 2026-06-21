@@ -41,6 +41,10 @@ export class AcceptBidUseCase {
         projectId: winner.projectId,
         specialistId: winner.specialistId,
         proposedBudget: winner.proposedBudget,
+        milestoneProposals: (winner.milestoneProposals || []).map(mp => ({
+          milestoneId: mp.milestoneId,
+          proposedAmount: Number(mp.proposedAmount),
+        })),
       }),
     );
 

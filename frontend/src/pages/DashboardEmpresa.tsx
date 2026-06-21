@@ -28,6 +28,7 @@ export default function DashboardEmpresa() {
   const [editTarget, setEditTarget] = useState<Project | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
   const [reviewTarget, setReviewTarget] = useState<Project | null>(null)
+  const [reviewedProjects, setReviewedProjects] = useState<Set<string>>(new Set())
   const [payments, setPayments] = useState<Payment[]>([])
   const [companyAvatarUrl, setCompanyAvatarUrl] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
@@ -35,12 +36,30 @@ export default function DashboardEmpresa() {
 
   function loadProjects() {
     projectsApi.listByCompany()
-      .then(res => {
+      .then(async res => {
         const all: Project[] = res.data.data
         const mine = user?.companyId
           ? all.filter(p => p.companyId === user.companyId)
           : all
         setProjects(mine)
+
+        // Verificar quais projetos COMPLETED já foram avaliados
+        const completed = mine.filter(p => p.status === 'COMPLETED' && p.specialistId)
+        const specialistIds = [...new Set(completed.map(p => p.specialistId!))]
+        const reviewed = new Set<string>()
+        for (const sId of specialistIds) {
+          try {
+            const r = await portfolioApi.listReviews(sId)
+            const reviews = r.data?.data ?? r.data ?? []
+            for (const rev of reviews) {
+              const rid = (rev as any).reviewerId ?? rev.companyId
+              if (rid === user?.id && rev.projectId) {
+                reviewed.add(rev.projectId)
+              }
+            }
+          } catch { /* ignore */ }
+        }
+        setReviewedProjects(reviewed)
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -272,6 +291,7 @@ export default function DashboardEmpresa() {
                 onEdit={() => setEditTarget(p)}
                 onComplete={() => handleComplete(p.id)}
                 onReview={() => setReviewTarget(p)}
+                alreadyReviewed={reviewedProjects.has(p.id)}
                 completing={completing === p.id}
               />
             ))}
@@ -296,7 +316,10 @@ export default function DashboardEmpresa() {
         <ReviewModal
           project={reviewTarget}
           reviewerId={user?.id ?? ''}
-          onClose={() => setReviewTarget(null)}
+          onClose={(submitted) => {
+            if (submitted) setReviewedProjects(prev => new Set(prev).add(reviewTarget.id))
+            setReviewTarget(null)
+          }}
         />
       )}
 
@@ -505,7 +528,7 @@ function EditProjectModal({ project, onClose, onSave }: {
 function ReviewModal({ project, reviewerId, onClose }: {
   project: Project
   reviewerId: string
-  onClose: () => void
+  onClose: (submitted?: boolean) => void
 }) {
   const [rating, setRating] = useState(0)
   const [comment, setComment] = useState('')
@@ -534,14 +557,14 @@ function ReviewModal({ project, reviewerId, onClose }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70" onClick={() => !saving && onClose()} />
+      <div className="absolute inset-0 bg-black/70" onClick={() => !saving && onClose(false)} />
       <div className="relative bg-dark-card border border-dark-border w-full max-w-md p-6 shadow-2xl z-10">
         <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-orange-500" />
         <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-orange-500" />
 
         <div className="flex items-center justify-between mb-5 border-b border-dark-border pb-4">
           <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">Avaliar Especialista</h2>
-          <button onClick={onClose} disabled={saving} className="text-zinc-500 hover:text-white transition-colors">
+          <button onClick={() => onClose(false)} disabled={saving} className="text-zinc-500 hover:text-white transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -551,7 +574,7 @@ function ReviewModal({ project, reviewerId, onClose }: {
             <Star className="w-10 h-10 text-orange-400 fill-orange-400 mx-auto mb-3" />
             <p className="font-mono text-sm text-white font-bold mb-1">Avaliação enviada!</p>
             <p className="font-mono text-[10px] text-zinc-500">A avaliação aparecerá no portfólio do especialista.</p>
-            <button onClick={onClose} className="mt-4 font-mono text-xs text-brand-500 border border-brand-500/40 px-4 py-2 hover:bg-brand-500/10 transition-colors">
+            <button onClick={() => onClose(true)} className="mt-4 font-mono text-xs text-brand-500 border border-brand-500/40 px-4 py-2 hover:bg-brand-500/10 transition-colors">
               Fechar
             </button>
           </div>
@@ -605,7 +628,7 @@ function ReviewModal({ project, reviewerId, onClose }: {
   )
 }
 
-function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onCancel, onEdit, onComplete, onReview, completing }: {
+function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onCancel, onEdit, onComplete, onReview, alreadyReviewed, completing }: {
   project: Project
   onViewBids: () => void
   onOpenKanban: () => void
@@ -614,6 +637,7 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onC
   onEdit: () => void
   onComplete: () => void
   onReview: () => void
+  alreadyReviewed: boolean
   completing: boolean
 }) {
   const isOpen      = p.status === 'OPEN'
@@ -743,12 +767,18 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onC
           <div className="flex items-center justify-between border-t border-dark-border pt-4 mt-2">
             <span className="font-mono text-[10px] text-zinc-500 uppercase">Projeto concluído</span>
             {p.specialistId && (
-              <button
-                onClick={onReview}
-                className="btn-sharp bg-orange-500 text-dark-bg hover:bg-orange-400 font-mono font-bold text-xs px-4 py-2 border border-orange-500 transition-colors flex items-center gap-1.5"
-              >
-                <Star className="w-3.5 h-3.5" /> AVALIAR()
-              </button>
+              alreadyReviewed ? (
+                <span className="font-mono text-[10px] text-zinc-600 uppercase flex items-center gap-1.5">
+                  <Star className="w-3.5 h-3.5 fill-zinc-600" /> Avaliado
+                </span>
+              ) : (
+                <button
+                  onClick={onReview}
+                  className="btn-sharp bg-orange-500 text-dark-bg hover:bg-orange-400 font-mono font-bold text-xs px-4 py-2 border border-orange-500 transition-colors flex items-center gap-1.5"
+                >
+                  <Star className="w-3.5 h-3.5" /> AVALIAR()
+                </button>
+              )
             )}
           </div>
         ) : (

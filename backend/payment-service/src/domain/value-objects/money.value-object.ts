@@ -3,11 +3,12 @@ import { DomainException } from '../exceptions/domain.exception';
 export class Money {
   private readonly _amount: number;
 
-  constructor(amount: number) {
-    if (amount < 0) {
+  constructor(amount: number | string) {
+    const parsed = Number(amount);
+    if (isNaN(parsed) || parsed < 0) {
       throw new DomainException('Valor monetário não pode ser negativo');
     }
-    this._amount = Number(amount.toFixed(2));
+    this._amount = Number(parsed.toFixed(2));
   }
 
   getAmount(): number {

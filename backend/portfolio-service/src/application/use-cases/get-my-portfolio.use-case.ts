@@ -35,7 +35,8 @@ export interface MyPortfolioDto {
     projectId: string;
     projectTitle: string;
     companyName: string;
-    earnedAmount: number;
+    amount: number;
+    milestoneTitle: string;
     completedAt: string;
   }>;
 }
@@ -95,6 +96,7 @@ export class GetMyPortfolioUseCase {
         id: h.id,
         projectId: h.projectId,
         projectTitle: h.projectTitle ?? '',
+        milestoneTitle: h.milestoneTitle ?? '',
         companyName: h.companyId ?? '',
         amount: Number(h.amountEarned ?? 0),
         completedAt: h.completedAt ? h.completedAt.toISOString() : '',

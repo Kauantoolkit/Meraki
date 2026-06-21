@@ -29,7 +29,7 @@ export default function DashboardEspecialista() {
       mySkills.length > 0 ? projectsApi.listOpen() : Promise.resolve(null),
     ]).then(([mine, bids, open]) => {
       const bidList: Bid[] = bids.data
-      setMyProjects(mine.data.data.filter((p: Project) => p.status === 'SIGNING' || p.status === 'IN_PROGRESS'))
+      setMyProjects(mine.data.data.filter((p: Project) => p.status === 'SIGNING' || p.status === 'IN_PROGRESS' || p.status === 'COMPLETED'))
       setMyBids(bidList)
       if (open) setOpenProjects(open.data.data)
       const uniqueIds = [...new Set(bidList.map((b: Bid) => b.projectId))]

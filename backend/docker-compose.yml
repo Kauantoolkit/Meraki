@@ -288,6 +288,9 @@ services:
       DB_PASS: ${DB_PASS:-postgres}
       JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+      PROJECT_SERVICE_URL: http://project-service:3002
+      IDENTITY_SERVICE_URL: http://identity-service:3001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
     depends_on:
       portfolio-db:
         condition: service_healthy

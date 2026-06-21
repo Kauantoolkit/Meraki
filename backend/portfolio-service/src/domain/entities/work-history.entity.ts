@@ -6,6 +6,7 @@ export class WorkHistory {
   specialistId: string;
   projectId: string;
   projectTitle: string;
+  milestoneTitle: string;
   companyId: string;
   amountEarned: number;
   completedAt: Date;

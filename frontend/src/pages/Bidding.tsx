@@ -336,24 +336,24 @@ export default function Bidding() {
                       Marcos ({project.milestones.length})
                     </p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
                     {project.milestones
                       .slice()
                       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
                       .map((m, i) => (
-                        <div key={m.id} className="bg-dark-input border border-dark-border p-3 flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-2 min-w-0">
-                            <span className="font-mono text-[9px] text-zinc-600 bg-dark-card border border-dark-border px-1.5 py-0.5 shrink-0 mt-0.5">
-                              M{i + 1}
-                            </span>
-                            <div className="min-w-0">
-                              <p className="font-mono text-xs text-white font-bold truncate">{m.title}</p>
-                              {m.description && (
-                                <p className="font-mono text-[10px] text-zinc-500 mt-0.5 line-clamp-1">{m.description}</p>
-                              )}
+                        <div key={m.id} className="bg-dark-input border border-dark-border p-3">
+                          <div className="flex items-start justify-between gap-3 mb-1">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-mono text-[9px] text-zinc-600 bg-dark-card border border-dark-border px-1.5 py-0.5 shrink-0">
+                                M{i + 1}
+                              </span>
+                              <p className="font-mono text-xs text-white font-bold">{m.title}</p>
                             </div>
+                            <span className="font-mono text-xs text-brand-500 font-bold shrink-0">{fmt(m.amount)}</span>
                           </div>
-                          <span className="font-mono text-xs text-brand-500 font-bold shrink-0">{fmt(m.amount)}</span>
+                          {m.description && (
+                            <p className="font-mono text-[10px] text-zinc-500 mt-1 pl-8 break-words max-h-20 overflow-y-auto overscroll-contain">{m.description}</p>
+                          )}
                         </div>
                       ))}
                   </div>

@@ -10,6 +10,7 @@ export interface CreateEscrowDto {
   projectId: string;
   specialistId: string;
   proposedBudget: number;
+  milestoneProposals?: Array<{ milestoneId: string; proposedAmount: number }>;
 }
 
 @Injectable()
@@ -57,9 +58,15 @@ export class CreateEscrowOnBidAcceptedUseCase {
     }
 
     // 3. Criar um Payment por milestone em ESCROW_HELD
-    //    O valor total em escrow é o proposedBudget do especialista (valor aceito),
-    //    distribuído proporcionalmente pelo peso de cada milestone.
-    const milestoneTotal = milestones.reduce((s, m) => s + (m.amount ?? 0), 0);
+    //    Usa o valor proposto pelo especialista (milestoneProposals) para cada milestone.
+    //    Fallback: distribui igualmente se não houver proposals.
+    const proposalMap = new Map<string, number>();
+    if (dto.milestoneProposals?.length) {
+      for (const mp of dto.milestoneProposals) {
+        proposalMap.set(mp.milestoneId, Number(mp.proposedAmount));
+      }
+    }
+
     let totalHeld = 0;
     for (const milestone of milestones) {
       const existing = await this.paymentRepo.findByMilestone(milestone.id);
@@ -68,9 +75,8 @@ export class CreateEscrowOnBidAcceptedUseCase {
         continue;
       }
 
-      const amount = milestoneTotal > 0
-        ? Number(((milestone.amount / milestoneTotal) * dto.proposedBudget).toFixed(2))
-        : Number((dto.proposedBudget / milestones.length).toFixed(2));
+      const amount = proposalMap.get(milestone.id)
+        ?? Number((dto.proposedBudget / milestones.length).toFixed(2));
       const payment = this.paymentFactory.create({
         milestoneId: milestone.id,
         projectId: dto.projectId,

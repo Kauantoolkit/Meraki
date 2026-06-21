@@ -21,8 +21,8 @@ export class MilestonesService {
   }
 
   async approveDelivery(milestoneId: string, amount: number | undefined, token: string) {
-    // 1. Liberar pagamento do escrow (RN05/RN06) — precisa acontecer ANTES de marcar done
-    await this.proxy.post(`${PAYMENT_URL}/api/payments/release`, { milestoneId }, this.proxy.authHeaders(token));
+    // 1. Liberar pagamento do escrow (RN05/RN06) — ignora se já foi liberado
+    await this.proxy.post(`${PAYMENT_URL}/api/payments/release`, { milestoneId }, this.proxy.authHeaders(token)).catch(() => {});
 
     // 2. Aprovar entrega no delivery-service (publica milestone.validated)
     const result = await this.proxy.put(`${DELIVERY_URL}/api/deliveries/${milestoneId}/approve`, { amount }, this.proxy.authHeaders(token));

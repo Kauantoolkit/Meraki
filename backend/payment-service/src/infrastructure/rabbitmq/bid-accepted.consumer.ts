@@ -20,9 +20,9 @@ export class BidAcceptedConsumer implements OnModuleInit {
       'payment.events.bid-accepted',
       'bid.accepted',
       async (message) => {
-        const { projectId, specialistId, proposedBudget } = message.payload || message;
+        const { projectId, specialistId, proposedBudget, milestoneProposals } = message.payload || message;
         this.logger.log(`bid.accepted: projeto=${projectId} budget=${proposedBudget}`);
-        await this.createEscrow.execute({ projectId, specialistId, proposedBudget });
+        await this.createEscrow.execute({ projectId, specialistId, proposedBudget, milestoneProposals });
       },
     );
   }

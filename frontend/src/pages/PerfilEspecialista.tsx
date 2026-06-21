@@ -4,7 +4,7 @@ import { Star, Briefcase, User, Award, ExternalLink, GitBranch, ArrowLeft, Chevr
 import Navbar from '../components/Navbar'
 import { portfolioApi, PublicProfile, WorkHistoryItem, Review, Certification } from '../api/portfolio'
 
-const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+const fmt = (v: number | string) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0)
 
 /** Aceita apenas http(s) para evitar XSS via esquemas como javascript:/data:. */
 function safeHref(url: string): string | undefined {
@@ -352,7 +352,7 @@ function WorkHistoryCard({ item: g, review }: { item: ProjectGroup; review?: Rev
             <div key={i} className="px-5 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="font-mono text-[9px] text-zinc-600 border border-zinc-700 px-1.5 py-0.5">M{i + 1}</span>
-                <span className="font-mono text-xs text-zinc-300">{e.projectTitle || `Milestone ${i + 1}`}</span>
+                <span className="font-mono text-xs text-zinc-300">{e.milestoneTitle || e.projectTitle || `Milestone ${i + 1}`}</span>
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-mono text-xs font-bold text-brand-500">{fmt(e.amount)}</span>

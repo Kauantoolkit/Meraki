@@ -6,6 +6,9 @@ export interface RecordWorkHistoryDto {
   specialistId: string;
   projectId: string;
   amountEarned: number;
+  projectTitle?: string;
+  milestoneTitle?: string;
+  companyName?: string;
 }
 
 @Injectable()
@@ -21,6 +24,9 @@ export class RecordWorkHistoryUseCase {
     await this.historyRepo.save({
       specialistId: dto.specialistId,
       projectId: dto.projectId,
+      projectTitle: dto.projectTitle ?? '',
+      milestoneTitle: dto.milestoneTitle ?? '',
+      companyId: dto.companyName ?? '',
       amountEarned: dto.amountEarned,
       completedAt: new Date(),
     });

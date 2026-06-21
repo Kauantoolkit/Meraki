@@ -30,8 +30,9 @@ export class Payment {
     if (this.status !== PaymentStatus.ESCROW_HELD) {
       throw new PaymentNotInEscrowError();
     }
-    const fee = Number((this.amount * feeRate).toFixed(2));
-    const specialist = Number((this.amount - fee).toFixed(2));
+    const amt = Number(this.amount);
+    const fee = Number((amt * feeRate).toFixed(2));
+    const specialist = Number((amt - fee).toFixed(2));
 
     this.platformFee = fee;
     this.specialistAmount = specialist;

@@ -40,6 +40,7 @@ export class GetPublicProfileUseCase {
       workHistory: history.map((h) => ({
         projectId: h.projectId,
         projectTitle: h.projectTitle ?? '',
+        milestoneTitle: h.milestoneTitle ?? '',
         companyName: h.companyId ?? '',
         completedAt: h.completedAt ? h.completedAt.toISOString() : '',
         amount: Number(h.amountEarned ?? 0),
