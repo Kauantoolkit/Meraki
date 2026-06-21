@@ -35,7 +35,7 @@ export class TokenService {
     @Inject('IRefreshTokenRepository')
     private readonly refreshTokens: IRefreshTokenRepository,
   ) {
-    this.accessExpiresIn = process.env.JWT_ACCESS_EXPIRES_IN ?? '15m';
+    this.accessExpiresIn = process.env.JWT_ACCESS_EXPIRES_IN ?? '8h';
     this.refreshExpiresIn = process.env.JWT_REFRESH_EXPIRES_IN ?? '7d';
     this.refreshTtlMs = parseDurationMs(this.refreshExpiresIn);
   }

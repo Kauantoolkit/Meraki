@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { notificationsApi, Notification as NotifType } from '../api/notifications'
+import { portfolioApi } from '../api/portfolio'
 import {
   TerminalSquare, ArrowLeft, Building2, User,
   LogOut, Menu, X, Bell,
@@ -21,8 +22,22 @@ export default function Navbar({ backUrl, projectTitle }: NavbarProps) {
   const [notifOpen, setNotifOpen] = useState(false)
   const [notifications, setNotifications] = useState<NotifType[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [avatarUrl, setAvatarUrl] = useState('')
 
   const isCompany = (user?.userType ?? user?.type)?.toLowerCase() === 'company'
+
+  useEffect(() => {
+    if (!user?.id) return
+    if (isCompany) {
+      portfolioApi.getCompanyProfile(user.id)
+        .then(res => { if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl) })
+        .catch(() => {})
+    } else {
+      portfolioApi.getMyProfile()
+        .then(res => { if (res.data?.avatarUrl) setAvatarUrl(res.data.avatarUrl) })
+        .catch(() => {})
+    }
+  }, [user?.id, isCompany])
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -201,10 +216,12 @@ export default function Navbar({ backUrl, projectTitle }: NavbarProps) {
                     {isCompany ? 'Empresa' : 'Especialista'}
                   </p>
                 </div>
-                <div className="w-7 h-7 bg-dark-input border border-dark-border flex items-center justify-center group-hover:border-brand-500 transition-colors">
-                  {isCompany
-                    ? <Building2 className="w-3.5 h-3.5 text-zinc-400 group-hover:text-brand-500" />
-                    : <User className="w-3.5 h-3.5 text-zinc-400 group-hover:text-brand-500" />
+                <div className="w-7 h-7 bg-dark-input border border-dark-border flex items-center justify-center group-hover:border-brand-500 transition-colors overflow-hidden">
+                  {avatarUrl
+                    ? <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                    : isCompany
+                      ? <Building2 className="w-3.5 h-3.5 text-zinc-400 group-hover:text-brand-500" />
+                      : <User className="w-3.5 h-3.5 text-zinc-400 group-hover:text-brand-500" />
                   }
                 </div>
               </div>
