@@ -7,6 +7,7 @@ export interface IUserRepository {
   // User
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
+  findBySpecialistId(specialistId: string): Promise<User | null>;
   findByResetToken(token: string): Promise<User | null>;
   findByVerificationToken(token: string): Promise<User | null>;
   create(data: Partial<User>): Promise<User>;

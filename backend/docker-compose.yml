@@ -155,6 +155,7 @@ services:
       SMTP_USER: ${SMTP_USER:?SMTP_USER não definido}
       SMTP_PASS: ${SMTP_PASS:?SMTP_PASS não definido}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
     depends_on:
       identity-db:
         condition: service_healthy
@@ -177,6 +178,7 @@ services:
       PAYMENT_SERVICE_URL: http://payment-service:3005
       PORTFOLIO_SERVICE_URL: http://portfolio-service:3006
       MESSAGING_SERVICE_URL: http://messaging-service:3007
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
     depends_on:
       - identity-service
 
@@ -196,6 +198,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
       IDENTITY_SERVICE_URL: http://identity-service:3001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
     depends_on:
       project-db:
         condition: service_healthy
@@ -262,6 +265,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
       PLATFORM_FEE_RATE: ${PLATFORM_FEE_RATE:-0.10}
+      PROJECT_SERVICE_URL: http://project-service:3002
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
     depends_on:
       payment-db:
         condition: service_healthy
@@ -283,6 +288,9 @@ services:
       DB_PASS: ${DB_PASS:-postgres}
       JWT_SECRET: ${JWT_SECRET:-meraki-jwt-secret-change-in-production}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-meraki}:${RABBITMQ_PASS:-meraki}@rabbitmq:5672
+      PROJECT_SERVICE_URL: http://project-service:3002
+      IDENTITY_SERVICE_URL: http://identity-service:3001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
     depends_on:
       portfolio-db:
         condition: service_healthy

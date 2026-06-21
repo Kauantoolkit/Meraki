@@ -35,7 +35,8 @@ export interface MyPortfolioDto {
     projectId: string;
     projectTitle: string;
     companyName: string;
-    earnedAmount: number;
+    amount: number;
+    milestoneTitle: string;
     completedAt: string;
   }>;
 }
@@ -57,10 +58,13 @@ export class GetMyPortfolioUseCase {
       profile = await this.profileRepo.save(blank);
     }
 
+    // Related data is indexed by identity's specialistId, not userId
+    const lookupId = profile.identitySpecialistId || specialistId;
+
     const [certifications, reviews, history] = await Promise.all([
-      this.certRepo.findBySpecialist(specialistId),
-      this.reviewRepo.findBySpecialist(specialistId),
-      this.historyRepo.findBySpecialist(specialistId),
+      this.certRepo.findBySpecialist(lookupId),
+      this.reviewRepo.findBySpecialist(lookupId),
+      this.historyRepo.findBySpecialist(lookupId),
     ]);
 
     return {
@@ -92,8 +96,9 @@ export class GetMyPortfolioUseCase {
         id: h.id,
         projectId: h.projectId,
         projectTitle: h.projectTitle ?? '',
+        milestoneTitle: h.milestoneTitle ?? '',
         companyName: h.companyId ?? '',
-        earnedAmount: Number(h.amountEarned ?? 0),
+        amount: Number(h.amountEarned ?? 0),
         completedAt: h.completedAt ? h.completedAt.toISOString() : '',
       })),
     };

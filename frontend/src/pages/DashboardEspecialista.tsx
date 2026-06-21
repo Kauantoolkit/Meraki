@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Terminal, Send, Wallet, Star, Zap, Cpu, Radio } from 'lucide-react'
+import { Terminal, Send, Wallet, Star, Zap, Cpu, Radio, Check } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
 import { bidsApi, Bid } from '../api/bids'
@@ -233,9 +233,9 @@ export default function DashboardEspecialista() {
               </h2>
             </div>
 
-            {myProjects.length === 0 ? (
+            {myProjects.filter(p => p.status !== 'COMPLETED').length === 0 ? (
               <div className="p-4 border border-zinc-800 border-dashed text-zinc-500 font-mono text-xs text-center">Nenhum trabalho em execução no momento.</div>
-            ) : myProjects.map(p => (
+            ) : myProjects.filter(p => p.status !== 'COMPLETED').map(p => (
               <div key={p.id} className={`bg-dark-card border p-5 transition-colors ${p.status === 'SIGNING' ? 'border-yellow-500/50 hover:border-yellow-500' : 'border-dark-border hover:border-brand-500/50'}`}>
                 <div className="flex items-center gap-2 mb-3">
                   {p.status === 'SIGNING' ? (
@@ -274,6 +274,30 @@ export default function DashboardEspecialista() {
                 )}
               </div>
             ))}
+
+            {myProjects.filter(p => p.status === 'COMPLETED').length > 0 && (
+              <>
+                <div className="flex items-center justify-between border-b border-dark-border pb-2 mt-4">
+                  <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <Check className="w-4 h-4 text-zinc-400" /> Projetos Concluídos
+                  </h2>
+                </div>
+                {myProjects.filter(p => p.status === 'COMPLETED').map(p => (
+                  <div key={p.id} className="bg-dark-card border border-zinc-700 p-5 transition-colors hover:border-zinc-600 opacity-75">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="font-mono text-[10px] text-zinc-400 border border-zinc-600 bg-zinc-800 px-2 py-0.5 tracking-widest flex items-center gap-1">
+                        <Check className="w-3 h-3" /> CONCLUÍDO
+                      </span>
+                      <span className="font-mono text-[10px] text-zinc-500">{p.id.slice(0, 8)}</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-white mb-1">{p.title}</h3>
+                    <div className="bg-[#000] border border-dark-border p-4">
+                      <h4 className="font-mono text-sm text-zinc-400 font-bold">Orçamento: {fmt(p.budget)}</h4>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
           </div>
 
           {/* Right: Bids */}

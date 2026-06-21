@@ -8,7 +8,7 @@ export class UpdateCompletedProjectsUseCase {
   constructor(private readonly profileRepo: SpecialistProfileRepository) {}
 
   async execute(specialistId: string): Promise<void> {
-    const profile = await this.profileRepo.findByUserId(specialistId);
+    const profile = await this.profileRepo.findByAnyId(specialistId);
     if (!profile) {
       this.logger.warn(`Perfil não encontrado para specialistId=${specialistId}`);
       return;

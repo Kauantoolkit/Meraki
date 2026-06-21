@@ -28,7 +28,7 @@ export class ProjectCompletedConsumer implements OnModuleInit {
         // Upgrade yellow → green for each skill in the completed project's requirements
         if (requirements && Array.isArray(requirements) && requirements.length > 0) {
           try {
-            const profile = await this.profileRepo.findByUserId(specialistId);
+            const profile = await this.profileRepo.findByAnyId(specialistId);
             if (profile) {
               const badges = profile.skillBadges ?? {};
               let changed = false;

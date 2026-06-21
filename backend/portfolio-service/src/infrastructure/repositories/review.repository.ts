@@ -19,6 +19,10 @@ export class ReviewRepository implements IReviewRepository {
     return this.repo.find({ where: { specialistId }, order: { createdAt: 'DESC' } });
   }
 
+  findByReviewerAndProject(reviewerId: string, projectId: string): Promise<Review | null> {
+    return this.repo.findOne({ where: { reviewerId, projectId } });
+  }
+
   async averageRating(specialistId: string): Promise<number> {
     const reviews = await this.repo.find({ where: { specialistId } });
     if (!reviews.length) return 0;

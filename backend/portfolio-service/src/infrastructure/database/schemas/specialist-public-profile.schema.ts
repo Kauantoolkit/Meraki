@@ -8,6 +8,7 @@ export const SpecialistPublicProfileSchema = new EntitySchema<SpecialistPublicPr
   columns: {
     id: { type: 'uuid', primary: true, generated: 'uuid' },
     userId: { type: 'varchar', unique: true },
+    identitySpecialistId: { type: 'varchar', nullable: true },
     name: { type: 'varchar', nullable: true },
     bio: { type: 'text', nullable: true },
     skills: { type: 'simple-array', nullable: true },

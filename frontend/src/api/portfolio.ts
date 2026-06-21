@@ -35,6 +35,7 @@ export interface PublicProfile {
 export interface WorkHistoryItem {
   projectId: string
   projectTitle: string
+  milestoneTitle?: string
   companyName: string
   completedAt: string
   amount: number
@@ -45,6 +46,7 @@ export interface Review {
   specialistId: string
   companyId: string
   companyName?: string
+  projectId?: string
   rating: number
   comment: string
   createdAt: string

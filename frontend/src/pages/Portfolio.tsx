@@ -1,13 +1,45 @@
 import { useState, useEffect, useRef } from 'react'
-import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle, Camera, Trash2 } from 'lucide-react'
+import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle, Camera, Trash2, ChevronDown, ChevronUp } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { portfolioApi, PublicProfile, ProfileLink, Certification } from '../api/portfolio'
+import { portfolioApi, PublicProfile, ProfileLink, Certification, WorkHistoryItem, Review } from '../api/portfolio'
 import { usersApi } from '../api/auth'
 import { skillsApi, Skill, SkillQuestion, SkillValidation, QuizResult } from '../api/skills'
 import { extractApiError } from '../api/client'
 import { uploadAvatar } from '../lib/sanity'
 
-const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+const fmt = (v: number | string) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(v) || 0)
+
+interface ProjectGroup {
+  projectId: string
+  projectTitle: string
+  companyName: string
+  totalAmount: number
+  lastCompletedAt: string
+  entries: WorkHistoryItem[]
+}
+
+function groupByProject(items: WorkHistoryItem[]): ProjectGroup[] {
+  const map = new Map<string, ProjectGroup>()
+  for (const w of items) {
+    const key = w.projectId
+    const existing = map.get(key)
+    if (existing) {
+      existing.totalAmount += Number(w.amount)
+      existing.entries.push(w)
+      if (w.completedAt > existing.lastCompletedAt) existing.lastCompletedAt = w.completedAt
+    } else {
+      map.set(key, {
+        projectId: key,
+        projectTitle: w.projectTitle,
+        companyName: w.companyName,
+        totalAmount: Number(w.amount),
+        lastCompletedAt: w.completedAt,
+        entries: [w],
+      })
+    }
+  }
+  return [...map.values()].sort((a, b) => b.lastCompletedAt.localeCompare(a.lastCompletedAt))
+}
 
 type Tab = 'history' | 'skills' | 'certifications'
 
@@ -162,22 +194,8 @@ export default function Portfolio() {
                     <div className="py-12 text-center border border-dashed border-zinc-700 font-mono text-zinc-600">
                       Nenhum projeto concluído ainda.
                     </div>
-                  ) : profile.workHistory.map((w, i) => (
-                    <div key={i} className="bg-dark-card border border-dark-border p-5 hover:border-brand-500/30 transition-colors">
-                      <div className="flex items-start justify-between gap-4 mb-3">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-mono text-[9px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 uppercase">CONCLUÍDO</span>
-                            <span className="font-mono text-[10px] text-zinc-600">{w.companyName}</span>
-                          </div>
-                          <h3 className="text-sm font-bold text-white">{w.projectTitle}</h3>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="font-mono text-sm font-bold text-brand-500">{fmt(w.amount)}</p>
-                          <p className="font-mono text-[10px] text-zinc-600">{new Date(w.completedAt).toLocaleDateString('pt-BR')}</p>
-                        </div>
-                      </div>
-                    </div>
+                  ) : groupByProject(profile.workHistory).map((g) => (
+                    <WorkHistoryCard key={g.projectId} item={g} />
                   ))}
                 </div>
               ) : tab === 'skills' ? (
@@ -983,6 +1001,53 @@ function EditProfileModal({ profile, onClose, onSave }: {
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+// ─── WorkHistoryCard (expandível por projeto) ────────────────────────────────
+
+function WorkHistoryCard({ item: g }: { item: ProjectGroup }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="bg-dark-card border border-dark-border p-5 hover:border-brand-500/30 transition-colors">
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-mono text-[9px] text-brand-500 border border-brand-500/30 bg-brand-500/10 px-2 py-0.5 uppercase">CONCLUÍDO</span>
+            <span className="font-mono text-[10px] text-zinc-600">{g.companyName}</span>
+          </div>
+          <h3 className="text-sm font-bold text-white">{g.projectTitle}</h3>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="font-mono text-sm font-bold text-brand-500">{fmt(g.totalAmount)}</p>
+          <p className="font-mono text-[10px] text-zinc-600">{new Date(g.lastCompletedAt).toLocaleDateString('pt-BR')}</p>
+        </div>
+      </div>
+
+      {g.entries.length > 1 && (
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="flex items-center gap-1 font-mono text-[10px] text-zinc-500 hover:text-brand-500 transition-colors mt-2"
+        >
+          {open ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          {g.entries.length} milestones
+        </button>
+      )}
+
+      {open && (
+        <div className="mt-3 space-y-2 border-t border-dark-border pt-3">
+          {g.entries.map((w, i) => (
+            <div key={i} className="flex items-center justify-between bg-dark-input border border-dark-border px-3 py-2">
+              <span className="font-mono text-[10px] text-zinc-300">{w.milestoneTitle || w.projectTitle}</span>
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-[10px] text-brand-500 font-bold">{fmt(Number(w.amount))}</span>
+                <span className="font-mono text-[9px] text-zinc-600">{new Date(w.completedAt).toLocaleDateString('pt-BR')}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

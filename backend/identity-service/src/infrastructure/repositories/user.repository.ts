@@ -34,6 +34,10 @@ export class UserRepository implements IUserRepository {
     return this.userRepo.findOne({ where: { email } });
   }
 
+  findBySpecialistId(specialistId: string): Promise<User | null> {
+    return this.userRepo.findOne({ where: { specialistId } });
+  }
+
   findByResetToken(token: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { passwordResetToken: token } });
   }

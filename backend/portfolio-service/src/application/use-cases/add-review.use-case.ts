@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ConflictException } from '@nestjs/common';
 import { ReviewRepository } from '../../infrastructure/repositories/review.repository';
 import { SpecialistProfileRepository } from '../../infrastructure/repositories/specialist-profile.repository';
 import { Review } from '../../domain/entities/review.entity';
@@ -11,6 +11,11 @@ export class AddReviewUseCase {
   ) {}
 
   async execute(data: Partial<Review>): Promise<Review> {
+    if (data.reviewerId && data.projectId) {
+      const existing = await this.reviewRepo.findByReviewerAndProject(data.reviewerId, data.projectId);
+      if (existing) throw new ConflictException('Você já avaliou este especialista neste projeto.');
+    }
+
     const review = await this.reviewRepo.save(data);
 
     // Recalcula rating médio no perfil público

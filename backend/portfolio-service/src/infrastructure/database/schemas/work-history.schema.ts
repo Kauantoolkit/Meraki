@@ -10,6 +10,7 @@ export const WorkHistorySchema = new EntitySchema<WorkHistory>({
     specialistId: { type: 'varchar' },
     projectId: { type: 'varchar' },
     projectTitle: { type: 'varchar', nullable: true },
+    milestoneTitle: { type: 'varchar', nullable: true },
     companyId: { type: 'varchar', nullable: true },
     amountEarned: { type: 'decimal', precision: 10, scale: 2, nullable: true },
     completedAt: { type: 'timestamp', nullable: true },

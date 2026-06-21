@@ -3,9 +3,10 @@ import { HttpProxyService } from '../../proxy/http-proxy.service';
 import { SubmitBidDto } from './dto/submit-bid.dto';
 import { UpdateBidDto } from './dto/update-bid.dto';
 
-const BIDDING_URL  = process.env.BIDDING_SERVICE_URL  as string;
-const PROJECT_URL  = process.env.PROJECT_SERVICE_URL  as string;
-const IDENTITY_URL = process.env.IDENTITY_SERVICE_URL as string;
+const BIDDING_URL    = process.env.BIDDING_SERVICE_URL    as string;
+const PROJECT_URL    = process.env.PROJECT_SERVICE_URL    as string;
+const IDENTITY_URL   = process.env.IDENTITY_SERVICE_URL   as string;
+const PORTFOLIO_URL  = process.env.PORTFOLIO_SERVICE_URL  as string;
 
 @Injectable()
 export class BidsService {
@@ -35,19 +36,31 @@ export class BidsService {
     }
     const bids: any[] = await this.proxy.get(`${BIDDING_URL}/api/bids?projectId=${projectId}`, this.proxy.authHeaders(token));
 
-    // Enrich bids with specialist names (identity-service lookup)
+    // Enrich bids: resolve specialistId → userId via identity internal API, then get name from portfolio
     const uniqueIds = [...new Set(bids.map((b: any) => b.specialistId).filter(Boolean))] as string[];
     const nameMap = new Map<string, string>();
+    const userIdMap = new Map<string, string>();
+    const apiKey = process.env.INTERNAL_API_KEY || 'meraki-internal-key';
     await Promise.all(
-      uniqueIds.map(async (id) => {
+      uniqueIds.map(async (specId) => {
         try {
-          const user = await this.proxy.get<any>(`${IDENTITY_URL}/api/users/${id}`, this.proxy.authHeaders(token));
-          if (user?.name) nameMap.set(id, user.name);
+          const user = await this.proxy.get<any>(
+            `${IDENTITY_URL}/api/internal/users/by-specialist/${specId}`,
+            { headers: { 'X-API-Key': apiKey } },
+          );
+          if (user?.id) {
+            userIdMap.set(specId, user.id);
+            if (user.name) nameMap.set(specId, user.name);
+          }
         } catch {}
       })
     );
 
-    return bids.map((b: any) => ({ ...b, specialistName: nameMap.get(b.specialistId) ?? null }));
+    return bids.map((b: any) => ({
+      ...b,
+      specialistName: nameMap.get(b.specialistId) ?? null,
+      specialistUserId: userIdMap.get(b.specialistId) ?? null,
+    }));
   }
 
   findMyBids(token: string) {

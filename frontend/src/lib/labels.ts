@@ -25,6 +25,7 @@ export const bidStatusLabel: Record<string, string> = {
 
 export const paymentStatusLabel: Record<string, string> = {
   PENDING: 'Pendente',
+  ESCROW_HELD: 'Em Escrow',
   RELEASED: 'Liberado',
   REFUNDED: 'Reembolsado',
 }
