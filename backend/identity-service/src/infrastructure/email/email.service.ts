@@ -24,7 +24,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: `"Meraki" <${process.env.SMTP_USER || 'noreply@meraki.com'}>`,
+        from: '"Meraki" <noreply@basilisk.dev.br>',
         to,
         subject: 'Verificação de Email — Meraki',
         html: `
@@ -59,7 +59,7 @@ export class EmailService {
 
     try {
       await this.transporter.sendMail({
-        from: `"Meraki" <${process.env.SMTP_USER || 'noreply@meraki.com'}>`,
+        from: '"Meraki" <noreply@basilisk.dev.br>',
         to,
         subject: 'Redefinição de Senha — Meraki',
         html: `

@@ -80,12 +80,17 @@ export class RegisterUserUseCase {
     });
     await this.eventPublisher.publishUserRegistered(event.payload);
 
-    // Envia email de verificação
-    await this.emailService.sendVerificationEmail(
-      savedUser.email,
-      savedUser.name,
-      verificationToken,
-    );
+    // Envia email de verificação — se falhar, remove o usuário criado
+    try {
+      await this.emailService.sendVerificationEmail(
+        savedUser.email,
+        savedUser.name,
+        verificationToken,
+      );
+    } catch (err) {
+      await this.userRepository.hardDelete(savedUser.id);
+      throw err;
+    }
 
     return {
       id: savedUser.id,

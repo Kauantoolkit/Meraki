@@ -12,6 +12,7 @@ export interface IUserRepository {
   create(data: Partial<User>): Promise<User>;
   update(id: string, data: Partial<User>): Promise<User>;
   softDelete(id: string): Promise<void>;
+  hardDelete(id: string): Promise<void>;
 
   // Specialist Profile
   createSpecialistProfile(data: Partial<SpecialistProfile>): Promise<SpecialistProfile>;

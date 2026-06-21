@@ -56,6 +56,10 @@ export class UserRepository implements IUserRepository {
     await this.userRepo.softDelete(id);
   }
 
+  async hardDelete(id: string): Promise<void> {
+    await this.userRepo.delete(id);
+  }
+
   // ─── SpecialistProfile ────────────────────────────────────────────────────
 
   async createSpecialistProfile(data: Partial<SpecialistProfile>): Promise<SpecialistProfile> {
