@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
-import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle, Camera } from 'lucide-react'
+import { Star, Briefcase, User, ChevronRight, Plus, X, Pencil, CheckCircle, Award, Loader2, AlertCircle, Camera, Trash2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { portfolioApi, PublicProfile, ProfileLink } from '../api/portfolio'
+import { portfolioApi, PublicProfile, ProfileLink, Certification } from '../api/portfolio'
 import { usersApi } from '../api/auth'
 import { skillsApi, Skill, SkillQuestion, SkillValidation, QuizResult } from '../api/skills'
 import { extractApiError } from '../api/client'
@@ -9,20 +9,29 @@ import { uploadAvatar } from '../lib/sanity'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
-type Tab = 'history' | 'skills'
+type Tab = 'history' | 'skills' | 'certifications'
 
 export default function Portfolio() {
   const [profile, setProfile] = useState<PublicProfile | null>(null)
+  const [certifications, setCertifications] = useState<Certification[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('history')
   const [editOpen, setEditOpen] = useState(false)
   const [addSkillOpen, setAddSkillOpen] = useState(false)
+  const [addCertOpen, setAddCertOpen] = useState(false)
 
   useEffect(() => {
     portfolioApi.getMyProfile()
       .then(res => setProfile(res.data))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!profile?.userId) return
+    portfolioApi.listCertifications(profile.userId)
+      .then(r => setCertifications(r.data))
+      .catch(() => {})
+  }, [profile?.userId])
 
   if (loading) return (
     <div className="bg-dark-bg min-h-screen flex items-center justify-center">
@@ -137,6 +146,14 @@ export default function Portfolio() {
                 >
                   Habilidades & Validações
                 </button>
+                <button
+                  onClick={() => setTab('certifications')}
+                  className={`px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider transition-colors border-b-2 -mb-px ${
+                    tab === 'certifications' ? 'text-brand-500 border-brand-500' : 'text-zinc-500 border-transparent hover:text-zinc-300'
+                  }`}
+                >
+                  Certificações
+                </button>
               </div>
 
               {tab === 'history' ? (
@@ -163,11 +180,17 @@ export default function Portfolio() {
                     </div>
                   ))}
                 </div>
-              ) : (
+              ) : tab === 'skills' ? (
                 <SkillsTab
                   profile={profile}
                   onSkillAdded={(updatedProfile) => setProfile(updatedProfile)}
                   onAddSkillOpen={() => setAddSkillOpen(true)}
+                />
+              ) : (
+                <CertificationsTab
+                  certifications={certifications}
+                  onAdd={() => setAddCertOpen(true)}
+                  onDelete={(id) => setCertifications(prev => prev.filter(c => c.id !== id))}
                 />
               )}
             </div>
@@ -200,6 +223,216 @@ export default function Portfolio() {
           }}
         />
       )}
+
+      {addCertOpen && (
+        <AddCertificationModal
+          onClose={() => setAddCertOpen(false)}
+          onCreated={(cert) => { setCertifications(prev => [...prev, cert]); setAddCertOpen(false) }}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── CertificationsTab ───────────────────────────────────────────────────────
+
+function CertificationsTab({ certifications, onAdd, onDelete }: {
+  certifications: Certification[]
+  onAdd: () => void
+  onDelete: (id: string) => void
+}) {
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  async function handleDelete(id: string) {
+    if (!confirm('Remover esta certificação?')) return
+    setDeleting(id)
+    try {
+      await portfolioApi.deleteCertification(id)
+      onDelete(id)
+    } catch {
+      // silently ignore — certification stays in list
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <p className="font-mono text-xs text-zinc-500">
+          {certifications.length === 0
+            ? 'Nenhuma certificação cadastrada.'
+            : `${certifications.length} certificação${certifications.length !== 1 ? 'ões' : ''} no perfil.`}
+        </p>
+        <button
+          onClick={onAdd}
+          className="font-mono text-[10px] text-brand-500 border border-brand-500/50 hover:border-brand-500 px-3 py-1.5 transition-colors flex items-center gap-1"
+        >
+          <Plus className="w-3 h-3" /> Adicionar Certificação
+        </button>
+      </div>
+
+      {certifications.length === 0 ? (
+        <div className="py-12 text-center border border-dashed border-zinc-700 font-mono text-zinc-600">
+          <Award className="w-8 h-8 mx-auto mb-3 text-zinc-700" />
+          <p className="mb-3">Adicione suas certificações para aparecerem no seu perfil público.</p>
+          <button
+            onClick={onAdd}
+            className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors"
+          >
+            Adicionar Certificação
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {certifications.map(cert => (
+            <div key={cert.id} className="bg-dark-card border border-dark-border p-4 flex items-start justify-between gap-4 hover:border-brand-500/30 transition-colors">
+              <div className="flex items-start gap-3 min-w-0">
+                <Award className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="font-mono text-sm text-white font-bold truncate">{cert.name}</p>
+                  <p className="font-mono text-[10px] text-zinc-500 mt-0.5">{cert.issuer}</p>
+                  {cert.issueDate && (
+                    <p className="font-mono text-[9px] text-zinc-600 mt-0.5">
+                      Emitido em {new Date(cert.issueDate).toLocaleDateString('pt-BR')}
+                    </p>
+                  )}
+                  {cert.credentialUrl && (
+                    <a
+                      href={cert.credentialUrl.startsWith('http://') || cert.credentialUrl.startsWith('https://') ? cert.credentialUrl : undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-[9px] text-brand-500 hover:underline mt-0.5 block"
+                    >
+                      Ver credencial
+                    </a>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => handleDelete(cert.id)}
+                disabled={deleting === cert.id}
+                className="text-zinc-600 hover:text-red-400 transition-colors shrink-0 disabled:opacity-40"
+                aria-label="Remover certificação"
+              >
+                {deleting === cert.id
+                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  : <Trash2 className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── AddCertificationModal ────────────────────────────────────────────────────
+
+function AddCertificationModal({ onClose, onCreated }: {
+  onClose: () => void
+  onCreated: (cert: Certification) => void
+}) {
+  const [title, setTitle] = useState('')
+  const [institution, setInstitution] = useState('')
+  const [issuedAt, setIssuedAt] = useState('')
+  const [credentialUrl, setCredentialUrl] = useState('')
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  async function handleSave() {
+    if (!title.trim()) { setError('Nome da certificação é obrigatório.'); return }
+    if (!institution.trim()) { setError('Emissor é obrigatório.'); return }
+    setSaving(true)
+    setError('')
+    try {
+      const res = await portfolioApi.createCertification({
+        title: title.trim(),
+        institution: institution.trim(),
+        issuedAt: issuedAt || undefined,
+        credentialUrl: credentialUrl.trim() || undefined,
+      })
+      onCreated(res.data)
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao salvar certificação.'))
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
+      <div className="relative bg-dark-card border border-dark-border w-full max-w-md p-6 shadow-2xl z-10">
+        <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-brand-500" />
+        <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-brand-500" />
+
+        <div className="flex items-center justify-between mb-6 border-b border-dark-border pb-4">
+          <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider">Adicionar Certificação</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Nome da Certificação *</label>
+            <input
+              type="text" maxLength={100} value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="Ex: AWS Certified Solutions Architect"
+              className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Emissor / Instituição *</label>
+            <input
+              type="text" maxLength={100} value={institution}
+              onChange={e => setInstitution(e.target.value)}
+              placeholder="Ex: Amazon Web Services"
+              className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Data de Emissão</label>
+            <input
+              type="date" value={issuedAt}
+              onChange={e => setIssuedAt(e.target.value)}
+              className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 focus:outline-none focus:border-brand-500 rounded-none"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">URL da Credencial</label>
+            <input
+              type="url" maxLength={300} value={credentialUrl}
+              onChange={e => setCredentialUrl(e.target.value)}
+              placeholder="https://..."
+              className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+            />
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 font-mono text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              {error}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-dark-border">
+          <button onClick={onClose}
+            className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase">
+            Cancelar
+          </button>
+          <button onClick={handleSave} disabled={saving}
+            className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-6 py-2 border border-brand-500 hover:bg-brand-400 transition-colors uppercase disabled:opacity-60 flex items-center gap-2">
+            <ChevronRight className="w-3.5 h-3.5" />
+            {saving ? 'Salvando...' : 'Salvar'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

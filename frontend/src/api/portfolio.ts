@@ -5,6 +5,18 @@ export interface ProfileLink {
   url: string
 }
 
+export interface Certification {
+  id: string
+  specialistId: string
+  name: string
+  issuer: string
+  issueDate?: string
+  expiryDate?: string
+  credentialId?: string
+  credentialUrl?: string
+  createdAt: string
+}
+
 export interface PublicProfile {
   id: string
   userId: string
@@ -66,4 +78,10 @@ export const portfolioApi = {
     const qs = params.toString()
     return api.get<PublicProfile[]>(`/portfolio/specialists${qs ? `?${qs}` : ''}`)
   },
+  listCertifications: (specialistId: string) =>
+    api.get<Certification[]>(`/certifications/specialist/${specialistId}`),
+  createCertification: (data: { title: string; institution: string; issuedAt?: string; credentialUrl?: string }) =>
+    api.post<Certification>('/portfolio/me/certifications', data),
+  deleteCertification: (id: string) =>
+    api.delete<void>(`/certifications/${id}`),
 }

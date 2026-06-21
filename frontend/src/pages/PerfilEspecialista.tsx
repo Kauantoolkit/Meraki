@@ -124,16 +124,24 @@ export default function PerfilEspecialista() {
                     Stack Tecnológica
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
-                    {profile.skills.map(s => (
-                      <span key={s} className="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">
-                        {s}
-                      </span>
-                    ))}
+                    {profile.skills.map(s => {
+                      const badge = profile.skillBadges?.[s]
+                      const cls = badge === 'green'
+                        ? 'border-green-500 text-green-400'
+                        : badge === 'yellow'
+                        ? 'border-yellow-500 text-yellow-400'
+                        : 'border-zinc-700 text-zinc-300'
+                      return (
+                        <span key={s} className={`text-[10px] font-mono border bg-dark-input px-2 py-1 ${cls}`}>
+                          {s}
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
               )}
 
-              {/* Credentials — só aparece se o especialista tiver certificações reais */}
+              {/* Credentials */}
               {certifications.length > 0 && (
                 <div className="bg-dark-card border border-dark-border p-5">
                   <h3 className="font-mono text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -142,11 +150,26 @@ export default function PerfilEspecialista() {
                   </h3>
                   <div className="space-y-2">
                     {certifications.map(cert => (
-                      <div key={cert.id} className="flex items-center gap-3 bg-dark-input border border-dark-border p-3">
-                        <Award className="w-4 h-4 text-brand-500 shrink-0" />
-                        <div>
-                          <p className="font-mono text-[10px] text-white font-bold">{cert.name}</p>
+                      <div key={cert.id} className="flex items-start gap-3 bg-dark-input border border-dark-border p-3">
+                        <Award className="w-4 h-4 text-brand-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="font-mono text-[10px] text-white font-bold truncate">{cert.name}</p>
                           <p className="font-mono text-[9px] text-zinc-500">{cert.issuer}</p>
+                          {cert.issueDate && (
+                            <p className="font-mono text-[9px] text-zinc-600 mt-0.5">
+                              {new Date(cert.issueDate).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                          {cert.credentialUrl && safeHref(cert.credentialUrl) && (
+                            <a
+                              href={safeHref(cert.credentialUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-mono text-[9px] text-brand-500 hover:underline mt-0.5 block truncate"
+                            >
+                              Ver credencial
+                            </a>
+                          )}
                         </div>
                       </div>
                     ))}
