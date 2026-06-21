@@ -96,7 +96,7 @@ export class GetMyPortfolioUseCase {
         projectId: h.projectId,
         projectTitle: h.projectTitle ?? '',
         companyName: h.companyId ?? '',
-        earnedAmount: Number(h.amountEarned ?? 0),
+        amount: Number(h.amountEarned ?? 0),
         completedAt: h.completedAt ? h.completedAt.toISOString() : '',
       })),
     };
