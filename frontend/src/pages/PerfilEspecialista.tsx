@@ -124,11 +124,19 @@ export default function PerfilEspecialista() {
                     Stack Tecnológica
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
-                    {profile.skills.map(s => (
-                      <span key={s} className="text-[10px] font-mono border border-zinc-700 bg-dark-input text-zinc-300 px-2 py-1">
-                        {s}
-                      </span>
-                    ))}
+                    {profile.skills.map(s => {
+                      const badge = profile.skillBadges?.[s]
+                      const cls = badge === 'green'
+                        ? 'border-green-500 text-green-400'
+                        : badge === 'yellow'
+                        ? 'border-yellow-500 text-yellow-400'
+                        : 'border-zinc-700 text-zinc-300'
+                      return (
+                        <span key={s} className={`text-[10px] font-mono border bg-dark-input px-2 py-1 ${cls}`}>
+                          {s}
+                        </span>
+                      )
+                    })}
                   </div>
                 </div>
               )}
