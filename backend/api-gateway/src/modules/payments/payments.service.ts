@@ -23,11 +23,11 @@ export class PaymentsService {
 
   async findByCompany(token: string) {
     const projectsRes = await this.proxy.get(`${PROJECT_URL}/api/projects`, this.proxy.authHeaders(token));
-    const projects: any[] = projectsRes.data?.data ?? [];
+    const projects: any[] = projectsRes?.data ?? projectsRes ?? [];
     const paymentArrays = await Promise.all(
       projects.map((p: any) =>
         this.proxy.get(`${PAYMENT_URL}/api/payments/project/${p.id}`, this.proxy.authHeaders(token))
-          .then(r => r.data ?? [])
+          .then(r => Array.isArray(r) ? r : r?.data ?? [])
           .catch(() => [])
       )
     );

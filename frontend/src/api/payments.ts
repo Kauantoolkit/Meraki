@@ -5,9 +5,9 @@ export interface Payment {
   projectId: string
   milestoneId: string
   amount: number
-  fee: number
-  netAmount: number
-  status: 'PENDING' | 'RELEASED' | 'REFUNDED'
+  specialistAmount: number
+  platformFee: number
+  status: 'PENDING' | 'ESCROW_HELD' | 'RELEASED' | 'REFUNDED'
   createdAt: string
 }
 

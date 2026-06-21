@@ -10,7 +10,6 @@ const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', c
 export default function Financeiro() {
   const [payments, setPayments] = useState<Payment[]>([])
   const [pendingMilestones, setPendingMilestones] = useState<Milestone[]>([])
-  const [totalBudget, setTotalBudget] = useState(0)
   const [loading, setLoading] = useState(true)
   const [approving, setApproving] = useState<string | null>(null)
 
@@ -19,11 +18,10 @@ export default function Financeiro() {
       paymentsApi.listByCompany(),
       projectsApi.listByCompany(),
     ]).then(async ([paymentsRes, projectsRes]) => {
-      const pyms = paymentsRes.data.data
-      setPayments(pyms)
+      const pyms = paymentsRes.data?.data ?? paymentsRes.data ?? []
+      setPayments(Array.isArray(pyms) ? pyms : [])
 
       const projects = projectsRes.data.data.filter(p => p.status === 'IN_PROGRESS')
-      setTotalBudget(projects.reduce((acc, p) => acc + p.budget, 0))
 
       const milestoneArrays = await Promise.all(
         projects.map(p =>
@@ -37,9 +35,9 @@ export default function Financeiro() {
     .finally(() => setLoading(false))
   }, [])
 
-  const escrow = payments.filter(p => p.status === 'PENDING').reduce((acc, p) => acc + p.amount, 0)
-  const released = payments.filter(p => p.status === 'RELEASED').reduce((acc, p) => acc + p.netAmount, 0)
-  const awaiting = Math.max(0, totalBudget - escrow - released)
+  const escrow = payments.filter(p => p.status === 'ESCROW_HELD').reduce((acc, p) => acc + Number(p.amount), 0)
+  const released = payments.filter(p => p.status === 'RELEASED').reduce((acc, p) => acc + Number(p.amount), 0)
+  const totalPago = payments.filter(p => p.status !== 'REFUNDED').reduce((acc, p) => acc + Number(p.amount), 0)
 
   function exportCsv() {
     const header = 'ID,Projeto,Milestone,Valor Bruto,Taxa (10%),Valor Líquido,Status,Data'
@@ -48,8 +46,8 @@ export default function Financeiro() {
       p.projectId,
       p.milestoneId,
       p.amount.toFixed(2),
-      p.fee.toFixed(2),
-      p.netAmount.toFixed(2),
+      Number(p.platformFee ?? 0).toFixed(2),
+      Number(p.specialistAmount ?? p.amount).toFixed(2),
       p.status,
       new Date(p.createdAt).toLocaleDateString('pt-BR'),
     ].join(','))
@@ -80,7 +78,7 @@ export default function Financeiro() {
   const STATUS_CLS: Record<string, string> = {
     RELEASED: 'text-brand-500 border-brand-500/30 bg-brand-500/10',
     PENDING:  'text-orange-400 border-orange-400/30 bg-orange-400/10',
-    ESCROW:   'text-blue-400 border-blue-400/30 bg-blue-400/10',
+    ESCROW_HELD: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
   }
 
   return (
@@ -98,7 +96,7 @@ export default function Financeiro() {
             </div>
             <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Gestão de Fundo de Garantia</h1>
             <p className="text-sm text-zinc-400 font-mono mt-2">
-              Controlo de depósitos de Escrow e a liberação de pagamentos por Milestone.
+              Controle de depósitos de Escrow e a liberação de pagamentos por Milestone.
             </p>
           </div>
           <div className="flex gap-3">
@@ -133,11 +131,11 @@ export default function Financeiro() {
           </div>
           <div className="bg-dark-card border border-dark-border p-5">
             <div className="flex justify-between items-start mb-4">
-              <span className="font-mono text-xs text-zinc-500 uppercase">Aguardando Utilização</span>
+              <span className="font-mono text-xs text-zinc-500 uppercase">Total Investido</span>
               <Clock className="w-4 h-4 text-zinc-400" />
             </div>
-            <span className="text-2xl font-bold text-white font-mono">{fmt(awaiting)}</span>
-            <p className="font-mono text-[10px] text-zinc-600 mt-1 uppercase">A aguardar milestone</p>
+            <span className="text-2xl font-bold text-white font-mono">{fmt(totalPago)}</span>
+            <p className="font-mono text-[10px] text-zinc-600 mt-1 uppercase">Soma de todos os pagamentos</p>
           </div>
         </div>
 
@@ -159,7 +157,7 @@ export default function Financeiro() {
                 <div className="p-8 text-center font-mono text-zinc-500">Carregando...</div>
               ) : payments.length === 0 ? (
                 <div className="p-8 text-center font-mono text-zinc-600 border border-dashed border-zinc-700 m-4">
-                  Nenhuma transação registada.
+                  Nenhuma transação registrada.
                 </div>
               ) : (
                 <>
@@ -175,7 +173,7 @@ export default function Financeiro() {
                         <span className="font-mono text-[10px] text-zinc-400 truncate">{p.id.slice(0, 8)}</span>
                         <span className="font-mono text-[10px] text-zinc-500">{new Date(p.createdAt).toLocaleDateString('pt-BR')}</span>
                         <span className="font-mono text-[10px] text-zinc-400">ESCROW_REL</span>
-                        <span className="font-mono text-xs font-bold text-white">{fmt(p.netAmount)}</span>
+                        <span className="font-mono text-xs font-bold text-white">{fmt(Number(p.specialistAmount ?? p.amount))}</span>
                         <span className={`font-mono text-[9px] px-2 py-0.5 border w-fit ${STATUS_CLS[p.status] ?? 'text-zinc-500 border-dark-border'}`}>
                           {paymentStatusLabel[p.status] ?? p.status}
                         </span>

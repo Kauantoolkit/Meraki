@@ -44,6 +44,7 @@ import { ProjectHistoryListener } from './application/listeners/project-history.
 import { ProjectController } from './interfaces/controllers/project.controller';
 import { MilestoneController } from './interfaces/controllers/milestone.controller';
 import { ProjectHistoryController } from './interfaces/controllers/project-history.controller';
+import { InternalMilestoneController } from './interfaces/controllers/internal-milestone.controller';
 
 // Event consumer (bid.accepted)
 import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.consumer';
@@ -59,6 +60,7 @@ import { SkillsCatalogService } from './infrastructure/http/skills-catalog.servi
     ProjectController,
     MilestoneController,
     ProjectHistoryController,
+    InternalMilestoneController,
   ],
   providers: [
     // Auth

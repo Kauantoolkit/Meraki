@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Terminal, Settings2, UploadCloud, ShieldCheck, Check, Send, User, Calendar, Lock, AlertCircle, X } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project, Milestone } from '../api/projects'
+import { paymentsApi, Payment } from '../api/payments'
 import { projectStatusLabel } from '../lib/labels'
 import { milestonesApi, DeliveryData } from '../api/milestones'
 import { useAuth } from '../contexts/AuthContext'
@@ -41,6 +42,7 @@ export default function Kanban() {
   const [actionLoading, setActionLoading] = useState(false)
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([])
   const [delivery, setDelivery] = useState<DeliveryData | null>(null)
+  const [projectPayments, setProjectPayments] = useState<Payment[]>([])
 
   const isCompany = ((user?.userType ?? user?.type) as string)?.toUpperCase() === 'COMPANY'
 
@@ -53,11 +55,14 @@ export default function Kanban() {
       projectsApi.getById(projectId),
       projectsApi.getMilestones(projectId),
       milestonesApi.getHistory(projectId).catch(() => ({ data: [] })),
+      paymentsApi.listByProject(projectId).catch(() => ({ data: [] })),
     ])
-      .then(([pRes, mRes, hRes]) => {
+      .then(([pRes, mRes, hRes, payRes]) => {
         setProject(pRes.data)
         setMilestones(mRes.data)
         setHistory(((hRes as { data: unknown }).data ?? []) as { action: string; description: string; createdAt: string }[])
+        const pyms = Array.isArray(payRes.data) ? payRes.data : []
+        setProjectPayments(pyms)
       })
       .finally(() => setLoading(false))
   }, [projectId])
@@ -195,8 +200,12 @@ export default function Kanban() {
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right border-r border-dark-border pr-3">
-              <p className="font-mono text-[10px] text-zinc-500 uppercase">Orçamento em Escrow</p>
-              <p className="font-mono font-bold text-brand-500">{project ? fmt(project.budget) : '—'}</p>
+              <p className="font-mono text-[10px] text-zinc-500 uppercase">Escrow Retido / Total</p>
+              {(() => {
+                const held = projectPayments.filter(p => p.status === 'ESCROW_HELD').reduce((s, p) => s + Number(p.amount), 0)
+                const total = projectPayments.reduce((s, p) => s + Number(p.amount), 0)
+                return <p className="font-mono font-bold text-brand-500">{project ? `${fmt(held)} / ${fmt(total)}` : '—'}</p>
+              })()}
             </div>
           </div>
         </div>

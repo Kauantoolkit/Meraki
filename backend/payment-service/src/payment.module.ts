@@ -38,6 +38,8 @@ import { EventPublisherService } from './infrastructure/rabbitmq/event-publisher
 // Consumers (infrastructure)
 import { MilestoneValidatedConsumer } from './infrastructure/rabbitmq/milestone-validated.consumer';
 import { DeliveryEventConsumer } from './infrastructure/rabbitmq/delivery-event.consumer';
+import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.consumer';
+import { CreateEscrowOnBidAcceptedUseCase } from './application/use-cases/create-escrow-on-bid-accepted.use-case';
 
 // Controllers (interfaces)
 import { PaymentController } from './interfaces/controllers/payment.controller';
@@ -83,9 +85,12 @@ import { ConfigService } from '@nestjs/config';
     ApproveWithdrawalUseCase,
     ProcessWithdrawalUseCase,
     GetSpecialistBalanceUseCase,
+    // Use Cases (escrow)
+    CreateEscrowOnBidAcceptedUseCase,
     // Consumers
     MilestoneValidatedConsumer,
     DeliveryEventConsumer,
+    BidAcceptedConsumer,
     // Payment Provider Factory
     {
       provide: PaymentProvider,

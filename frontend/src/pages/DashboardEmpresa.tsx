@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Activity, Inbox, Wallet, PlusSquare, FolderCode, FolderGit2, Users, Search, Trash2, X, AlertTriangle, Pencil, Plus, BookOpen, Building2, Camera, Star } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
+import { paymentsApi, Payment } from '../api/payments'
 import { portfolioApi } from '../api/portfolio'
 import { usersApi } from '../api/auth'
 import { extractApiError } from '../api/client'
@@ -27,6 +28,7 @@ export default function DashboardEmpresa() {
   const [editTarget, setEditTarget] = useState<Project | null>(null)
   const [completing, setCompleting] = useState<string | null>(null)
   const [reviewTarget, setReviewTarget] = useState<Project | null>(null)
+  const [payments, setPayments] = useState<Payment[]>([])
   const [companyAvatarUrl, setCompanyAvatarUrl] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const avatarInputRef = useRef<HTMLInputElement>(null)
@@ -45,6 +47,12 @@ export default function DashboardEmpresa() {
   }
 
   useEffect(() => { loadProjects() }, [user?.companyId])
+
+  useEffect(() => {
+    paymentsApi.listByCompany()
+      .then(res => setPayments(res.data?.data ?? res.data ?? []))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (!user?.id) return
@@ -113,7 +121,9 @@ export default function DashboardEmpresa() {
 
   const inProgress = projects.filter(p => p.status === 'IN_PROGRESS').length
   const open       = projects.filter(p => p.status === 'OPEN').length
-  const committed  = projects.filter(p => p.status === 'IN_PROGRESS').reduce((sum, p) => sum + p.budget, 0)
+  const totalBudget = projects.filter(p => p.status === 'IN_PROGRESS').reduce((sum, p) => sum + p.budget, 0)
+  const totalReleased = payments.filter(p => p.status === 'RELEASED').reduce((sum, p) => sum + Number(p.amount), 0)
+  const committed  = Math.max(0, totalBudget - totalReleased)
 
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased overflow-x-hidden">

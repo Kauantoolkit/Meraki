@@ -6,15 +6,17 @@ import { paymentsApi, Payment } from '../api/payments'
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
 const STATUS_CLS: Record<string, string> = {
-  RELEASED: 'text-brand-500 border-brand-500/30 bg-brand-500/10',
-  PENDING:  'text-orange-400 border-orange-400/30 bg-orange-400/10',
-  REFUNDED: 'text-red-400 border-red-400/30 bg-red-400/10',
+  RELEASED:    'text-brand-500 border-brand-500/30 bg-brand-500/10',
+  ESCROW_HELD: 'text-orange-400 border-orange-400/30 bg-orange-400/10',
+  PENDING:     'text-orange-400 border-orange-400/30 bg-orange-400/10',
+  REFUNDED:    'text-red-400 border-red-400/30 bg-red-400/10',
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  RELEASED: 'Liberado',
-  PENDING:  'Pendente',
-  REFUNDED: 'Estornado',
+  RELEASED:    'Liberado',
+  ESCROW_HELD: 'Em Escrow',
+  PENDING:     'Pendente',
+  REFUNDED:    'Estornado',
 }
 
 export default function GanhosEspecialista() {
@@ -26,11 +28,11 @@ export default function GanhosEspecialista() {
   }, [])
 
   const released = payments.filter(p => p.status === 'RELEASED')
-  const inEscrow  = payments.filter(p => p.status === 'PENDING')
+  const inEscrow  = payments.filter(p => p.status === 'ESCROW_HELD')
 
-  const totalRecebido  = released.reduce((acc, p) => acc + p.netAmount, 0)
-  const emEscrow       = inEscrow.reduce((acc, p) => acc + p.amount, 0)
-  const ganhosBrutos   = payments.filter(p => p.status !== 'REFUNDED').reduce((acc, p) => acc + p.netAmount, 0)
+  const totalRecebido  = released.reduce((acc, p) => acc + Number(p.specialistAmount ?? 0), 0)
+  const emEscrow       = inEscrow.reduce((acc, p) => acc + Number(p.amount), 0)
+  const ganhosBrutos   = payments.filter(p => p.status !== 'REFUNDED').reduce((acc, p) => acc + Number(p.specialistAmount ?? p.amount), 0)
 
   return (
     <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased">
@@ -122,7 +124,7 @@ export default function GanhosEspecialista() {
                   <div className="flex items-center gap-1">
                     <ArrowDownLeft className="w-3 h-3 text-brand-500" />
                     <span className="font-mono text-sm font-bold text-brand-500">
-                      +{fmt(p.netAmount)}
+                      +{fmt(Number(p.specialistAmount ?? p.amount))}
                     </span>
                   </div>
                   <span className={`font-mono text-[9px] px-2 py-0.5 border w-fit ${STATUS_CLS[p.status] ?? 'text-zinc-500 border-dark-border'}`}>
