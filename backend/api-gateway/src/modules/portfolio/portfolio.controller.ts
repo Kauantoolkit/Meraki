@@ -130,20 +130,3 @@ export class ReviewsController {
   }
 }
 
-@ApiTags('Certifications')
-@Controller('certifications')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
-export class CertificationsController {
-  constructor(private readonly portfolioService: PortfolioService) {}
-
-  private token(req: Request): string {
-    return req.headers.authorization?.split(' ')[1];
-  }
-
-  @Get('specialist/:specialistId')
-  @ApiOperation({ summary: 'Certificações do especialista' })
-  listCertifications(@Param('specialistId') specialistId: string, @Req() req: Request) {
-    return this.portfolioService.listCertifications(specialistId, this.token(req));
-  }
-}
