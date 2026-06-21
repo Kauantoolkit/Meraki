@@ -55,7 +55,16 @@ export default function Kanban() {
       milestonesApi.getHistory(projectId).catch(() => ({ data: [] })),
     ])
       .then(([pRes, mRes, hRes]) => {
-        setProject(pRes.data)
+        const p = pRes.data
+        if (p.status === 'SIGNING') {
+          navigate(`/contract/${projectId}`, { replace: true })
+          return
+        }
+        if (p.status === 'COMPLETED') {
+          navigate('/dashboard', { replace: true })
+          return
+        }
+        setProject(p)
         setMilestones(mRes.data)
         setHistory(((hRes as { data: unknown }).data ?? []) as { action: string; description: string; createdAt: string }[])
       })
