@@ -17,6 +17,6 @@ export const getTypeOrmConfig = (): TypeOrmModuleOptions => ({
   password: process.env.DB_PASS || 'postgres',
   database: process.env.DB_NAME || 'identity_db',
   entities: [UserSchema, SpecialistProfileSchema, CompanyProfileSchema, AuditLog, RefreshTokenSchema, SkillSchema, SkillQuestionSchema, SkillValidationSchema, QuestionReportSchema],
-  synchronize: process.env.NODE_ENV !== 'production',
+  synchronize: true,
   logging: process.env.NODE_ENV === 'development',
 });

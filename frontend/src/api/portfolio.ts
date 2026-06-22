@@ -80,8 +80,6 @@ export const portfolioApi = {
     const qs = params.toString()
     return api.get<PublicProfile[]>(`/portfolio/specialists${qs ? `?${qs}` : ''}`)
   },
-  listCertifications: (specialistId: string) =>
-    api.get<Certification[]>(`/certifications/specialist/${specialistId}`),
   createCertification: (data: { title: string; institution: string; issuedAt?: string; credentialUrl?: string }) =>
     api.post<Certification>('/portfolio/me/certifications', data),
   deleteCertification: (id: string) =>

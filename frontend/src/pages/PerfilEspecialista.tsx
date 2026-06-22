@@ -136,7 +136,7 @@ export default function PerfilEspecialista() {
                   <div className="bg-dark-input border border-dark-border p-3 text-center">
                     <p className="font-mono font-bold text-brand-500 text-sm mb-1">
                       {profile.workHistory && profile.workHistory.length > 0
-                        ? fmt(profile.workHistory.reduce((s, w) => s + w.amount, 0) / profile.workHistory.length)
+                        ? fmt(profile.workHistory.reduce((s: number, w: any) => s + w.amount, 0) / profile.workHistory.length)
                         : 'R$—'}
                     </p>
                     <p className="font-mono text-[9px] text-zinc-500 uppercase">Média/Milestone</p>
@@ -153,7 +153,7 @@ export default function PerfilEspecialista() {
                     Stack Tecnológica
                   </h3>
                   <div className="flex flex-wrap gap-1.5">
-                    {profile.skills.map(s => {
+                    {profile.skills.map((s: string) => {
                       const badge = profile.skillBadges?.[s]
                       const cls = badge === 'green'
                         ? 'border-green-500 text-green-400'
@@ -281,7 +281,7 @@ export default function PerfilEspecialista() {
                     <div className="py-12 text-center border border-dashed border-zinc-700 font-mono text-zinc-600">
                       Nenhum link cadastrado.
                     </div>
-                  ) : profile.links.map((l, i) => (
+                  ) : profile.links.map((l: any, i: number) => (
                     <a
                       key={i}
                       href={safeHref(l.url)}
