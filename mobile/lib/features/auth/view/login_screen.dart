@@ -264,6 +264,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                       const SizedBox(height: 20),
 
+                      // ─── Forgot password link ──────────────────────────
+                      GestureDetector(
+                        onTap: () => context.go('/forgot-password'),
+                        child: Text(
+                          'ESQUECEU A SENHA?',
+                          style: GoogleFonts.sourceCodePro(
+                            fontSize: 11,
+                            color: AppTheme.brand,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
                       // ─── Register link ───────────────────────────────
                       GestureDetector(
                         onTap: () => context.go('/register'),

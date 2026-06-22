@@ -650,7 +650,7 @@ class _ProjectCard extends StatelessWidget {
                                   icon: Icons.view_kanban_rounded,
                                   label: 'Ver Kanban',
                                   onTap: () => context.go(
-                                      '/projects/${project.id}/kanban'),
+                                      '/projects/${project.id}/contract'),
                                 ),
                               if (isCompany && isOpen)
                                 _ActionButton(
@@ -664,7 +664,7 @@ class _ProjectCard extends StatelessWidget {
                                   icon: Icons.view_kanban_rounded,
                                   label: 'Kanban',
                                   onTap: () => context.go(
-                                      '/projects/${project.id}/kanban'),
+                                      '/projects/${project.id}/contract'),
                                 ),
                             ],
                           ),

@@ -61,7 +61,7 @@ class _ProjectDetailScreenState extends ConsumerState<ProjectDetailScreen> {
             if (isSpecialist && isAssigned)
               TextButton.icon(
                 onPressed: () =>
-                    context.go('/projects/${widget.projectId}/kanban'),
+                    context.go('/projects/${widget.projectId}/contract'),
                 icon: const Icon(Icons.view_kanban_rounded, size: 16),
                 label: const Text('Kanban'),
               ),

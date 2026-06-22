@@ -402,7 +402,7 @@ class _BidCardState extends ConsumerState<_BidCard> {
                 // Navigate to kanban after acceptance
                 Future.delayed(const Duration(milliseconds: 800), () {
                   if (context.mounted) {
-                    context.go('/projects/${widget.projectId}/kanban');
+                    context.go('/projects/${widget.projectId}/contract');
                   }
                 });
               }

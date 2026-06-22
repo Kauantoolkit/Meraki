@@ -26,6 +26,7 @@ dependencies:
 
   # Utils
   intl: ^0.18.1
+  crypto: ^3.0.3
 
   # UI
   google_fonts: ^6.2.1

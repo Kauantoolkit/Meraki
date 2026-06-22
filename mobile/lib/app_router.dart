@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'features/auth/view/login_screen.dart';
 import 'features/auth/view/register_screen.dart';
+import 'features/auth/view/forgot_password_screen.dart';
+import 'features/projects/view/contract_screen.dart';
 import 'features/auth/viewmodel/auth_viewmodel.dart';
 import 'features/dashboard/view/dashboard_screen.dart';
 import 'features/projects/view/projects_list_screen.dart';
@@ -39,7 +41,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = ref.read(authViewModelProvider).isAuthenticated;
       final loc = state.matchedLocation;
-      final isPublic = loc == '/login' || loc == '/register';
+      final isPublic = loc == '/login' || loc == '/register' || loc == '/forgot-password';
       if (!isAuthenticated && !isPublic) return '/login';
       if (isAuthenticated && isPublic) return '/dashboard';
       return null;
@@ -47,6 +49,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),
       GoRoute(path: '/register', builder: (_, __) => const RegisterScreen()),
+      GoRoute(path: '/forgot-password', builder: (_, __) => const ForgotPasswordScreen()),
       ShellRoute(
         navigatorKey: _shellNavigatorKey,
         builder: (context, state, child) => MainShell(child: child),
@@ -82,6 +85,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/projects/:id/bid',
             builder: (_, state) =>
                 SubmitBidScreen(projectId: state.pathParameters['id']!),
+          ),
+
+          // ─── Contrato ──────────────────────────────────────────────────
+          GoRoute(
+            path: '/projects/:id/contract',
+            builder: (_, state) =>
+                ContractScreen(projectId: state.pathParameters['id']!),
           ),
 
           // ─── Kanban ───────────────────────────────────────────────────
