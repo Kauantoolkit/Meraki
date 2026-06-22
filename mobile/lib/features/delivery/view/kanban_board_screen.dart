@@ -25,6 +25,16 @@ class _KanbanBoardScreenState extends ConsumerState<KanbanBoardScreen> {
     });
   }
 
+  void _showHistory() {
+    ref.read(projectHistoryViewModelProvider.notifier).load(widget.projectId);
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _HistorySheet(projectId: widget.projectId),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final boardAsync = ref.watch(kanbanViewModelProvider);
@@ -52,6 +62,11 @@ class _KanbanBoardScreenState extends ConsumerState<KanbanBoardScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history, size: 20),
+            tooltip: 'Histórico do projeto',
+            onPressed: _showHistory,
+          ),
           IconButton(
             icon: const Icon(Icons.refresh, size: 20),
             onPressed: () => ref
@@ -640,6 +655,152 @@ class _SmallButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─── Histórico do projeto (RF11) ─────────────────────────────────────────────
+// Painel estilo terminal, em paridade com o frontend React.
+class _HistorySheet extends ConsumerWidget {
+  final String projectId;
+  const _HistorySheet({required this.projectId});
+
+  static String _fmtTime(String iso) {
+    final t = DateTime.tryParse(iso)?.toLocal();
+    if (t == null) return '--:--:--';
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${two(t.hour)}:${two(t.minute)}:${two(t.second)}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final historyAsync = ref.watch(projectHistoryViewModelProvider);
+    final shortId = projectId.length >= 8 ? projectId.substring(0, 8) : projectId;
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.92,
+      builder: (context, scrollController) {
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          child: Container(
+            color: const Color(0xFF000000),
+            child: Column(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.slate900,
+                    border: Border(
+                        bottom: BorderSide(color: AppTheme.slate700)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.terminal,
+                          size: 16, color: AppTheme.brand),
+                      const SizedBox(width: 8),
+                      Text(
+                        'HISTÓRICO',
+                        style: GoogleFonts.sourceCodePro(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.close,
+                            size: 18, color: AppTheme.slate400),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: historyAsync.when(
+                    loading: () => const LoadingIndicator(),
+                    error: (e, _) => Center(
+                      child: Text(
+                        'Erro ao carregar histórico',
+                        style: GoogleFonts.sourceCodePro(
+                            color: AppTheme.danger, fontSize: 11),
+                      ),
+                    ),
+                    data: (history) => ListView(
+                      controller: scrollController,
+                      padding: const EdgeInsets.all(16),
+                      children: [
+                        Text.rich(
+                          TextSpan(
+                            style: GoogleFonts.sourceCodePro(
+                                fontSize: 11, height: 1.6),
+                            children: [
+                              const TextSpan(
+                                  text: '[SYS] ',
+                                  style:
+                                      TextStyle(color: AppTheme.slate500)),
+                              const TextSpan(
+                                  text: 'PROJECT_EVENT: ',
+                                  style: TextStyle(color: AppTheme.brand)),
+                              TextSpan(
+                                  text: 'Board carregado para $shortId',
+                                  style: const TextStyle(
+                                      color: AppTheme.slate400)),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        if (history.isEmpty)
+                          Text(
+                            '[SYS] Sem eventos registados ainda.',
+                            style: GoogleFonts.sourceCodePro(
+                                color: AppTheme.slate500, fontSize: 11),
+                          )
+                        else
+                          ...history.map(
+                            (h) => Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: Text.rich(
+                                TextSpan(
+                                  style: GoogleFonts.sourceCodePro(
+                                      fontSize: 11, height: 1.5),
+                                  children: [
+                                    TextSpan(
+                                        text: '[${_fmtTime(h.createdAt)}] ',
+                                        style: const TextStyle(
+                                            color: AppTheme.slate500)),
+                                    TextSpan(
+                                        text: '${h.action}: ',
+                                        style: const TextStyle(
+                                            color: AppTheme.brand)),
+                                    TextSpan(
+                                        text: h.description ?? '',
+                                        style: const TextStyle(
+                                            color: Colors.white)),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 12),
+                        Text(
+                          r'meraki@kanban:~$',
+                          style: GoogleFonts.sourceCodePro(
+                              color: AppTheme.brand, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }
