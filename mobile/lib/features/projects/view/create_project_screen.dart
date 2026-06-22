@@ -123,6 +123,14 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen> {
 
   void _goToStep(int step) {
     if (step > _currentStep && !_validateStep(_currentStep)) return;
+    // Step 4 (orçamento): pré-preenche com a soma das milestones, em paridade
+    // com o frontend React.
+    if (step == 3 && _milestonesTotal > 0) {
+      final total = _milestonesTotal;
+      _budgetCtrl.text = total == total.roundToDouble()
+          ? total.toInt().toString()
+          : total.toString();
+    }
     setState(() {
       _currentStep = step;
       _error = null;
