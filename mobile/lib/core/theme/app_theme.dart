@@ -144,7 +144,7 @@ abstract final class AppTheme {
 
   // ── Dark theme (the only theme) ───────────────────────────────────────────
   static ThemeData get dark {
-    final colorScheme = ColorScheme(
+    const colorScheme = ColorScheme(
       brightness: Brightness.dark,
       primary: brand,
       onPrimary: slate900,
@@ -193,7 +193,7 @@ abstract final class AppTheme {
         ),
         iconTheme: const IconThemeData(color: slate400, size: 22),
         actionsIconTheme: const IconThemeData(color: slate500, size: 22),
-        shape: Border(bottom: BorderSide(color: slate200)),
+        shape: const Border(bottom: BorderSide(color: slate200)),
       ),
 
       // ── Card ────────────────────────────────────────────────────────────
@@ -204,7 +204,7 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(4),
-          side: BorderSide(color: slate200),
+          side: const BorderSide(color: slate200),
         ),
         margin: EdgeInsets.zero,
       ),
@@ -217,11 +217,11 @@ abstract final class AppTheme {
             const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: slate200),
+          borderSide: const BorderSide(color: slate200),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
-          borderSide: BorderSide(color: slate200),
+          borderSide: const BorderSide(color: slate200),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(4),
@@ -304,7 +304,7 @@ abstract final class AppTheme {
       // ── Chips ───────────────────────────────────────────────────────────
       chipTheme: ChipThemeData(
         backgroundColor: slate700,
-        side: BorderSide(color: slate200),
+        side: const BorderSide(color: slate200),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         labelStyle: GoogleFonts.sourceCodePro(
             fontWeight: FontWeight.w500,
@@ -341,7 +341,7 @@ abstract final class AppTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(4),
-            side: BorderSide(color: slate200)),
+            side: const BorderSide(color: slate200)),
         elevation: 0,
         titleTextStyle: GoogleFonts.plusJakartaSans(
             color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16),
@@ -350,13 +350,13 @@ abstract final class AppTheme {
       ),
 
       // ── Bottom Sheet ─────────────────────────────────────────────────────
-      bottomSheetTheme: BottomSheetThemeData(
+      bottomSheetTheme: const BottomSheetThemeData(
         backgroundColor: slate100,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(8)),
+              BorderRadius.vertical(top: Radius.circular(8)),
           side: BorderSide(color: slate200),
         ),
       ),
@@ -367,7 +367,7 @@ abstract final class AppTheme {
         backgroundColor: slate100,
         shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(4),
-            side: BorderSide(color: brand.withOpacity(0.4))),
+            side: BorderSide(color: brand.withValues(alpha: 0.4))),
         contentTextStyle:
             GoogleFonts.sourceCodePro(color: Colors.white, fontSize: 12),
       ),
@@ -405,7 +405,7 @@ abstract final class AppTheme {
       ),
 
       // ── ProgressIndicator ───────────────────────────────────────────────
-      progressIndicatorTheme: ProgressIndicatorThemeData(
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: brand,
         linearTrackColor: brandLight,
       ),

@@ -603,7 +603,7 @@ class _ProjectCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: bg,
                     borderRadius: BorderRadius.circular(2),
-                    border: Border.all(color: color.withOpacity(0.3)),
+                    border: Border.all(color: color.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     label,
@@ -645,7 +645,7 @@ class _ProjectCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppTheme.brandLight,
                     border: Border.all(
-                        color: AppTheme.brand.withOpacity(0.4)),
+                        color: AppTheme.brand.withValues(alpha: 0.4)),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(

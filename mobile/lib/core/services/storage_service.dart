@@ -36,7 +36,7 @@ class StorageService {
 
   List<Map<String, dynamic>> getProjects() {
     return _projectsBox.values
-        .map((v) => Map<String, dynamic>.from(v as Map))
+        .map((v) => Map<String, dynamic>.from(v))
         .toList();
   }
 

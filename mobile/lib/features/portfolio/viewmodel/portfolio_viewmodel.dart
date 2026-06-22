@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../model/portfolio_model.dart';
-import '../repository/portfolio_repository.dart';
 
 class PortfolioViewModel extends AsyncNotifier<PortfolioModel> {
   @override

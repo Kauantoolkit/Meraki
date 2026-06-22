@@ -146,7 +146,7 @@ class _ProjectContent extends ConsumerWidget {
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
+                  color: Colors.black.withValues(alpha: 0.04),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
@@ -167,7 +167,7 @@ class _ProjectContent extends ConsumerWidget {
                 ),
                 if (project.specialistId != null) ...[
                   const Divider(height: 12),
-                  _InfoRow(
+                  const _InfoRow(
                     Icons.person_rounded,
                     'Especialista contratado',
                     label: 'Status',
@@ -180,7 +180,7 @@ class _ProjectContent extends ConsumerWidget {
 
           // ─── Descrição ───────────────────────────────────────────────
           const SizedBox(height: 24),
-          _SectionTitle('Descrição'),
+          const _SectionTitle('Descrição'),
           const SizedBox(height: 8),
           Text(
             project.description,
@@ -193,7 +193,7 @@ class _ProjectContent extends ConsumerWidget {
           // ─── Requisitos ──────────────────────────────────────────────
           if (project.requirements.isNotEmpty) ...[
             const SizedBox(height: 24),
-            _SectionTitle('Requisitos'),
+            const _SectionTitle('Requisitos'),
             const SizedBox(height: 8),
             ...project.requirements.map(
               (r) => Padding(
@@ -218,7 +218,7 @@ class _ProjectContent extends ConsumerWidget {
           // ─── Milestones ──────────────────────────────────────────────
           if (project.milestones.isNotEmpty) ...[
             const SizedBox(height: 24),
-            _SectionTitle('Milestones'),
+            const _SectionTitle('Milestones'),
             const SizedBox(height: 8),
             // Determina o índice da milestone desbloqueada (RN04)
             ...List.generate(project.milestones.length, (i) {
@@ -324,7 +324,7 @@ class _MilestoneTile extends ConsumerWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -406,12 +406,12 @@ class _MilestoneTile extends ConsumerWidget {
                             // RN04: aviso de bloqueio sequencial
                             if (isBlocked) ...[
                               const SizedBox(height: 6),
-                              Row(
+                              const Row(
                                 children: [
                                   Icon(Icons.lock_rounded,
                                       size: 12,
                                       color: AppTheme.slate400),
-                                  const SizedBox(width: 4),
+                                  SizedBox(width: 4),
                                   Text(
                                     'Aguardando aprovação da anterior',
                                     style: TextStyle(

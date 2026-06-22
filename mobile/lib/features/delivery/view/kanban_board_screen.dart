@@ -142,8 +142,8 @@ class _KanbanBoard extends ConsumerWidget {
                   color: AppTheme.slate100,
                   border: Border(
                     top: BorderSide(color: colColor, width: 2),
-                    left: BorderSide(color: AppTheme.slate200),
-                    right: BorderSide(color: AppTheme.slate200),
+                    left: const BorderSide(color: AppTheme.slate200),
+                    right: const BorderSide(color: AppTheme.slate200),
                   ),
                   borderRadius:
                       const BorderRadius.vertical(top: Radius.circular(4)),
@@ -165,7 +165,7 @@ class _KanbanBoard extends ConsumerWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: colColor.withOpacity(0.15),
+                        color: colColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
@@ -598,7 +598,7 @@ class _MilestoneCard extends ConsumerWidget {
                 );
               }
             },
-            child: Text('REJEITAR',
+            child: const Text('REJEITAR',
                 style: TextStyle(color: AppTheme.danger)),
           ),
         ],
@@ -625,7 +625,7 @@ class _SmallButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 6),
         decoration: BoxDecoration(
-          border: Border.all(color: color.withOpacity(0.5)),
+          border: Border.all(color: color.withValues(alpha: 0.5)),
           borderRadius: BorderRadius.circular(2),
         ),
         child: Center(

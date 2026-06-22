@@ -65,11 +65,11 @@ class _SubmitBidScreenState extends ConsumerState<SubmitBidScreen> {
       filled: true,
       fillColor: AppTheme.slate100,
       border: OutlineInputBorder(
-        borderSide: BorderSide(color: AppTheme.slate200),
+        borderSide: const BorderSide(color: AppTheme.slate200),
         borderRadius: BorderRadius.circular(4),
       ),
       enabledBorder: OutlineInputBorder(
-        borderSide: BorderSide(color: AppTheme.slate200),
+        borderSide: const BorderSide(color: AppTheme.slate200),
         borderRadius: BorderRadius.circular(4),
       ),
       focusedBorder: OutlineInputBorder(

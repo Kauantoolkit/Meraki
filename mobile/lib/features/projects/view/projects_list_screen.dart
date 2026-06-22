@@ -142,7 +142,7 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                           border: Border.all(color: AppTheme.slate200),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
+                              color: Colors.black.withValues(alpha: 0.04),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -330,7 +330,7 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                                   ? [
                                       BoxShadow(
                                         color: AppTheme.brand
-                                            .withOpacity(0.3),
+                                            .withValues(alpha: 0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -491,12 +491,12 @@ class _ProjectCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 28,
             offset: const Offset(0, 8),
           ),

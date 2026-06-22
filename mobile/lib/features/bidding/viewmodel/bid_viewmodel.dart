@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../model/bid_model.dart';
-import '../repository/bid_repository.dart';
 
 // Propostas de um projeto (visão da empresa)
 class ProjectBidsViewModel extends AsyncNotifier<List<BidModel>> {

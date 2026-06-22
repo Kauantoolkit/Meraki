@@ -66,8 +66,8 @@ class _SpecialistsListScreenState
             child: CustomScrollView(
               slivers: [
                 // ─── App bar ───────────────────────────────────────────
-                SliverAppBar.large(
-                  title: const Text('Especialistas'),
+                const SliverAppBar.large(
+                  title: Text('Especialistas'),
                   backgroundColor: AppTheme.slate100,
                   surfaceTintColor: Colors.transparent,
                   scrolledUnderElevation: 0,
@@ -85,7 +85,7 @@ class _SpecialistsListScreenState
                         border: Border.all(color: AppTheme.slate200),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -127,7 +127,7 @@ class _SpecialistsListScreenState
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                     child: Text(
                       '${filtered.length} especialista${filtered.length != 1 ? 's' : ''} encontrado${filtered.length != 1 ? 's' : ''}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppTheme.slate400,
                         fontSize: 13,
                       ),
@@ -233,12 +233,12 @@ class _SpecialistCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 2),
             ),
             BoxShadow(
-              color: Colors.black.withOpacity(0.03),
+              color: Colors.black.withValues(alpha: 0.03),
               blurRadius: 28,
               offset: const Offset(0, 8),
             ),

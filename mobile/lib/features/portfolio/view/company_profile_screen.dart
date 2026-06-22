@@ -100,7 +100,7 @@ class _CompanyContent extends StatelessWidget {
                         child: Text(
                           profile.sector!,
                           style: GoogleFonts.plusJakartaSans(
-                            color: Colors.white.withOpacity(0.55),
+                            color: Colors.white.withValues(alpha: 0.55),
                             fontSize: 13,
                           ),
                         ),
@@ -143,7 +143,7 @@ class _CompanyContent extends StatelessWidget {
               // ─── About ───────────────────────────────────────────────
               if (profile.description != null &&
                   profile.description!.isNotEmpty) ...[
-                _SectionHeader(
+                const _SectionHeader(
                     icon: Icons.info_outline_rounded, title: 'Sobre'),
                 const SizedBox(height: 10),
                 Container(
@@ -153,7 +153,7 @@ class _CompanyContent extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
+                        color: Colors.black.withValues(alpha: 0.04),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -171,7 +171,7 @@ class _CompanyContent extends StatelessWidget {
               ],
 
               // ─── Details ─────────────────────────────────────────────
-              _SectionHeader(
+              const _SectionHeader(
                   icon: Icons.business_rounded, title: 'Informações'),
               const SizedBox(height: 10),
               Container(
@@ -180,7 +180,7 @@ class _CompanyContent extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -206,8 +206,8 @@ class _CompanyContent extends StatelessWidget {
                     ],
                     if ((profile.sector == null || profile.sector!.isEmpty) &&
                         (profile.website == null || profile.website!.isEmpty))
-                      Padding(
-                        padding: const EdgeInsets.all(16),
+                      const Padding(
+                        padding: EdgeInsets.all(16),
                         child: Text(
                           'Nenhuma informação adicional',
                           style: TextStyle(color: AppTheme.slate400),

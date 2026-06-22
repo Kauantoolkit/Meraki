@@ -105,7 +105,7 @@ class _DeliverMilestoneScreenState
                 decoration: BoxDecoration(
                   color: AppTheme.dangerLight,
                   border:
-                      Border.all(color: AppTheme.danger.withOpacity(0.3)),
+                      Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(vmState.error!,

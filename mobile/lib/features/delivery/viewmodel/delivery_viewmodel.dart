@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../model/delivery_model.dart';
-import '../repository/delivery_repository.dart';
 
 class KanbanViewModel extends AsyncNotifier<List<KanbanColumnModel>> {
   late String projectId;

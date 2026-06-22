@@ -61,7 +61,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
 
   Widget _successView() => Column(
         children: [
-          Icon(Icons.mark_email_read, color: AppTheme.brand, size: 48),
+          const Icon(Icons.mark_email_read, color: AppTheme.brand, size: 48),
           const SizedBox(height: 16),
           Text('Email enviado!',
               style: AppTheme.mono(fontSize: 18, fontWeight: FontWeight.w700)),
@@ -107,7 +107,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
               margin: const EdgeInsets.only(bottom: 16),
               decoration: BoxDecoration(
                 color: AppTheme.dangerLight,
-                border: Border.all(color: AppTheme.danger.withOpacity(0.3)),
+                border: Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
               ),
               child: Text(_error!, style: AppTheme.mono(color: AppTheme.danger, fontSize: 11)),
             ),

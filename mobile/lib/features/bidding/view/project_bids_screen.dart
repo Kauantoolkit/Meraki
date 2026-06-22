@@ -117,7 +117,7 @@ class _ProjectBidsScreenState extends ConsumerState<ProjectBidsScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.brandLight,
-                    border: Border.all(color: AppTheme.brand.withOpacity(0.4)),
+                    border: Border.all(color: AppTheme.brand.withValues(alpha: 0.4)),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(
@@ -217,7 +217,7 @@ class _BidCardState extends ConsumerState<_BidCard> {
         color: AppTheme.slate100,
         border: Border.all(
           color: bid.isAccepted
-              ? AppTheme.brand.withOpacity(0.4)
+              ? AppTheme.brand.withValues(alpha: 0.4)
               : AppTheme.slate200,
         ),
         borderRadius: BorderRadius.circular(4),
@@ -251,7 +251,7 @@ class _BidCardState extends ConsumerState<_BidCard> {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.15),
+                                color: statusColor.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(2),
                               ),
                               child: Text(
@@ -438,7 +438,7 @@ class _BidCardState extends ConsumerState<_BidCard> {
                   .read(projectBidsViewModelProvider.notifier)
                   .reject(bid.id);
             },
-            child: Text('REJEITAR',
+            child: const Text('REJEITAR',
                 style: TextStyle(color: AppTheme.danger)),
           ),
         ],

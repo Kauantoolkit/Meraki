@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers.dart';
 import '../model/payment_model.dart';
-import '../repository/payment_repository.dart';
 
 class PaymentsViewModel extends AsyncNotifier<List<PaymentModel>> {
   @override

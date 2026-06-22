@@ -44,10 +44,10 @@ class _PublicProfileContent extends StatelessWidget {
         children: [
           Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 32,
                 backgroundColor: AppTheme.brandLight,
-                child: const Icon(Icons.person, size: 32, color: AppTheme.brand),
+                child: Icon(Icons.person, size: 32, color: AppTheme.brand),
               ),
               const SizedBox(width: 16),
               Expanded(

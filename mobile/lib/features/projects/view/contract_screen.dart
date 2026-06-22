@@ -121,7 +121,7 @@ class _ContractScreenState extends ConsumerState<ContractScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.check_circle, color: AppTheme.brand, size: 48),
+                const Icon(Icons.check_circle, color: AppTheme.brand, size: 48),
                 const SizedBox(height: 16),
                 Text('Tudo pronto!',
                     style: AppTheme.mono(fontSize: 18, fontWeight: FontWeight.w700)),
@@ -158,7 +158,7 @@ class _ContractScreenState extends ConsumerState<ContractScreen> {
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
                   color: AppTheme.dangerLight,
-                  border: Border.all(color: AppTheme.danger.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
                 ),
                 child: Text(error!, style: AppTheme.mono(color: AppTheme.danger, fontSize: 11)),
               ),
@@ -216,7 +216,7 @@ class _ContractScreenState extends ConsumerState<ContractScreen> {
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: AppTheme.brandLight,
-                  border: Border.all(color: AppTheme.brand.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.brand.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -253,11 +253,11 @@ class _ContractScreenState extends ConsumerState<ContractScreen> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppTheme.brandLight,
-                  border: Border.all(color: AppTheme.brand.withOpacity(0.3)),
+                  border: Border.all(color: AppTheme.brand.withValues(alpha: 0.3)),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.check_circle, color: AppTheme.brand, size: 24),
+                    const Icon(Icons.check_circle, color: AppTheme.brand, size: 24),
                     const SizedBox(height: 8),
                     Text('Você já assinou',
                         style: AppTheme.mono(fontSize: 12, color: AppTheme.brand)),
@@ -294,7 +294,7 @@ class _ContractScreenState extends ConsumerState<ContractScreen> {
         decoration: BoxDecoration(
           color: AppTheme.slate50,
           border: Border.all(
-            color: signedAt != null ? AppTheme.brand.withOpacity(0.3) : AppTheme.slate200,
+            color: signedAt != null ? AppTheme.brand.withValues(alpha: 0.3) : AppTheme.slate200,
           ),
         ),
         child: Row(

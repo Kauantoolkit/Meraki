@@ -242,7 +242,7 @@ class _CreateProjectScreenState extends ConsumerState<CreateProjectScreen> {
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 color: AppTheme.dangerLight,
-                border: Border.all(color: AppTheme.danger.withOpacity(0.3)),
+                border: Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Row(
@@ -386,7 +386,7 @@ class _StepIndicator extends StatelessWidget {
                       color: isDone
                           ? AppTheme.brand
                           : isActive
-                              ? AppTheme.brand.withOpacity(0.6)
+                              ? AppTheme.brand.withValues(alpha: 0.6)
                               : AppTheme.slate200,
                       borderRadius: BorderRadius.circular(2),
                     ),
@@ -559,7 +559,7 @@ class _Step2Skills extends ConsumerWidget {
                             horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           border: Border.all(
-                              color: AppTheme.brand.withOpacity(0.4)),
+                              color: AppTheme.brand.withValues(alpha: 0.4)),
                           borderRadius: BorderRadius.circular(2),
                         ),
                         child: Text(
@@ -584,12 +584,12 @@ class _Step2Skills extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(Icons.add_circle_outline,
-                    size: 14, color: AppTheme.brand.withOpacity(0.7)),
+                    size: 14, color: AppTheme.brand.withValues(alpha: 0.7)),
                 const SizedBox(width: 6),
                 Text(
                   'Criar skill não encontrada no catálogo',
                   style: GoogleFonts.sourceCodePro(
-                      color: AppTheme.brand.withOpacity(0.7), fontSize: 10),
+                      color: AppTheme.brand.withValues(alpha: 0.7), fontSize: 10),
                 ),
               ],
             ),
@@ -611,7 +611,7 @@ class _Step2Skills extends ConsumerWidget {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: AppTheme.brandLight,
-                  border: Border.all(color: AppTheme.brand.withOpacity(0.4)),
+                  border: Border.all(color: AppTheme.brand.withValues(alpha: 0.4)),
                   borderRadius: BorderRadius.circular(2),
                 ),
                 child: Row(
@@ -767,7 +767,7 @@ class _Step3Milestones extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
-              border: Border.all(color: AppTheme.brand.withOpacity(0.5)),
+              border: Border.all(color: AppTheme.brand.withValues(alpha: 0.5)),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Center(

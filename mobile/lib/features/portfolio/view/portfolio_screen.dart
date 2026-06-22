@@ -136,7 +136,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
                         Text(
                           portfolio.rating.toStringAsFixed(1),
                           style: GoogleFonts.plusJakartaSans(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -149,7 +149,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
                         Text(
                           '${portfolio.completedProjects} projetos',
                           style: GoogleFonts.plusJakartaSans(
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
                           ),
@@ -240,7 +240,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               if (portfolio.skills.isEmpty)
-                _EmptySectionHint('Adicione suas habilidades técnicas')
+                const _EmptySectionHint('Adicione suas habilidades técnicas')
               else
                 _SkillBadgesSection(
                   skills: portfolio.skills,
@@ -261,7 +261,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               if (portfolio.certifications.isEmpty)
-                _EmptySectionHint('Adicione certificados e cursos relevantes')
+                const _EmptySectionHint('Adicione certificados e cursos relevantes')
               else
                 ...portfolio.certifications.map((c) => Container(
                       margin: const EdgeInsets.only(bottom: 10),
@@ -293,7 +293,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
                                 const SizedBox(height: 2),
                                 Text(
                                   '${c.institution} · ${c.issuedAt.substring(0, 10)}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                       color: AppTheme.slate500,
                                       fontSize: 12),
                                 ),
@@ -307,7 +307,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
               // ─── Avaliações ──────────────────────────────────────────
               if (portfolio.reviews.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                _SectionHeader(
+                const _SectionHeader(
                   icon: Icons.star_outline_rounded,
                   title: 'Avaliações',
                 ),
@@ -362,7 +362,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
               // ─── Histórico profissional ───────────────────────────────
               if (portfolio.workHistory.isNotEmpty) ...[
                 const SizedBox(height: 24),
-                _SectionHeader(
+                const _SectionHeader(
                   icon: Icons.work_history_outlined,
                   title: 'Histórico profissional',
                 ),
@@ -409,7 +409,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
                                 fontSize: 14,
                               ),
                             ),
-                            Text(
+                            const Text(
                               'recebido',
                               style: TextStyle(
                                   color: AppTheme.slate400, fontSize: 11),
@@ -434,7 +434,7 @@ class _SpecialistProfileScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -645,7 +645,7 @@ class _CompanyOwnProfileScreen extends ConsumerWidget {
                     Text(
                       email,
                       style: GoogleFonts.plusJakartaSans(
-                        color: Colors.white.withOpacity(0.55),
+                        color: Colors.white.withValues(alpha: 0.55),
                         fontSize: 13,
                       ),
                     ),
@@ -661,7 +661,7 @@ class _CompanyOwnProfileScreen extends ConsumerWidget {
           sliver: SliverList(
             delegate: SliverChildListDelegate([
               // ─── Atalhos rápidos ────────────────────────────────────
-              _SectionHeader(
+              const _SectionHeader(
                 icon: Icons.grid_view_rounded,
                 title: 'Acesso rápido',
               ),
@@ -717,7 +717,7 @@ class _CompanyOwnProfileScreen extends ConsumerWidget {
 
               // ─── Info da conta ──────────────────────────────────────
               const SizedBox(height: 28),
-              _SectionHeader(
+              const _SectionHeader(
                 icon: Icons.business_rounded,
                 title: 'Informações da conta',
               ),
@@ -728,7 +728,7 @@ class _CompanyOwnProfileScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(14),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.04),
+                      color: Colors.black.withValues(alpha: 0.04),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -736,7 +736,7 @@ class _CompanyOwnProfileScreen extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
-                    _InfoTile(
+                    const _InfoTile(
                       icon: Icons.badge_outlined,
                       label: 'Tipo de conta',
                       value: 'Empresa',
@@ -800,8 +800,8 @@ class _SkillBadgesSection extends ConsumerWidget {
               color: AppTheme.brandLight,
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: badgeColor?.withOpacity(0.4) ??
-                    AppTheme.brand.withOpacity(0.2),
+                color: badgeColor?.withValues(alpha: 0.4) ??
+                    AppTheme.brand.withValues(alpha: 0.2),
               ),
             ),
             child: Row(
@@ -985,7 +985,7 @@ class _EmptySectionHint extends StatelessWidget {
       ),
       child: Text(
         message,
-        style: TextStyle(color: AppTheme.slate400, fontSize: 13),
+        style: const TextStyle(color: AppTheme.slate400, fontSize: 13),
         textAlign: TextAlign.center,
       ),
     );
@@ -1018,7 +1018,7 @@ class _QuickCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -1031,7 +1031,7 @@ class _QuickCard extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
+                color: color.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 22),
@@ -1045,7 +1045,7 @@ class _QuickCard extends StatelessWidget {
             const SizedBox(height: 2),
             Text(
               subtitle,
-              style: TextStyle(
+              style: const TextStyle(
                   color: AppTheme.slate400,
                   fontSize: 11),
             ),

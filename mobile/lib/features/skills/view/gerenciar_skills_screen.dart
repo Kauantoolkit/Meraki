@@ -166,7 +166,7 @@ class _GerenciarSkillsScreenState
           ),
           TextButton(
             onPressed: () => ctx.pop(true),
-            child: Text('DELETAR',
+            child: const Text('DELETAR',
                 style: TextStyle(color: AppTheme.danger)),
           ),
         ],
@@ -215,7 +215,7 @@ class _SkillCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppTheme.slate100,
         border: Border.all(
-            color: isExpanded ? AppTheme.brand.withOpacity(0.4) : AppTheme.slate200),
+            color: isExpanded ? AppTheme.brand.withValues(alpha: 0.4) : AppTheme.slate200),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Column(
@@ -263,7 +263,7 @@ class _SkillCard extends ConsumerWidget {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         border: Border.all(
-                            color: AppTheme.brand.withOpacity(0.5)),
+                            color: AppTheme.brand.withValues(alpha: 0.5)),
                         borderRadius: BorderRadius.circular(2),
                       ),
                       child: Text(
@@ -332,7 +332,7 @@ class _QuestionsPanel extends ConsumerWidget {
               decoration: BoxDecoration(
                 border: Border(
                     bottom: BorderSide(
-                        color: AppTheme.slate200.withOpacity(0.5))),
+                        color: AppTheme.slate200.withValues(alpha: 0.5))),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,

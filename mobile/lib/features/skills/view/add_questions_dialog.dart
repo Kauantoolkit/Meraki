@@ -183,7 +183,7 @@ class _AddQuestionsDialogState extends ConsumerState<AddQuestionsDialog> {
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
                             border: Border.all(
-                                color: AppTheme.brand.withOpacity(0.5)),
+                                color: AppTheme.brand.withValues(alpha: 0.5)),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Center(
@@ -206,7 +206,7 @@ class _AddQuestionsDialogState extends ConsumerState<AddQuestionsDialog> {
                         decoration: BoxDecoration(
                           color: AppTheme.dangerLight,
                           border: Border.all(
-                              color: AppTheme.danger.withOpacity(0.3)),
+                              color: AppTheme.danger.withValues(alpha: 0.3)),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Row(
@@ -357,7 +357,7 @@ class _QuestionCard extends StatelessWidget {
                         enabledBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                             color: isCorrect
-                                ? AppTheme.brand.withOpacity(0.5)
+                                ? AppTheme.brand.withValues(alpha: 0.5)
                                 : AppTheme.slate200,
                           ),
                         ),

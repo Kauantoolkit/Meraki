@@ -64,7 +64,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 height: 280,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.brand.withOpacity(0.05),
+                  color: AppTheme.brand.withValues(alpha: 0.05),
                 ),
               ),
             ),
@@ -252,7 +252,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                     color: AppTheme.dangerLight,
                                     border: Border.all(
                                         color: AppTheme.danger
-                                            .withOpacity(0.3)),
+                                            .withValues(alpha: 0.3)),
                                     borderRadius:
                                         BorderRadius.circular(4),
                                   ),
