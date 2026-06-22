@@ -7,6 +7,7 @@ import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../model/bid_model.dart';
 import '../viewmodel/bid_viewmodel.dart';
+import '../../auth/viewmodel/auth_viewmodel.dart';
 
 class ProjectBidsScreen extends ConsumerStatefulWidget {
   final String projectId;
@@ -28,6 +29,25 @@ class _ProjectBidsScreenState extends ConsumerState<ProjectBidsScreen> {
   @override
   Widget build(BuildContext context) {
     final bidsAsync = ref.watch(projectBidsViewModelProvider);
+    final isCompany = ref.watch(authViewModelProvider).user?.isCompany ?? false;
+
+    // ACL: só a empresa avalia propostas (paridade com o React).
+    if (!isCompany) {
+      return Scaffold(
+        backgroundColor: AppTheme.slate900,
+        appBar: AppBar(
+          backgroundColor: AppTheme.slate900,
+          surfaceTintColor: Colors.transparent,
+        ),
+        body: Center(
+          child: Text(
+            'Acesso restrito a empresas.',
+            style: GoogleFonts.sourceCodePro(
+                color: AppTheme.slate400, fontSize: 12),
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.slate900,
@@ -236,6 +256,18 @@ class _BidCardState extends ConsumerState<_BidCard> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        if (bid.specialistName != null &&
+                            bid.specialistName!.isNotEmpty) ...[
+                          Text(
+                            bid.specialistName!,
+                            style: GoogleFonts.sourceCodePro(
+                              color: Colors.white,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                        ],
                         Row(
                           children: [
                             Text(
@@ -276,8 +308,8 @@ class _BidCardState extends ConsumerState<_BidCard> {
                     ),
                   ),
                   GestureDetector(
-                    onTap: () =>
-                        context.go('/portfolio/${bid.specialistId}'),
+                    onTap: () => context.go(
+                        '/portfolio/${bid.specialistUserId ?? bid.specialistId}'),
                     child: Text(
                       'VER PERFIL',
                       style: GoogleFonts.sourceCodePro(
@@ -398,13 +430,18 @@ class _BidCardState extends ConsumerState<_BidCard> {
               final ok = await ref
                   .read(projectBidsViewModelProvider.notifier)
                   .accept(bid.id);
-              if (ok && context.mounted) {
+              if (!context.mounted) return;
+              if (ok) {
                 // Navigate to kanban after acceptance
                 Future.delayed(const Duration(milliseconds: 800), () {
                   if (context.mounted) {
                     context.go('/projects/${widget.projectId}/contract');
                   }
                 });
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Erro ao aceitar a proposta')),
+                );
               }
             },
             child: const Text('CONFIRMAR'),
@@ -434,9 +471,18 @@ class _BidCardState extends ConsumerState<_BidCard> {
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              await ref
+              final ok = await ref
                   .read(projectBidsViewModelProvider.notifier)
                   .reject(bid.id);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(ok
+                        ? 'Proposta rejeitada'
+                        : 'Erro ao rejeitar a proposta'),
+                  ),
+                );
+              }
             },
             child: Text('REJEITAR',
                 style: TextStyle(color: AppTheme.danger)),
