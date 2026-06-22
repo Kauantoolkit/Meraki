@@ -615,14 +615,14 @@ class _SpecialistProfileScreen extends StatelessWidget {
         skillId: skillId,
         skillName: skillName,
         mode: QuizMode.profile,
-        onCompleted: (result) async {
+        onCompleted: (result) {
           Navigator.of(context).pop();
-          // Só adiciona a skill ao perfil se passou no quiz.
+          // A skill e o badge amarelo já são persistidos pelo backend
+          // (identity-service) ao passar no quiz, que publica o evento para o
+          // portfolio-service. Aqui só recarregamos a UI a partir do servidor.
           if (result.passed) {
-            await ref
-                .read(portfolioViewModelProvider.notifier)
-                .addSkill(skillName);
             ref.invalidate(myValidationsProvider);
+            ref.invalidate(portfolioViewModelProvider);
           }
         },
       ),
