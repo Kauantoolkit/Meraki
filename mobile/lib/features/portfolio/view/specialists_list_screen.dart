@@ -7,6 +7,7 @@ import '../../../shared/widgets/loading_indicator.dart';
 import '../../../shared/widgets/error_view.dart';
 import '../model/portfolio_model.dart';
 import '../viewmodel/portfolio_viewmodel.dart';
+import '../../skills/viewmodel/skill_viewmodel.dart';
 
 class SpecialistsListScreen extends ConsumerStatefulWidget {
   const SpecialistsListScreen({super.key});
@@ -20,6 +21,20 @@ class _SpecialistsListScreenState
     extends ConsumerState<SpecialistsListScreen> {
   final _searchController = TextEditingController();
   String _searchQuery = '';
+  final Set<String> _selectedSkills = {};
+
+  bool get _hasActiveFilters =>
+      _searchQuery.trim().isNotEmpty || _selectedSkills.isNotEmpty;
+
+  void _toggleSkill(String skill) {
+    setState(() {
+      if (_selectedSkills.contains(skill)) {
+        _selectedSkills.remove(skill);
+      } else {
+        _selectedSkills.add(skill);
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -38,6 +53,11 @@ class _SpecialistsListScreenState
   @override
   Widget build(BuildContext context) {
     final specialistsAsync = ref.watch(specialistsListViewModelProvider);
+    final catalogSkills = (ref.watch(skillsCatalogProvider).valueOrNull ?? [])
+        .map((s) => s.name)
+        .toSet()
+        .toList()
+      ..sort();
 
     return Scaffold(
       body: specialistsAsync.when(
@@ -49,15 +69,18 @@ class _SpecialistsListScreenState
               .refresh(),
         ),
         data: (specialists) {
-          // Filtro client-side por nome, bio ou skills
-          final filtered = _searchQuery.isEmpty
-              ? specialists
-              : specialists.where((s) {
-                  final q = _searchQuery.toLowerCase();
-                  return s.name.toLowerCase().contains(q) ||
-                      s.bio.toLowerCase().contains(q) ||
-                      s.skills.any((sk) => sk.toLowerCase().contains(q));
-                }).toList();
+          // Filtro client-side: texto (nome/bio) E todas as skills selecionadas
+          // (logica AND, em paridade com o frontend React).
+          final filtered = specialists.where((s) {
+            final q = _searchQuery.trim().toLowerCase();
+            final matchesText = q.isEmpty ||
+                s.name.toLowerCase().contains(q) ||
+                s.bio.toLowerCase().contains(q);
+            final matchesSkills = _selectedSkills.isEmpty ||
+                _selectedSkills.every((sel) => s.skills
+                    .any((ps) => ps.toLowerCase() == sel.toLowerCase()));
+            return matchesText && matchesSkills;
+          }).toList();
 
           return RefreshIndicator(
             onRefresh: () => ref
@@ -121,16 +144,85 @@ class _SpecialistsListScreenState
                   ),
                 ),
 
+                // ─── Skill filter chips ───────────────────────────────
+                if (catalogSkills.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: SizedBox(
+                      height: 40,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                        children: [
+                          for (final skill in catalogSkills)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: FilterChip(
+                                label: Text(skill),
+                                selected: _selectedSkills.contains(skill),
+                                onSelected: (_) => _toggleSkill(skill),
+                                showCheckmark: false,
+                                labelStyle: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: _selectedSkills.contains(skill)
+                                      ? AppTheme.brand
+                                      : AppTheme.slate500,
+                                ),
+                                backgroundColor: Colors.white,
+                                selectedColor: AppTheme.brandLight,
+                                side: BorderSide(
+                                  color: _selectedSkills.contains(skill)
+                                      ? AppTheme.brand
+                                      : AppTheme.slate200,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+
                 // ─── Counter ──────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                    child: Text(
-                      '${filtered.length} especialista${filtered.length != 1 ? 's' : ''} encontrado${filtered.length != 1 ? 's' : ''}',
-                      style: TextStyle(
-                        color: AppTheme.slate400,
-                        fontSize: 13,
-                      ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _hasActiveFilters
+                                ? '${filtered.length} de ${specialists.length} especialista${specialists.length != 1 ? 's' : ''}'
+                                    '${_selectedSkills.isNotEmpty ? ' · ${_selectedSkills.length} filtro${_selectedSkills.length != 1 ? 's' : ''} ativo${_selectedSkills.length != 1 ? 's' : ''}' : ''}'
+                                : '${filtered.length} especialista${filtered.length != 1 ? 's' : ''} encontrado${filtered.length != 1 ? 's' : ''}',
+                            style: const TextStyle(
+                              color: AppTheme.slate400,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        if (_selectedSkills.isNotEmpty)
+                          TextButton(
+                            onPressed: () =>
+                                setState(() => _selectedSkills.clear()),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              minimumSize: Size.zero,
+                              tapTargetSize:
+                                  MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'Limpar filtros',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.brand,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
@@ -138,7 +230,7 @@ class _SpecialistsListScreenState
                 // ─── Lista ────────────────────────────────────────────
                 if (filtered.isEmpty)
                   SliverFillRemaining(
-                    child: _EmptyState(hasSearch: _searchQuery.isNotEmpty),
+                    child: _EmptyState(hasSearch: _hasActiveFilters),
                   )
                 else
                   SliverPadding(
