@@ -50,7 +50,7 @@ export default function DashboardEmpresa() {
         for (const sId of specialistIds) {
           try {
             const r = await portfolioApi.listReviews(sId)
-            const reviews = r.data?.data ?? r.data ?? []
+            const reviews: any[] = Array.isArray(r.data) ? r.data : (r.data as any)?.data ?? []
             for (const rev of reviews) {
               const rid = (rev as any).reviewerId ?? rev.companyId
               if (rid === user?.id && rev.projectId) {
@@ -609,7 +609,7 @@ function ReviewModal({ project, reviewerId, onClose }: {
             {error && <p className="font-mono text-xs text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2">{error}</p>}
 
             <div className="flex justify-end gap-3 pt-2 border-t border-dark-border">
-              <button onClick={onClose} disabled={saving} className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase">
+              <button onClick={() => onClose()} disabled={saving} className="font-mono text-xs text-zinc-400 border border-dark-border px-4 py-2 hover:border-zinc-500 transition-colors uppercase">
                 Cancelar
               </button>
               <button onClick={handleSubmit} disabled={saving || rating === 0}

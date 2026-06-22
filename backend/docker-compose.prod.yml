@@ -1,7 +1,7 @@
 services:
   # ─── REVERSE PROXY + SSL ───────────────────────────────────────────────────
   traefik:
-    image: traefik:v3.0
+    image: traefik:v3.7
     container_name: meraki-traefik
     restart: unless-stopped
     command:
