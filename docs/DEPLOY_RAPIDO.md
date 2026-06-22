@@ -31,14 +31,14 @@ Mínimo absoluto: 4GB RAM (vai ficar apertado).
 
 ### 2. Domínio
 
-Você precisa de **2 subdomínios** apontando para o IP da VPS:
+Você precisa de **1 subdomínio** apontando para o IP da VPS:
 
 ```
-app.seudominio.com   →  IP_DA_VPS    (frontend)
-api.seudominio.com   →  IP_DA_VPS    (api-gateway)
+meraki.seudominio.com   →  IP_DA_VPS    (frontend + API no mesmo host)
 ```
 
-Ambos como registro A no seu DNS. Traefik cuida do SSL automaticamente.
+Registro A no seu DNS. Traefik cuida do SSL automaticamente.
+O frontend fica na raiz (`meraki.seudominio.com`) e a API em `/api` (`meraki.seudominio.com/api`).
 
 ---
 
@@ -46,9 +46,8 @@ Ambos como registro A no seu DNS. Traefik cuida do SSL automaticamente.
 
 O `docker-compose.prod.yml` já inclui todos os serviços (frontend, messaging-service, etc.) e está pronto para uso. Apenas verifique que o `.env` tem todas as variáveis documentadas acima.
 
-Subdomínios configurados via Traefik:
-- `api.${DOMAIN}` → api-gateway (porta 3000)
-- `app.${DOMAIN}` → frontend (nginx, porta 80)
+Subdomínio configurado via Traefik:
+- `meraki.${DOMAIN}` → frontend (nginx, porta 80) + API Gateway em `/api` (porta 3000)
 
 ---
 
@@ -158,20 +157,20 @@ docker compose -f docker-compose.prod.yml ps
 
 ```bash
 # 1. API respondendo
-curl https://api.seudominio.com/api/health
+curl https://meraki.seudominio.com/api/health
 # Esperado: 200 OK ou qualquer resposta (não 502/503)
 
 # 2. Frontend carregando
-curl -I https://app.seudominio.com
+curl -I https://meraki.seudominio.com
 # Esperado: HTTP/2 200
 
 # 3. Criar conta de empresa via API
-curl -X POST https://api.seudominio.com/api/auth/register \
+curl -X POST https://meraki.seudominio.com/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"empresa@test.com","password":"Test@1234","name":"Empresa Teste","userType":"COMPANY"}'
 
 # 4. Login e pegar token
-curl -X POST https://api.seudominio.com/api/auth/login \
+curl -X POST https://meraki.seudominio.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"empresa@test.com","password":"Test@1234"}'
 # Deve retornar accessToken
