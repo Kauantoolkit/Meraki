@@ -471,6 +471,9 @@ services:
       context: ../frontend
       args:
         VITE_API_URL: https://meraki.${DOMAIN}/api
+        VITE_SANITY_PROJECT_ID: ${VITE_SANITY_PROJECT_ID}
+        VITE_SANITY_DATASET: ${VITE_SANITY_DATASET:-production}
+        VITE_SANITY_TOKEN: ${VITE_SANITY_TOKEN}
     container_name: meraki-frontend
     restart: unless-stopped
     networks:
