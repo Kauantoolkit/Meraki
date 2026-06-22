@@ -506,6 +506,7 @@ class _MilestoneCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.slate100,
+        scrollable: true,
         title: Text('Aprovar M${card.order + 1}?',
             style: GoogleFonts.sourceCodePro(color: Colors.white)),
         content: Column(
@@ -521,6 +522,8 @@ class _MilestoneCard extends ConsumerWidget {
               style: GoogleFonts.sourceCodePro(
                   color: AppTheme.slate400, fontSize: 11, height: 1.4),
             ),
+            if (card.milestoneId != null)
+              _DeliverySection(milestoneId: card.milestoneId!),
           ],
         ),
         actions: [
@@ -553,6 +556,7 @@ class _MilestoneCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.slate100,
+        scrollable: true,
         title: Text('Rejeitar M${card.order + 1}?',
             style: GoogleFonts.sourceCodePro(color: Colors.white)),
         content: Column(
@@ -564,6 +568,8 @@ class _MilestoneCard extends ConsumerWidget {
               style: GoogleFonts.sourceCodePro(
                   color: AppTheme.slate400, fontSize: 11),
             ),
+            if (card.milestoneId != null)
+              _DeliverySection(milestoneId: card.milestoneId!),
             const SizedBox(height: 12),
             TextField(
               controller: reasonCtrl,
@@ -604,6 +610,99 @@ class _MilestoneCard extends ConsumerWidget {
         ],
       ),
     ).whenComplete(reasonCtrl.dispose);
+  }
+}
+
+// ─── Entregáveis submetidos ──────────────────────────────────────────────────
+// Exibe os arquivos/links e notas da entrega nos diálogos de aprovar/rejeitar,
+// em paridade com o frontend React.
+class _DeliverySection extends ConsumerWidget {
+  final String milestoneId;
+  const _DeliverySection({required this.milestoneId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final deliveryAsync = ref.watch(deliveryProvider(milestoneId));
+    return deliveryAsync.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.symmetric(vertical: 10),
+        child: SizedBox(
+          height: 16,
+          width: 16,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (delivery) {
+        final files = delivery?.deliveredFiles ?? const <String>[];
+        final notes = delivery?.deliveryNotes;
+        if (files.isEmpty && (notes == null || notes.isEmpty)) {
+          return const SizedBox.shrink();
+        }
+        return Container(
+          margin: const EdgeInsets.only(top: 12),
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: AppTheme.slate50,
+            borderRadius: BorderRadius.circular(6),
+            border: Border.all(color: AppTheme.slate200),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'ENTREGÁVEIS',
+                style: GoogleFonts.sourceCodePro(
+                  color: AppTheme.slate500,
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1,
+                ),
+              ),
+              if (files.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                ...files.map(
+                  (f) => Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Icon(Icons.link, size: 13, color: AppTheme.brand),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: SelectableText(
+                            f,
+                            style: GoogleFonts.sourceCodePro(
+                                color: AppTheme.brand, fontSize: 11),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              if (notes != null && notes.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Notas',
+                  style: GoogleFonts.sourceCodePro(
+                    color: AppTheme.slate500,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  notes,
+                  style: GoogleFonts.sourceCodePro(
+                      color: AppTheme.slate700, fontSize: 11, height: 1.4),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

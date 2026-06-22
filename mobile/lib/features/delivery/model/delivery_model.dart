@@ -88,6 +88,8 @@ class DeliveryModel {
   final String status;
   final String submittedAt;
   final String? feedback;
+  final List<String> deliveredFiles;
+  final String? deliveryNotes;
 
   const DeliveryModel({
     required this.id,
@@ -96,6 +98,8 @@ class DeliveryModel {
     required this.status,
     required this.submittedAt,
     this.feedback,
+    this.deliveredFiles = const [],
+    this.deliveryNotes,
   });
 
   factory DeliveryModel.fromJson(Map<String, dynamic> json) => DeliveryModel(
@@ -107,5 +111,10 @@ class DeliveryModel {
             json['createdAt'] as String? ??
             '',
         feedback: json['feedback'] as String?,
+        deliveredFiles: (json['deliveredFiles'] as List<dynamic>?)
+                ?.map((e) => e as String)
+                .toList() ??
+            const [],
+        deliveryNotes: json['deliveryNotes'] as String?,
       );
 }

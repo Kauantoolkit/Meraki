@@ -141,3 +141,11 @@ final projectHistoryViewModelProvider =
     AsyncNotifierProvider<ProjectHistoryViewModel, List<ProjectHistoryModel>>(
   ProjectHistoryViewModel.new,
 );
+
+// ─── Delivery de uma milestone ───────────────────────────────────────────────
+// Usado nos diálogos de aprovar/rejeitar para mostrar os entregáveis submetidos.
+final deliveryProvider =
+    FutureProvider.family.autoDispose<DeliveryModel?, String>(
+  (ref, milestoneId) =>
+      ref.read(deliveryRepositoryProvider).getDelivery(milestoneId),
+);

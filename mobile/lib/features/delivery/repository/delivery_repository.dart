@@ -33,6 +33,14 @@ class DeliveryRepository {
     return DeliveryModel.fromJson(response.data!);
   }
 
+  Future<DeliveryModel?> getDelivery(String milestoneId) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/milestones/$milestoneId/delivery',
+    );
+    if (response.data == null) return null;
+    return DeliveryModel.fromJson(response.data!);
+  }
+
   Future<void> startMilestone(String milestoneId) async {
     await _apiClient.put('/milestones/$milestoneId/start');
   }
