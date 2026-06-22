@@ -16,6 +16,12 @@ export class InternalUserController {
     return { id: user.id, name: user.name, email: user.email };
   }
 
+  @Get('specialist/:specialistId/pix-key')
+  async getSpecialistPixKey(@Param('specialistId') specialistId: string) {
+    const profile = await this.userRepo.findSpecialistProfileById(specialistId);
+    return { pixKey: profile?.pixKey ?? null };
+  }
+
   @Get(':id')
   async findById(@Param('id') id: string) {
     const user = await this.userRepo.findById(id);

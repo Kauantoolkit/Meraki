@@ -53,6 +53,9 @@ import { PixPaymentProvider } from './infrastructure/providers/pix-payment.provi
 import { MercadoPagoPaymentProvider } from './infrastructure/providers/mercadopago-payment.provider';
 import { ConfigService } from '@nestjs/config';
 
+// Identity Client (infrastructure — inter-service communication)
+import { IdentityClientService } from './infrastructure/identity/identity-client.service';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Payment, EscrowAccount, Withdrawal, SpecialistBalance]),
@@ -76,6 +79,8 @@ import { ConfigService } from '@nestjs/config';
         parseFloat(process.env.PLATFORM_FEE_RATE || '0.10'),
       ),
     },
+    // Identity Client
+    IdentityClientService,
     // Event Publisher
     EventPublisherService,
     // Use Cases

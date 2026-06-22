@@ -127,7 +127,7 @@ export class NotificationConsumer implements OnModuleInit {
       userId: specialistId,
       type: 'bid.accepted',
       title: 'Proposta aceita!',
-      message: 'Sua proposta foi aceita. Você pode iniciar o projeto.',
+      message: 'Sua proposta foi aceita! Assine o contrato para iniciar o projeto.',
       metadata: { projectId },
     });
   }

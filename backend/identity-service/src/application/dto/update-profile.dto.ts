@@ -66,6 +66,13 @@ export class UpdateSpecialistProfileDto {
   @IsUrl({ require_protocol: true, protocols: ['http', 'https'] })
   @Transform(({ value }) => value?.trim())
   website?: string;
+
+  @ApiPropertyOptional({ example: 'email@exemplo.com', description: 'Chave Pix para recebimentos', maxLength: 100 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  @Transform(({ value }) => value?.trim())
+  pixKey?: string;
 }
 
 export class UpdateCompanyProfileDto {
@@ -148,6 +155,12 @@ export class UpdateProfileDto {
   @Min(0)
   @Max(100000)
   hourlyRate?: number;
+
+  @ApiPropertyOptional({ example: 'email@exemplo.com', description: 'Chave Pix para recebimentos', maxLength: 100 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  pixKey?: string;
 
   // Company
   @ApiPropertyOptional({ example: 'Tech Corp Ltda', maxLength: 255 })

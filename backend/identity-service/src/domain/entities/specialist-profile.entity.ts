@@ -10,10 +10,15 @@ export class SpecialistProfile {
   hourlyRate: number;
   rating: number;
   avatarUrl?: string;
+  pixKey?: string;
   createdAt: Date;
   updatedAt: Date;
 
   // ─── Domain behavior ───────────────────────────────────────────────────────
+
+  updatePixKey(pixKey: string): void {
+    this.pixKey = pixKey?.trim() || null;
+  }
 
   updateBio(bio: string): void {
     if (bio && bio.length > 2000) {

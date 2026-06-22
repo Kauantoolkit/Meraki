@@ -50,6 +50,10 @@ export const SpecialistProfileSchema = new EntitySchema<SpecialistProfile>({
       type: 'varchar',
       nullable: true,
     },
+    pixKey: {
+      type: 'varchar',
+      nullable: true,
+    },
     createdAt: {
       type: 'timestamp',
       createDate: true,

@@ -30,6 +30,7 @@ export interface PublicProfile {
   completedProjects?: number
   workHistory?: WorkHistoryItem[]
   avatarUrl?: string
+  pixKey?: string
 }
 
 export interface WorkHistoryItem {

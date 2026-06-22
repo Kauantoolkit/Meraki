@@ -3,7 +3,7 @@ import { IUserRepository } from '../../domain/repositories/user.repository.inter
 import { UserType } from '../../domain/enums/user-type.enum';
 import { UpdateProfileDto } from '../dto/update-profile.dto';
 
-const SPECIALIST_KEYS = ['bio', 'skills', 'experience', 'hourlyRate', 'website', 'avatarUrl'] as const;
+const SPECIALIST_KEYS = ['bio', 'skills', 'experience', 'hourlyRate', 'website', 'avatarUrl', 'pixKey'] as const;
 const COMPANY_KEYS = [
   'companyName',
   'cnpj',

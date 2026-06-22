@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Lock, TrendingUp, ArrowDownLeft } from 'lucide-react'
+import { Lock, TrendingUp, ArrowDownLeft, AlertTriangle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import { paymentsApi, Payment } from '../api/payments'
+import { authApi } from '../api/auth'
 
 const fmt = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -20,11 +22,14 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export default function GanhosEspecialista() {
+  const navigate = useNavigate()
   const [payments, setPayments] = useState<Payment[]>([])
   const [loading, setLoading] = useState(true)
+  const [hasPixKey, setHasPixKey] = useState(true)
 
   useEffect(() => {
     paymentsApi.list().then(res => setPayments(res.data)).finally(() => setLoading(false))
+    authApi.me().then(res => setHasPixKey(!!(res.data as any)?.profile?.pixKey)).catch(() => {})
   }, [])
 
   const released = payments.filter(p => p.status === 'RELEASED')
@@ -49,6 +54,25 @@ export default function GanhosEspecialista() {
           <h1 className="text-3xl font-bold text-white uppercase tracking-tight">Meus Pagamentos</h1>
           <p className="text-sm text-zinc-400 font-mono mt-2">Histórico de pagamentos recebidos por milestones aprovados.</p>
         </div>
+
+        {/* Banner sem Pix */}
+        {!hasPixKey && (
+          <div className="mb-6 bg-orange-500/10 border border-orange-500/40 p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-400 shrink-0" />
+              <div>
+                <p className="font-mono text-xs text-orange-300 font-bold">Chave Pix não cadastrada</p>
+                <p className="font-mono text-[10px] text-orange-400/70">Cadastre sua chave Pix no perfil para receber pagamentos automaticamente.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/portfolio')}
+              className="shrink-0 font-mono text-[10px] text-orange-400 border border-orange-500/40 px-3 py-1.5 hover:bg-orange-500/10 transition-colors uppercase"
+            >
+              Cadastrar Pix
+            </button>
+          </div>
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
@@ -127,9 +151,17 @@ export default function GanhosEspecialista() {
                       +{fmt(Number(p.specialistAmount ?? p.amount))}
                     </span>
                   </div>
-                  <span className={`font-mono text-[9px] px-2 py-0.5 border w-fit ${STATUS_CLS[p.status] ?? 'text-zinc-500 border-dark-border'}`}>
-                    {STATUS_LABEL[p.status] ?? p.status}
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className={`font-mono text-[9px] px-2 py-0.5 border w-fit ${STATUS_CLS[p.status] ?? 'text-zinc-500 border-dark-border'}`}>
+                      {STATUS_LABEL[p.status] ?? p.status}
+                    </span>
+                    {p.status === 'RELEASED' && p.payoutStatus === 'TRANSFERRED' && (
+                      <span className="font-mono text-[8px] text-brand-500">Pix enviado</span>
+                    )}
+                    {p.status === 'RELEASED' && p.payoutStatus !== 'TRANSFERRED' && (
+                      <span className="font-mono text-[8px] text-orange-400">Aguardando Pix</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

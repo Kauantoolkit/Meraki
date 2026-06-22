@@ -7,6 +7,8 @@ import { PaymentReleasedEvent } from '../../domain/events/payment-released.event
 import { SpecialistBalance } from '../../domain/entities/specialist-balance.entity';
 import { Money } from '../../domain/value-objects/money.value-object';
 import { EventPublisherService } from '../../infrastructure/rabbitmq/event-publisher.service';
+import { IdentityClientService } from '../../infrastructure/identity/identity-client.service';
+import { PaymentProvider } from '../../infrastructure/providers/payment-provider.interface';
 
 export interface ReleasePaymentDto {
   milestoneId: string;
@@ -25,6 +27,8 @@ export class ReleasePaymentUseCase {
     private readonly balanceRepo: SpecialistBalanceRepository,
     private readonly feeService: FeeCalculationDomainService,
     private readonly events: EventPublisherService,
+    private readonly identityClient: IdentityClientService,
+    private readonly paymentProvider: PaymentProvider,
   ) {}
 
   async execute(dto: ReleasePaymentDto): Promise<void> {
@@ -59,6 +63,26 @@ export class ReleasePaymentUseCase {
     balance.credit(specialistAmount);
     await this.balanceRepo.save(balance);
 
+    // 4b. Auto-transfer — busca pixKey e transfere automaticamente
+    let payoutStatus: 'TRANSFERRED' | 'PENDING_MANUAL' = 'PENDING_MANUAL';
+    let payoutTransactionId: string | null = null;
+
+    const pixKey = await this.identityClient.getSpecialistPixKey(dto.specialistId);
+    if (pixKey) {
+      try {
+        const result = await this.paymentProvider.transferFunds(specialistAmount, pixKey);
+        payoutTransactionId = result.transactionId;
+        balance.debit(specialistAmount);
+        await this.balanceRepo.save(balance);
+        payoutStatus = 'TRANSFERRED';
+        this.logger.log(`Auto-transfer concluído: R$${specialistAmount} → pixKey ${pixKey} (txn: ${payoutTransactionId})`);
+      } catch (err) {
+        this.logger.warn(`Falha no auto-transfer para especialista ${dto.specialistId}: ${err.message}. Saldo mantido para saque manual.`);
+      }
+    } else {
+      this.logger.log(`Especialista ${dto.specialistId} sem pixKey cadastrada. Saldo creditado para saque manual.`);
+    }
+
     // 5. Domain Event → publica payment.released
     const event = new PaymentReleasedEvent({
       paymentId: payment.id,
@@ -68,9 +92,11 @@ export class ReleasePaymentUseCase {
       specialistAmount,
       platformFee,
       specialistId: dto.specialistId,
+      payoutStatus,
+      payoutTransactionId,
     });
     await this.events.publishPaymentReleased(event.payload);
 
-    this.logger.log(`Pagamento liberado: R$${specialistAmount} para especialista, R$${platformFee} para plataforma`);
+    this.logger.log(`Pagamento liberado: R$${specialistAmount} para especialista (${payoutStatus}), R$${platformFee} para plataforma`);
   }
 }

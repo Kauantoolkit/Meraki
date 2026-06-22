@@ -75,6 +75,10 @@ export class UserRepository implements IUserRepository {
     return this.specialistRepo.findOne({ where: { userId } });
   }
 
+  findSpecialistProfileById(id: string): Promise<SpecialistProfile | null> {
+    return this.specialistRepo.findOne({ where: { id } });
+  }
+
   async updateSpecialistProfile(
     id: string,
     data: Partial<SpecialistProfile>,

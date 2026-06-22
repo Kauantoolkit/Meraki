@@ -18,6 +18,7 @@ export interface IUserRepository {
   // Specialist Profile
   createSpecialistProfile(data: Partial<SpecialistProfile>): Promise<SpecialistProfile>;
   findSpecialistProfileByUserId(userId: string): Promise<SpecialistProfile | null>;
+  findSpecialistProfileById(id: string): Promise<SpecialistProfile | null>;
   updateSpecialistProfile(id: string, data: Partial<SpecialistProfile>): Promise<SpecialistProfile>;
 
   // Company Profile

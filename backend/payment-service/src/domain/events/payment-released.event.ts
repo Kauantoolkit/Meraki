@@ -9,6 +9,8 @@ export class PaymentReleasedEvent extends BaseEvent {
     specialistAmount: number;
     platformFee: number;
     specialistId: string;
+    payoutStatus?: 'TRANSFERRED' | 'PENDING_MANUAL';
+    payoutTransactionId?: string | null;
   };
 
   constructor(payload: PaymentReleasedEvent['payload']) {

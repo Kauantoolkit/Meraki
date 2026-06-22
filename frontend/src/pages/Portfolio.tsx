@@ -857,6 +857,7 @@ function EditProfileModal({ profile, onClose, onSave }: {
   const [bio, setBio] = useState(profile?.bio ?? '')
   const [links, setLinks] = useState<ProfileLink[]>(profile?.links ?? [])
   const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl ?? '')
+  const [pixKey, setPixKey] = useState(profile?.pixKey ?? '')
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -901,7 +902,7 @@ function EditProfileModal({ profile, onClose, onSave }: {
     try {
       await Promise.all([
         portfolioApi.updateProfile({ bio, links: cleanLinks, ...(avatarUrl ? { avatarUrl } : {}) }),
-        usersApi.updateProfile({ bio, ...(avatarUrl ? { avatarUrl } : {}) }),
+        usersApi.updateProfile({ bio, ...(avatarUrl ? { avatarUrl } : {}), ...(pixKey ? { pixKey } : {}) }),
       ])
       const fresh = await portfolioApi.getMyProfile()
       onSave(fresh.data)
@@ -995,6 +996,20 @@ function EditProfileModal({ profile, onClose, onSave }: {
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Chave Pix */}
+          <div className="space-y-2">
+            <label className="font-mono text-[10px] text-brand-500 uppercase tracking-wider block">Chave Pix para Recebimentos</label>
+            <input
+              type="text"
+              maxLength={100}
+              value={pixKey}
+              onChange={e => setPixKey(e.target.value)}
+              placeholder="CPF, CNPJ, e-mail, telefone ou chave aleatória"
+              className="w-full px-4 py-3 bg-[#000] border border-dark-border text-sm font-mono text-zinc-300 placeholder-zinc-700 focus:outline-none focus:border-brand-500 rounded-none"
+            />
+            <p className="font-mono text-[9px] text-zinc-600">Usado para transferência automática ao aprovar milestones.</p>
           </div>
 
           <div className="bg-dark-input border border-dark-border p-3">

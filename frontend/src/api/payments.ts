@@ -8,6 +8,8 @@ export interface Payment {
   specialistAmount: number
   platformFee: number
   status: 'PENDING' | 'ESCROW_HELD' | 'RELEASED' | 'REFUNDED'
+  payoutStatus?: 'TRANSFERRED' | 'PENDING_MANUAL'
+  payoutTransactionId?: string
   createdAt: string
 }
 
