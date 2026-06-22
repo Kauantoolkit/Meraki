@@ -603,6 +603,7 @@ function AddSkillModal({ profile, onClose, onSkillAdded }: {
   const [submitting, setSubmitting] = useState(false)
   const [result, setResult] = useState<QuizResult | null>(null)
   const [error, setError] = useState('')
+  const [reportedIds, setReportedIds] = useState<Set<string>>(new Set())
 
   const existingSkills = new Set(profile.skills ?? [])
 
@@ -719,9 +720,28 @@ function AddSkillModal({ profile, onClose, onSkillAdded }: {
               </p>
               {questions.map((q, qi) => (
                 <div key={q.id} className="bg-dark-input border border-dark-border p-4">
-                  <p className="font-mono text-xs text-white font-bold mb-3">
-                    <span className="text-brand-500 mr-2">{qi + 1}.</span>{q.text}
-                  </p>
+                  <div className="flex items-start justify-between mb-3">
+                    <p className="font-mono text-xs text-white font-bold">
+                      <span className="text-brand-500 mr-2">{qi + 1}.</span>{q.text}
+                    </p>
+                    <button
+                      onClick={async (e) => {
+                        e.preventDefault()
+                        try {
+                          await skillsApi.reportQuestion(q.id)
+                          setReportedIds(prev => new Set(prev).add(q.id))
+                        } catch {}
+                      }}
+                      disabled={reportedIds.has(q.id)}
+                      className={`ml-2 shrink-0 font-mono text-[9px] px-1.5 py-0.5 border transition-colors ${
+                        reportedIds.has(q.id)
+                          ? 'text-zinc-600 border-zinc-700 cursor-default'
+                          : 'text-zinc-500 border-dark-border hover:text-red-400 hover:border-red-500/30'
+                      }`}
+                    >
+                      {reportedIds.has(q.id) ? 'Reportado' : 'Reportar'}
+                    </button>
+                  </div>
                   <div className="space-y-2">
                     {q.options.map((opt, oi) => (
                       <label

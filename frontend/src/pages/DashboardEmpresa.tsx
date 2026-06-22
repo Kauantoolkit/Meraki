@@ -129,11 +129,8 @@ export default function DashboardEmpresa() {
     }
   }
 
-  // ALL hides CANCELLED by default — só aparece se filtro CANCELLED está ativo
   const filtered = projects.filter(p => {
-    const matchFilter = filter === 'ALL'
-      ? p.status !== 'CANCELLED'
-      : p.status === filter
+    const matchFilter = filter === 'ALL' || p.status === filter
     const matchSearch = p.title.toLowerCase().includes(search.toLowerCase())
     return matchFilter && matchSearch
   })
@@ -285,7 +282,7 @@ export default function DashboardEmpresa() {
                 key={p.id}
                 project={p}
                 onViewBids={() => navigate(`/projects/${p.id}/bids`)}
-                onOpenKanban={() => navigate(`/kanban/${p.id}`)}
+                onOpenKanban={() => navigate(`/contract/${p.id}`)}
                 onSignContract={() => navigate(`/contract/${p.id}`)}
                 onCancel={() => { setCancelTarget(p); setCancelError('') }}
                 onEdit={() => setEditTarget(p)}
@@ -709,7 +706,7 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onC
         </div>
         <div>
           <p className="font-mono text-[10px] text-zinc-500 uppercase mb-1">Prazo</p>
-          <p className="font-mono text-white">{p.deadline}</p>
+          <p className="font-mono text-white">{p.deadline ? new Date(p.deadline).toLocaleDateString('pt-BR') : '—'}</p>
         </div>
       </div>
 
@@ -731,7 +728,7 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onC
           <div className="flex items-center justify-between border-t border-dark-border pt-4 mt-2">
             <div>
               <p className="font-mono text-[10px] text-zinc-500 uppercase">Especialista selecionado</p>
-              <p className="font-mono text-xs text-white">{p.specialistId?.slice(0, 8) ?? 'N/A'}</p>
+              <p className="font-mono text-xs text-white">{p.specialistName || 'N/A'}</p>
             </div>
             <button
               onClick={onSignContract}
@@ -745,7 +742,7 @@ function ProjectCard({ project: p, onViewBids, onOpenKanban, onSignContract, onC
             <div className="flex items-center justify-between">
               <div>
                 <p className="font-mono text-[10px] text-zinc-500 uppercase">Especialista</p>
-                <p className="font-mono text-xs text-white">{p.specialistId ?? 'N/A'}</p>
+                <p className="font-mono text-xs text-white">{p.specialistName || 'N/A'}</p>
               </div>
               <button
                 onClick={onOpenKanban}

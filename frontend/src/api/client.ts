@@ -93,7 +93,7 @@ api.interceptors.response.use(
   (res) => res,
   (error) => {
     const url: string = error.config?.url ?? ''
-    const isAuthRoute = url.includes('/auth/')
+    const isAuthRoute = url.includes('/auth/') && !url.includes('/auth/me')
     const hasToken = !!sessionStorage.getItem('meraki_token')
     if (error.response?.status === 401 && !isAuthRoute && hasToken) {
       sessionStorage.removeItem('meraki_token')

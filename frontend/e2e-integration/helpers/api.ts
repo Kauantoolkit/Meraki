@@ -40,7 +40,7 @@ export async function registerAndLogin(
     companyName?: string
   },
 ) {
-  // Registo via API (sem UI para registo nos testes de fluxo)
+  // Registro via API (sem UI nos testes de fluxo)
   const regPayload: any = { ...data }
   if (data.userType === 'COMPANY' && !data.companyName) {
     regPayload.companyName = data.name

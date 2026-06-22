@@ -4,6 +4,7 @@ import { In, Repository } from 'typeorm';
 import { Skill } from '../../domain/entities/skill.entity';
 import { SkillQuestion } from '../../domain/entities/skill-question.entity';
 import { SkillValidation } from '../../domain/entities/skill-validation.entity';
+import { QuestionReport } from '../../domain/entities/question-report.entity';
 import {
   ISkillRepository,
   CreateSkillData,
@@ -22,6 +23,9 @@ export class SkillRepository implements ISkillRepository {
 
     @InjectRepository(SkillValidation)
     private readonly validationRepo: Repository<SkillValidation>,
+
+    @InjectRepository(QuestionReport)
+    private readonly reportRepo: Repository<QuestionReport>,
   ) {}
 
   findAll(): Promise<Skill[]> {
@@ -99,8 +103,12 @@ export class SkillRepository implements ISkillRepository {
     return this.questionRepo.find({ where: { skillId, createdByCompanyId: companyId, deletedAt: null } });
   }
 
-  async getRandomQuestionsForSkill(skillId: string, limit: number): Promise<SkillQuestion[]> {
-    const all = await this.questionRepo.find({ where: { skillId, deletedAt: null } });
+  async getRandomQuestionsForSkill(skillId: string, limit: number, excludeReported = false): Promise<SkillQuestion[]> {
+    let all = await this.questionRepo.find({ where: { skillId, deletedAt: null } });
+    if (excludeReported) {
+      const reportedIds = await this.getReportedQuestionIds(3);
+      all = all.filter(q => !reportedIds.includes(q.id));
+    }
     // Fisher-Yates shuffle then slice
     for (let i = all.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -139,5 +147,29 @@ export class SkillRepository implements ISkillRepository {
       where: { specialistId },
       order: { attemptedAt: 'DESC' },
     });
+  }
+
+  async reportQuestion(questionId: string, userId: string): Promise<QuestionReport> {
+    const report = this.reportRepo.create({ questionId, userId });
+    return this.reportRepo.save(report);
+  }
+
+  findReport(questionId: string, userId: string): Promise<QuestionReport | null> {
+    return this.reportRepo.findOne({ where: { questionId, userId } });
+  }
+
+  async getReportCount(questionId: string): Promise<number> {
+    return this.reportRepo.count({ where: { questionId } });
+  }
+
+  async getReportedQuestionIds(threshold: number): Promise<string[]> {
+    const results = await this.reportRepo
+      .createQueryBuilder('report')
+      .select('report.questionId', 'questionId')
+      .addSelect('COUNT(*)', 'cnt')
+      .groupBy('report.questionId')
+      .having('COUNT(*) >= :threshold', { threshold })
+      .getRawMany();
+    return results.map((r: { questionId: string }) => r.questionId);
   }
 }

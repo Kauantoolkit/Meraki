@@ -10,6 +10,7 @@ import {
   UseGuards,
   ParseUUIDPipe,
   BadRequestException,
+  ConflictException,
   Inject,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -72,6 +73,20 @@ export class SkillsController {
     return this.getMyValidationsUseCase.execute(user.id);
   }
 
+  @Post('questions/:questionId/report')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserType.SPECIALIST)
+  @ApiOperation({ summary: 'Reportar questão sem sentido (especialista)' })
+  async reportQuestion(
+    @Param('questionId', ParseUUIDPipe) questionId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ) {
+    const existing = await this.skillRepo.findReport(questionId, user.id);
+    if (existing) throw new ConflictException('Você já reportou esta questão.');
+    return this.skillRepo.reportQuestion(questionId, user.id);
+  }
+
   @Post()
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -130,7 +145,7 @@ export class SkillsController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Questões aleatórias para quiz de perfil (sem correctIndex)' })
   async getRandomQuestions(@Param('skillId', ParseUUIDPipe) skillId: string) {
-    const questions = await this.skillRepo.getRandomQuestionsForSkill(skillId, 10);
+    const questions = await this.skillRepo.getRandomQuestionsForSkill(skillId, 10, true);
     // Return without correctIndex to prevent cheating
     return questions.map(q => ({
       id: q.id,

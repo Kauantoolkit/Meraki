@@ -207,11 +207,18 @@ services:
       DB_HOST: identity-db
       DB_PORT: 5432
       DB_NAME: ${IDENTITY_DB_NAME}
-      DB_USERNAME: ${DB_USER}
-      DB_PASSWORD: ${DB_PASS}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
       JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-8h}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+      SMTP_HOST: ${SMTP_HOST:-live.smtp.mailtrap.io}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      FRONTEND_URL: https://app.${DOMAIN}
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
     depends_on:
       identity-db:
         condition: service_healthy
@@ -239,6 +246,8 @@ services:
       DELIVERY_SERVICE_URL: http://delivery-service:3004
       PAYMENT_SERVICE_URL: http://payment-service:3005
       PORTFOLIO_SERVICE_URL: http://portfolio-service:3006
+      MESSAGING_SERVICE_URL: http://messaging-service:3007
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
     depends_on:
       - identity-service
       - project-service
@@ -246,11 +255,12 @@ services:
       - delivery-service
       - payment-service
       - portfolio-service
+      - messaging-service
     networks:
       - meraki-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`${DOMAIN}`)"
+      - "traefik.http.routers.api.rule=Host(`api.${DOMAIN}`)"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.api.middlewares=secure-headers@file,rate-limit@file"
@@ -275,6 +285,8 @@ services:
       DB_PASS: ${DB_PASS}
       JWT_SECRET: ${JWT_SECRET}
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+      IDENTITY_SERVICE_URL: http://identity-service:3001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
     depends_on:
       project-db:
         condition: service_healthy
@@ -357,6 +369,10 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
       PLATFORM_FEE_RATE: ${PLATFORM_FEE_RATE}
+      PROJECT_SERVICE_URL: http://project-service:3002
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mercadopago}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN}
     depends_on:
       payment-db:
         condition: service_healthy
@@ -384,6 +400,9 @@ services:
       DB_PASS: ${DB_PASS}
       JWT_SECRET: ${JWT_SECRET}
       RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+      PROJECT_SERVICE_URL: http://project-service:3002
+      IDENTITY_SERVICE_URL: http://identity-service:3001
+      INTERNAL_API_KEY: ${INTERNAL_API_KEY}
     depends_on:
       portfolio-db:
         condition: service_healthy
@@ -396,6 +415,77 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
+  messaging-db:
+    image: postgres:15-alpine
+    container_name: meraki-messaging-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${MESSAGING_DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+    volumes:
+      - messaging-db:/var/lib/postgresql/data
+    networks:
+      - meraki-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  messaging-service:
+    build: ./messaging-service
+    container_name: meraki-messaging-service
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3007
+      DB_HOST: messaging-db
+      DB_PORT: 5432
+      DB_NAME: ${MESSAGING_DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASS: ${DB_PASS}
+      RABBITMQ_URL: amqp://${RABBITMQ_USER}:${RABBITMQ_PASS}@rabbitmq:5672
+    depends_on:
+      messaging-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - meraki-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  frontend:
+    build:
+      context: ../frontend
+      args:
+        VITE_API_URL: https://api.${DOMAIN}/api
+    container_name: meraki-frontend
+    restart: unless-stopped
+    networks:
+      - meraki-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`app.${DOMAIN}`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend.middlewares=secure-headers@file"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   # ─── BACKUP AUTOMÁTICO DOS BANCOS ──────────────────────────────────────────
   # Roda pg_dump de todos os 6 bancos todo dia às 02:00
@@ -418,6 +508,7 @@ services:
       DELIVERY_DB_NAME: ${DELIVERY_DB_NAME}
       PAYMENT_DB_NAME: ${PAYMENT_DB_NAME}
       PORTFOLIO_DB_NAME: ${PORTFOLIO_DB_NAME}
+      MESSAGING_DB_NAME: ${MESSAGING_DB_NAME}
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-7}
     volumes:
       - ./scripts/backup.sh:/scripts/backup.sh:ro
@@ -434,6 +525,8 @@ services:
       payment-db:
         condition: service_healthy
       portfolio-db:
+        condition: service_healthy
+      messaging-db:
         condition: service_healthy
     networks:
       - meraki-net
@@ -454,6 +547,7 @@ volumes:
   delivery-db:
   payment-db:
   portfolio-db:
+  messaging-db:
   rabbitmq:
   traefik-certs:
   db-backups:

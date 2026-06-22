@@ -324,7 +324,7 @@ export default function Bidding() {
                     <CalendarClock className="w-3 h-3 text-blue-400" />
                     <p className="font-mono text-[10px] text-zinc-500 uppercase">Prazo de Entrega</p>
                   </div>
-                  <p className="font-mono font-bold text-white text-lg">{project?.deadline ?? '—'}</p>
+                  <p className="font-mono font-bold text-white text-lg">{project?.deadline ? new Date(project.deadline).toLocaleDateString('pt-BR') : '—'}</p>
                 </div>
               </div>
 
@@ -794,7 +794,7 @@ export default function Bidding() {
                   <h2 className="text-xl font-mono font-bold text-white mb-2">PROPOSTA SUBMETIDA</h2>
                   <p className="text-xs font-mono text-brand-500 text-center mb-6">&gt; Proposta enviada com sucesso. Aguardando avaliação do cliente.</p>
                   <div className="bg-[#000] border border-dark-border p-4 w-full max-w-sm mb-6">
-                    <p className="font-mono text-[10px] text-zinc-500 mb-1">DETALHES DO REGISTO:</p>
+                    <p className="font-mono text-[10px] text-zinc-500 mb-1">DETALHES DO REGISTRO:</p>
                     <div className="flex justify-between font-mono text-[10px]">
                       <span className="text-zinc-400">ID:</span><span className="text-white">{submitted.id}</span>
                     </div>

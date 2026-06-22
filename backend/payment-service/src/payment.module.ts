@@ -45,10 +45,12 @@ import { CreateEscrowOnBidAcceptedUseCase } from './application/use-cases/create
 import { PaymentController } from './interfaces/controllers/payment.controller';
 import { PaymentHiringController } from './interfaces/controllers/payment-hiring.controller';
 import { WithdrawalController } from './interfaces/controllers/withdrawal.controller';
+import { WebhookController } from './interfaces/controllers/webhook.controller';
 
 // Providers (infrastructure)
 import { PaymentProvider } from './infrastructure/providers/payment-provider.interface';
 import { PixPaymentProvider } from './infrastructure/providers/pix-payment.provider';
+import { MercadoPagoPaymentProvider } from './infrastructure/providers/mercadopago-payment.provider';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
@@ -57,7 +59,7 @@ import { ConfigService } from '@nestjs/config';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({ secret: process.env.JWT_SECRET }),
   ],
-  controllers: [PaymentController, PaymentHiringController, WithdrawalController],
+  controllers: [PaymentController, PaymentHiringController, WithdrawalController, WebhookController],
   providers: [
     JwtStrategy,
     // Repositories
@@ -91,10 +93,16 @@ import { ConfigService } from '@nestjs/config';
     MilestoneValidatedConsumer,
     DeliveryEventConsumer,
     BidAcceptedConsumer,
-    // Payment Provider Factory
+    // Payment Provider Factory — PAYMENT_PROVIDER=mercadopago ativa Mercado Pago SDK
     {
       provide: PaymentProvider,
-      useFactory: (configService: ConfigService) => new PixPaymentProvider(configService),
+      useFactory: (configService: ConfigService) => {
+        const provider = configService.get<string>('PAYMENT_PROVIDER', 'pix');
+        if (provider === 'mercadopago') {
+          return new MercadoPagoPaymentProvider(configService);
+        }
+        return new PixPaymentProvider(configService);
+      },
       inject: [ConfigService],
     },
   ],

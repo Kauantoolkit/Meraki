@@ -42,43 +42,13 @@ Ambos como registro A no seu DNS. Traefik cuida do SSL automaticamente.
 
 ---
 
-## Passo 1 — Adicionar frontend ao docker-compose.prod.yml
+## Passo 1 — Verificar o docker-compose.prod.yml
 
-Abrir `backend/docker-compose.prod.yml` e adicionar o serviço antes de `networks:`:
+O `docker-compose.prod.yml` já inclui todos os serviços (frontend, messaging-service, etc.) e está pronto para uso. Apenas verifique que o `.env` tem todas as variáveis documentadas acima.
 
-```yaml
-  frontend:
-    build:
-      context: ../frontend
-      args:
-        VITE_API_URL: https://api.${DOMAIN}/api
-    container_name: meraki-frontend
-    restart: unless-stopped
-    networks:
-      - meraki-net
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`app.${DOMAIN}`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.frontend.loadbalancer.server.port=80"
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-```
-
-E adicionar `traefik-frontend-certs` em `volumes:` se necessário (os certs são compartilhados pelo Traefik, não precisa volume separado).
-
-Também atualizar o label do api-gateway para usar subdomínio `api.`:
-
-```yaml
-# No serviço api-gateway, trocar:
-- "traefik.http.routers.api.rule=Host(`${DOMAIN}`)"
-# Para:
-- "traefik.http.routers.api.rule=Host(`api.${DOMAIN}`)"
-```
+Subdomínios configurados via Traefik:
+- `api.${DOMAIN}` → api-gateway (porta 3000)
+- `app.${DOMAIN}` → frontend (nginx, porta 80)
 
 ---
 
@@ -93,7 +63,7 @@ ACME_EMAIL=seuemail@dominio.com
 
 # ── JWT (gerar uma vez: openssl rand -base64 64) ──────────────────────────────
 JWT_SECRET=GERAR_AQUI
-JWT_ACCESS_EXPIRES_IN=15m
+JWT_ACCESS_EXPIRES_IN=8h
 JWT_REFRESH_EXPIRES_IN=7d
 
 # ── Banco de dados (mesma senha para todos, simplifica) ───────────────────────
@@ -106,11 +76,25 @@ BIDDING_DB_NAME=bidding_db
 DELIVERY_DB_NAME=delivery_db
 PAYMENT_DB_NAME=payment_db
 PORTFOLIO_DB_NAME=portfolio_db
+MESSAGING_DB_NAME=messaging_db
 
 # ── RabbitMQ ──────────────────────────────────────────────────────────────────
 RABBITMQ_USER=meraki_user
 RABBITMQ_PASS=GERAR_AQUI_openssl_rand_base64_32
 RABBITMQ_ERLANG_COOKIE=GERAR_AQUI_openssl_rand_base64_32
+
+# ── SMTP (e-mail — Mailtrap ou outro provedor) ───────────────────────────
+SMTP_HOST=live.smtp.mailtrap.io
+SMTP_PORT=587
+SMTP_USER=GERAR_NO_MAILTRAP
+SMTP_PASS=GERAR_NO_MAILTRAP
+
+# ── Comunicação interna entre serviços ────────────────────────────────────
+INTERNAL_API_KEY=GERAR_AQUI_openssl_rand_base64_32
+
+# ── Mercado Pago ──────────────────────────────────────────────────────────
+PAYMENT_PROVIDER=mercadopago
+MERCADOPAGO_ACCESS_TOKEN=TEST-xxxx-xxxx  # Pegar em https://www.mercadopago.com.br/developers
 
 # ── Negócio ───────────────────────────────────────────────────────────────────
 PLATFORM_FEE_RATE=0.10
@@ -271,7 +255,7 @@ ufw enable
 |---------|--------|-------------|
 | Verificação de e-mail real | Fora de escopo (#55) | Cadastro sem verificação funciona |
 | Upload de fotos | Fora de escopo (#51) | Avatares não exibem |
-| Pagamento real (Pix) | Fora de escopo (#56) | Escrow simulado funciona para demo |
+| Pagamento real (Pix) | Integrado via Mercado Pago sandbox | Definir `PAYMENT_PROVIDER=mercadopago` e `MERCADOPAGO_ACCESS_TOKEN` no .env |
 | Notificações push | Fora de escopo (#50) | — |
 | App mobile em produção | Flutter precisa rebuild com URL de produção | Build separado (ver abaixo) |
 

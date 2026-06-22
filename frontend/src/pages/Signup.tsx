@@ -41,7 +41,7 @@ export default function Signup() {
           <div className="w-12 h-12 bg-dark-input border border-brand-500 flex items-center justify-center mb-4 shadow-[4px_4px_0px_rgba(85,202,124,0.2)]">
             <ShieldCheck className="text-brand-500 w-6 h-6" strokeWidth={1.5} />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white uppercase font-mono">Registo</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white uppercase font-mono">Registro</h1>
           <p className="text-xs text-zinc-500 mt-1 font-mono tracking-wider">SISTEMA.CADASTRO // INICIAR</p>
         </div>
 
@@ -85,7 +85,7 @@ export default function Signup() {
         <form onSubmit={handleSignup} className="space-y-4">
           <div className="space-y-2">
             <label className="text-xs font-mono text-zinc-400 uppercase tracking-wider block">
-              {type === 'company' ? 'Nome da Empresa' : 'Nome / Handle Desenvolvedor'}
+              {type === 'company' ? 'Nome da Empresa' : 'Nome Completo'}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

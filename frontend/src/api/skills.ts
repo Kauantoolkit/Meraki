@@ -69,5 +69,8 @@ export const skillsApi = {
   deleteQuestion: (questionId: string) =>
     api.delete(`/skills/questions/${questionId}`),
 
+  reportQuestion: (questionId: string) =>
+    api.post(`/skills/questions/${questionId}/report`),
+
   getMyValidations: () => api.get<SkillValidation[]>('/skills/my-validations'),
 }

@@ -53,7 +53,8 @@ backup_db "project"   "project-db"   "$PROJECT_DB_NAME"   || ERRORS=$((ERRORS + 
 backup_db "bidding"   "bidding-db"   "$BIDDING_DB_NAME"   || ERRORS=$((ERRORS + 1))
 backup_db "delivery"  "delivery-db"  "$DELIVERY_DB_NAME"  || ERRORS=$((ERRORS + 1))
 backup_db "payment"   "payment-db"   "$PAYMENT_DB_NAME"   || ERRORS=$((ERRORS + 1))
-backup_db "portfolio" "portfolio-db" "$PORTFOLIO_DB_NAME" || ERRORS=$((ERRORS + 1))
+backup_db "portfolio"  "portfolio-db"  "$PORTFOLIO_DB_NAME"  || ERRORS=$((ERRORS + 1))
+backup_db "messaging"  "messaging-db"  "$MESSAGING_DB_NAME"  || ERRORS=$((ERRORS + 1))
 
 log "----------------------------------------"
 log "Limpando backups com mais de $RETENTION_DAYS dias..."

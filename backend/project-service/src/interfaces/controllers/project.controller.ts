@@ -21,6 +21,7 @@ import { CompleteProjectUseCase } from '../../application/use-cases/complete-pro
 import { SignProjectContractUseCase } from '../../application/use-cases/sign-project-contract.use-case';
 import { ProjectStatus } from '../../domain/enums/project-status.enum';
 import { FindProjectsFilter } from '../../domain/repositories/project.repository.interface';
+import { IdentityLookupService } from '../../infrastructure/http/identity-lookup.service';
 
 @ApiTags('Projects')
 @Controller('api/projects')
@@ -35,6 +36,7 @@ export class ProjectController {
     private readonly cancelProject: CancelProjectUseCase,
     private readonly completeProject: CompleteProjectUseCase,
     private readonly signContract: SignProjectContractUseCase,
+    private readonly identityLookup: IdentityLookupService,
   ) {}
 
   @Post()
@@ -53,7 +55,7 @@ export class ProjectController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'Lista paginada de projetos.' })
   @ApiResponse({ status: 401, description: 'Não autenticado.' })
-  findAll(
+  async findAll(
     @Query('status') status?: ProjectStatus,
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -64,7 +66,16 @@ export class ProjectController {
     const filter: FindProjectsFilter = { status, page, limit };
     if (userType === 'COMPANY') filter.companyId = companyId;
     if (userType === 'SPECIALIST' && status !== ProjectStatus.OPEN) filter.specialistId = specialistId;
-    return this.getProjects.execute(filter);
+    const result = await this.getProjects.execute(filter);
+
+    const specIds = result.data.map(p => p.specialistId).filter(Boolean);
+    const names = await this.identityLookup.resolveSpecialistNames(specIds);
+    const enriched = result.data.map(p => ({
+      ...p,
+      specialistName: p.specialistId ? (names[p.specialistId] ?? null) : null,
+    }));
+
+    return { data: enriched, total: result.total };
   }
 
   @Get(':id')
@@ -72,8 +83,13 @@ export class ProjectController {
   @ApiParam({ name: 'id', description: 'UUID do projeto' })
   @ApiResponse({ status: 200, description: 'Dados do projeto encontrado.' })
   @ApiResponse({ status: 404, description: 'Projeto não encontrado.' })
-  findOne(@Param('id') id: string) {
-    return this.getProjectById.execute(id);
+  async findOne(@Param('id') id: string) {
+    const project = await this.getProjectById.execute(id);
+    if (project?.specialistId) {
+      const names = await this.identityLookup.resolveSpecialistNames([project.specialistId]);
+      return { ...project, specialistName: names[project.specialistId] ?? null };
+    }
+    return { ...project, specialistName: null };
   }
 
   @Put(':id')

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Lock, ArrowDownLeft, Clock, Filter, Download, ShieldCheck } from 'lucide-react'
+import { Lock, ArrowDownLeft, Clock, Filter, Download, ShieldCheck, Copy, CheckCircle, QrCode } from 'lucide-react'
 import Navbar from '../components/Navbar'
-import { paymentsApi, Payment } from '../api/payments'
+import { paymentsApi, Payment, PaymentMethodResponse } from '../api/payments'
 import { projectsApi, Milestone } from '../api/projects'
 import { paymentStatusLabel } from '../lib/labels'
 
@@ -12,6 +12,8 @@ export default function Financeiro() {
   const [pendingMilestones, setPendingMilestones] = useState<Milestone[]>([])
   const [loading, setLoading] = useState(true)
   const [approving, setApproving] = useState<string | null>(null)
+  const [pixData, setPixData] = useState<PaymentMethodResponse | null>(null)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -221,6 +223,61 @@ export default function Financeiro() {
             </div>
           </div>
         </div>
+
+        {/* Pix QR Code Modal */}
+        {pixData && pixData.qrCode && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-dark-card border border-orange-400/30 max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <QrCode className="w-5 h-5 text-orange-400" />
+                  <h3 className="font-mono text-sm font-bold text-white uppercase">Pagamento via Pix</h3>
+                </div>
+                <button
+                  onClick={() => { setPixData(null); setCopied(false); }}
+                  className="text-zinc-500 hover:text-white font-mono text-xs"
+                >
+                  FECHAR
+                </button>
+              </div>
+
+              <div className="flex flex-col items-center gap-4">
+                <img
+                  src={`data:image/png;base64,${pixData.qrCode}`}
+                  alt="QR Code Pix"
+                  className="w-48 h-48 border border-dark-border"
+                />
+                <p className="font-mono text-2xl font-bold text-orange-400">{fmt(pixData.amount)}</p>
+                <p className="font-mono text-[10px] text-zinc-500 uppercase">Escaneie o QR code ou copie o codigo abaixo</p>
+
+                {pixData.qrCodeText && (
+                  <div className="w-full flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={pixData.qrCodeText}
+                      className="flex-1 bg-dark-input border border-dark-border px-3 py-2 font-mono text-[10px] text-zinc-400 truncate"
+                    />
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(pixData.qrCodeText || '')
+                        setCopied(true)
+                        setTimeout(() => setCopied(false), 2000)
+                      }}
+                      className="flex items-center gap-1 px-3 py-2 bg-orange-500 text-dark-bg font-mono text-[10px] font-bold uppercase border border-orange-500 hover:bg-orange-400 transition-colors"
+                    >
+                      {copied ? <><CheckCircle className="w-3 h-3" /> Copiado</> : <><Copy className="w-3 h-3" /> Copiar</>}
+                    </button>
+                  </div>
+                )}
+
+                <p className="font-mono text-[9px] text-zinc-600 text-center">
+                  O pagamento sera confirmado automaticamente apos a transferencia.
+                  <br />Expira em {new Date(pixData.expiresAt).toLocaleTimeString('pt-BR')}.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   )

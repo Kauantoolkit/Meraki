@@ -71,7 +71,7 @@ export default function AvaliarPropostas() {
       const updated = await bidsApi.listForProject(projectId!)
       setBids(updated.data)
       if (action === 'accept') {
-        setTimeout(() => navigate(`/kanban/${projectId}`), 1200)
+        setTimeout(() => navigate(`/contract/${projectId}`), 1200)
       }
     } catch {
       alert('Erro ao processar a acção. Tente novamente.')
@@ -123,7 +123,7 @@ export default function AvaliarPropostas() {
               </div>
               <div className="bg-dark-input px-4 py-3 text-center">
                 <p className="font-mono text-[9px] text-zinc-600 uppercase mb-1">Deadline</p>
-                <p className="font-mono text-sm font-bold text-white">{project?.deadline ?? '—'}</p>
+                <p className="font-mono text-sm font-bold text-white">{project?.deadline ? new Date(project.deadline).toLocaleDateString('pt-BR') : '—'}</p>
               </div>
               <div className="bg-dark-input px-4 py-3 text-center">
                 <p className="font-mono text-[9px] text-zinc-600 uppercase mb-1">Propostas</p>
@@ -145,10 +145,10 @@ export default function AvaliarPropostas() {
               </p>
             </div>
             <button
-              onClick={() => navigate(`/kanban/${projectId}`)}
+              onClick={() => navigate(`/contract/${projectId}`)}
               className="btn-sharp bg-brand-500 text-dark-bg font-mono font-bold text-xs px-4 py-2 border border-brand-500 hover:bg-brand-400 transition-colors uppercase"
             >
-              ABRIR_KANBAN()
+              VER_CONTRATO()
             </button>
           </div>
         )}

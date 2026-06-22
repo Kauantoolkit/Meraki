@@ -177,7 +177,7 @@ export default function DashboardEspecialista() {
                     </div>
                     <div>
                       <p className="font-mono text-[9px] text-zinc-500">DEADLINE</p>
-                      <p className="font-mono text-xs text-white">{p.deadline}</p>
+                      <p className="font-mono text-xs text-white">{p.deadline ? new Date(p.deadline).toLocaleDateString('pt-BR') : '—'}</p>
                     </div>
                   </div>
                   <button
@@ -253,7 +253,7 @@ export default function DashboardEspecialista() {
                 <div className="bg-[#000] border border-dark-border p-4 mb-4">
                   <div className="flex justify-between items-start mb-2">
                     <span className="font-mono text-[10px] text-brand-500">DADOS DO CONTRATO</span>
-                    <span className="font-mono text-[10px] text-zinc-500">Deadline: {p.deadline}</span>
+                    <span className="font-mono text-[10px] text-zinc-500">Deadline: {p.deadline ? new Date(p.deadline).toLocaleDateString('pt-BR') : '—'}</span>
                   </div>
                   <h4 className="font-mono text-sm text-white font-bold">Orçamento: {fmt(p.budget)}</h4>
                 </div>
@@ -266,7 +266,7 @@ export default function DashboardEspecialista() {
                   </button>
                 ) : (
                   <button
-                    onClick={() => navigate(`/kanban/${p.id}`)}
+                    onClick={() => navigate(`/contract/${p.id}`)}
                     className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-4 py-2 hover:bg-brand-400 border border-brand-500 transition-colors shadow-[2px_2px_0px_rgba(85,202,124,0.2)]"
                   >
                     ABRIR_KANBAN()
@@ -305,7 +305,7 @@ export default function DashboardEspecialista() {
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between border-b border-dark-border pb-2">
                 <h2 className="font-mono text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  <Radio className="w-4 h-4 text-zinc-400" /> Registo de Propostas
+                  <Radio className="w-4 h-4 text-zinc-400" /> Registro de Propostas
                 </h2>
               </div>
 

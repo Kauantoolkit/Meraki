@@ -67,10 +67,16 @@ export default function Kanban() {
           navigate('/dashboard', { replace: true })
           return
         }
+        // Bloqueia kanban se escrow não foi depositado
+        const pyms = Array.isArray(payRes.data) ? payRes.data : []
+        const hasEscrow = pyms.some((pay: any) => pay.status === 'ESCROW_HELD' || pay.status === 'RELEASED')
+        if (!hasEscrow) {
+          navigate(`/contract/${projectId}`, { replace: true })
+          return
+        }
         setProject(p)
         setMilestones(mRes.data)
         setHistory(((hRes as { data: unknown }).data ?? []) as { action: string; description: string; createdAt: string }[])
-        const pyms = Array.isArray(payRes.data) ? payRes.data : []
         setProjectPayments(pyms)
       })
       .finally(() => setLoading(false))
@@ -200,10 +206,10 @@ export default function Kanban() {
                 <span className="w-1.5 h-1.5 bg-brand-500 animate-pulse" />{projectStatusLabel[project?.status ?? ''] ?? project?.status}
               </span>
               <span className="font-mono text-[10px] text-zinc-400 border border-dark-border px-2 py-0.5 flex items-center gap-1">
-                <User className="w-3 h-3 text-brand-500" /> {project?.specialistId ?? 'Sem especialista'}
+                <User className="w-3 h-3 text-brand-500" /> {(project as any)?.specialistName || project?.specialistId?.slice(0, 8) || 'Sem especialista'}
               </span>
               <span className="font-mono text-[10px] text-zinc-400 border border-dark-border px-2 py-0.5 flex items-center gap-1">
-                <Calendar className="w-3 h-3 text-brand-500" /> Prazo: {project?.deadline}
+                <Calendar className="w-3 h-3 text-brand-500" /> Prazo: {project?.deadline ? new Date(project.deadline).toLocaleDateString('pt-BR') : '—'}
               </span>
             </div>
           </div>
@@ -243,7 +249,7 @@ export default function Kanban() {
                 <div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-4">
                   {cards.length === 0 && col.key !== 'APPROVED' ? (
                     <div className="border border-dashed border-dark-border flex items-center justify-center p-6 bg-dark-input/30 min-h-[100px]">
-                      <p className="font-mono text-[10px] text-zinc-500 text-center uppercase tracking-widest">Sem Registos</p>
+                      <p className="font-mono text-[10px] text-zinc-500 text-center uppercase tracking-widest">Sem Registros</p>
                     </div>
                   ) : cards.map((m, idx) => (
                     <MilestoneCard

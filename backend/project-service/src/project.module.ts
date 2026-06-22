@@ -49,6 +49,7 @@ import { InternalMilestoneController } from './interfaces/controllers/internal-m
 // Event consumer (bid.accepted)
 import { BidAcceptedConsumer } from './infrastructure/rabbitmq/bid-accepted.consumer';
 import { SkillsCatalogService } from './infrastructure/http/skills-catalog.service';
+import { IdentityLookupService } from './infrastructure/http/identity-lookup.service';
 
 @Module({
   imports: [
@@ -90,6 +91,8 @@ import { SkillsCatalogService } from './infrastructure/http/skills-catalog.servi
     LegallyAcceptMilestoneUseCase,
     // Listeners (RN07)
     ProjectHistoryListener,
+    // HTTP services
+    IdentityLookupService,
     // Event consumer
     BidAcceptedConsumer,
   ],

@@ -9,6 +9,7 @@ export interface Project {
   status: 'OPEN' | 'SIGNING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED'
   companyId: string
   specialistId?: string
+  specialistName?: string
   skills?: string[]
   milestones?: Milestone[]
   contractHash?: string

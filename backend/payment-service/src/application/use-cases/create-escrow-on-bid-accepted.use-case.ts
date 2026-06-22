@@ -89,11 +89,9 @@ export class CreateEscrowOnBidAcceptedUseCase {
       this.logger.log(`Payment criado: milestone=${milestone.id} amount=R$${amount}`);
     }
 
-    // 4. Atualizar escrow com total retido
-    if (totalHeld > 0) {
-      escrow.holdFunds(new Money(totalHeld));
-      await this.escrowRepo.save(escrow);
-      this.logger.log(`Escrow criado: projeto=${dto.projectId} total=R$${totalHeld}`);
-    }
+    // 4. Salvar escrow com total esperado (ainda OPEN — será HELD após pagamento Pix)
+    escrow.totalAmount = totalHeld;
+    await this.escrowRepo.save(escrow);
+    this.logger.log(`Escrow criado (OPEN, aguardando depósito): projeto=${dto.projectId} total=R$${totalHeld}`);
   }
 }

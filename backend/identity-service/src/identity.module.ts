@@ -13,6 +13,7 @@ import { AuditLog } from './domain/entities/audit-log.entity';
 import { SkillSchema } from './infrastructure/database/schemas/skill.schema';
 import { SkillQuestionSchema } from './infrastructure/database/schemas/skill-question.schema';
 import { SkillValidationSchema } from './infrastructure/database/schemas/skill-validation.schema';
+import { QuestionReportSchema } from './infrastructure/database/schemas/question-report.schema';
 
 // Infrastructure
 import { UserRepository, RefreshTokenRepository } from './infrastructure/repositories/user.repository';
@@ -69,6 +70,7 @@ import { RolesGuard } from './interfaces/guards/roles.guard';
       SkillSchema,
       SkillQuestionSchema,
       SkillValidationSchema,
+      QuestionReportSchema,
     ]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({

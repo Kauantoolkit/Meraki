@@ -5,4 +5,5 @@ export interface IPaymentRepository {
   findByProject(projectId: string): Promise<Payment[]>;
   findByMilestone(milestoneId: string): Promise<Payment | null>;
   findById(id: string): Promise<Payment | null>;
+  findByPaymentIdentifier(paymentIdentifier: string): Promise<Payment | null>;
 }

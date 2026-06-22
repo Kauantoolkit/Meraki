@@ -30,4 +30,8 @@ export class PaymentRepository implements IPaymentRepository {
   findBySpecialist(specialistId: string): Promise<Payment[]> {
     return this.repo.find({ where: { specialistId }, order: { createdAt: 'DESC' } });
   }
+
+  findByPaymentIdentifier(paymentIdentifier: string): Promise<Payment | null> {
+    return this.repo.findOne({ where: { paymentIdentifier } });
+  }
 }

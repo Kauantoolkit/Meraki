@@ -1,8 +1,11 @@
 export interface PaymentMethod {
   type: 'pix' | 'card' | 'bank_transfer';
-  identifier: string; // Pix key, QR code, etc.
+  identifier: string; // Pix copia-e-cola or QR code base64
   amount: number;
   expiresAt: Date;
+  qrCode?: string;       // base64 QR code image
+  qrCodeText?: string;   // Pix copia-e-cola text
+  externalId?: string;   // Mercado Pago payment ID
 }
 
 export abstract class PaymentProvider {

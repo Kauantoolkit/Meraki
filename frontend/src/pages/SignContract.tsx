@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { FileCheck, CheckCircle2, Clock, AlertCircle, ArrowLeft, Loader2, Shield } from 'lucide-react'
+import { FileCheck, CheckCircle2, Clock, AlertCircle, ArrowLeft, Loader2, Shield, QrCode, Copy, Check } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import { projectsApi, Project } from '../api/projects'
+import { paymentsApi, HiringPaymentResponse } from '../api/payments'
 import { useAuth } from '../contexts/AuthContext'
 import { extractApiError } from '../api/client'
 
@@ -97,22 +98,7 @@ export default function SignContract() {
 
   if (!project || project.status !== 'SIGNING') {
     if (project?.status === 'IN_PROGRESS') {
-      return (
-        <div className="bg-dark-bg min-h-screen text-zinc-300 antialiased">
-          <Navbar backUrl="/dashboard" projectTitle="CONTRATO" />
-          <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-            <CheckCircle2 className="w-12 h-12 text-brand-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Contrato firmado!</h2>
-            <p className="font-mono text-sm text-zinc-400 mb-6">Ambas as partes assinaram. O projeto está em andamento.</p>
-            <button
-              onClick={() => navigate(`/kanban/${projectId}`)}
-              className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors"
-            >
-              ABRIR_KANBAN()
-            </button>
-          </div>
-        </div>
-      )
+      return <PostSigningFlow project={project} projectId={projectId!} isCompany={isCompany} navigate={navigate} />
     }
 
     return (
@@ -212,7 +198,7 @@ export default function SignContract() {
             </p>
             <p className="mb-3">
               <span className="text-zinc-500">Prazo de Entrega:</span>{' '}
-              <span className="text-white">{project.deadline}</span>
+              <span className="text-white">{project.deadline ? new Date(project.deadline).toLocaleDateString('pt-BR') : '—'}</span>
             </p>
             <p className="mb-3">
               <span className="text-zinc-500">Empresa (contratante):</span>{' '}
@@ -220,7 +206,7 @@ export default function SignContract() {
             </p>
             <p className="mb-3">
               <span className="text-zinc-500">Especialista (contratado):</span>{' '}
-              <span className="text-white">{project.specialistId}</span>
+              <span className="text-white">{(project as any).specialistName || project.specialistId}</span>
             </p>
 
             {project.milestones && project.milestones.length > 0 && (
@@ -308,6 +294,222 @@ export default function SignContract() {
 
               <p className="font-mono text-[9px] text-zinc-600 text-center">
                 Ao clicar, seu endereço IP, navegador e horário serão registrados junto ao hash SHA-256 dos termos.
+              </p>
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  )
+}
+
+/* ─── Fluxo pós-assinatura: Pix (empresa) ou aguardar (especialista) ───── */
+
+function PostSigningFlow({
+  project,
+  projectId,
+  isCompany,
+  navigate,
+}: {
+  project: Project
+  projectId: string
+  isCompany: boolean
+  navigate: ReturnType<typeof useNavigate>
+}) {
+  const [pixData, setPixData] = useState<HiringPaymentResponse | null>(null)
+  const [loadingPix, setLoadingPix] = useState(false)
+  const [confirming, setConfirming] = useState(false)
+  const [escrowPaid, setEscrowPaid] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const [error, setError] = useState('')
+
+  const totalBudget = project.budget
+
+  // Verifica se já existe escrow pago para este projeto
+  useEffect(() => {
+    paymentsApi.listByProject(projectId)
+      .then(res => {
+        const payments = Array.isArray(res.data) ? res.data : (res as any).data?.data ?? []
+        const hasEscrow = payments.some((p: any) => p.status === 'ESCROW_HELD' || p.status === 'RELEASED')
+        if (hasEscrow) setEscrowPaid(true)
+      })
+      .catch(() => {})
+  }, [projectId])
+
+  async function handleGeneratePix() {
+    setLoadingPix(true)
+    setError('')
+    try {
+      const res = await paymentsApi.createHiringPayment({
+        projectId,
+        specialistId: project.specialistId!,
+        amount: totalBudget,
+      })
+      setPixData(res.data)
+    } catch (err) {
+      setError(extractApiError(err, 'Erro ao gerar pagamento Pix.'))
+    } finally {
+      setLoadingPix(false)
+    }
+  }
+
+  async function handleConfirmPayment() {
+    if (!pixData) return
+    setConfirming(true)
+    setError('')
+    try {
+      await paymentsApi.confirmHiringPayment(pixData.payment.id)
+      setEscrowPaid(true)
+    } catch (err) {
+      setError(extractApiError(err, 'Pagamento ainda não confirmado. Tente novamente.'))
+    } finally {
+      setConfirming(false)
+    }
+  }
+
+  function handleCopy(text: string) {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
+  const fmt = (v: number) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
+
+  // Escrow já pago → pode ir pro Kanban
+  if (escrowPaid) {
+    return (
+      <div className="bg-dark-bg min-h-screen text-zinc-300 antialiased">
+        <Navbar backUrl="/dashboard" projectTitle="CONTRATO" />
+        <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+          <CheckCircle2 className="w-12 h-12 text-brand-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Tudo pronto!</h2>
+          <p className="font-mono text-sm text-zinc-400 mb-2">Contrato assinado e escrow depositado.</p>
+          <p className="font-mono text-[10px] text-zinc-500 mb-6">O valor de {fmt(totalBudget)} está retido em escrow e será liberado conforme as milestones forem aprovadas.</p>
+          <button
+            onClick={() => navigate(`/kanban/${projectId}`)}
+            className="btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-xs px-6 py-3 hover:bg-brand-400 border border-brand-500 transition-colors"
+          >
+            ABRIR_KANBAN()
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Especialista: aguardar empresa depositar
+  if (!isCompany) {
+    return (
+      <div className="bg-dark-bg min-h-screen text-zinc-300 antialiased">
+        <Navbar backUrl="/dashboard" projectTitle="CONTRATO" />
+        <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+          <CheckCircle2 className="w-12 h-12 text-brand-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Contrato firmado!</h2>
+          <p className="font-mono text-sm text-zinc-400 mb-2">Ambas as partes assinaram.</p>
+          <div className="bg-dark-card border border-yellow-500/30 p-4 mt-4 inline-block">
+            <Clock className="w-5 h-5 text-yellow-400 mx-auto mb-2" />
+            <p className="font-mono text-xs text-yellow-400 font-bold">Aguardando depósito em escrow</p>
+            <p className="font-mono text-[10px] text-zinc-500 mt-1">A empresa precisa depositar {fmt(totalBudget)} para o projeto iniciar.</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Empresa: depositar escrow via Pix
+  return (
+    <div className="bg-dark-bg bg-grid min-h-screen text-zinc-300 antialiased">
+      <Navbar backUrl="/dashboard" projectTitle="DEPÓSITO ESCROW" />
+
+      <main className="max-w-xl mx-auto px-4 sm:px-6 py-8">
+        <div className="bg-dark-card border border-dark-border p-6">
+          <div className="flex items-center gap-3 mb-6 border-b border-dark-border pb-4">
+            <QrCode className="w-6 h-6 text-brand-500" />
+            <div>
+              <h1 className="text-lg font-bold text-white uppercase tracking-tight">Depósito em Escrow</h1>
+              <p className="font-mono text-[10px] text-zinc-500 mt-0.5">Pague via Pix para garantir o projeto</p>
+            </div>
+          </div>
+
+          <div className="bg-dark-input border border-dark-border p-4 mb-6">
+            <p className="font-mono text-[10px] text-zinc-500 uppercase mb-2">Projeto</p>
+            <p className="font-mono text-sm text-white font-bold">{project.title}</p>
+            <div className="flex justify-between mt-3 pt-3 border-t border-dark-border/50">
+              <span className="font-mono text-[10px] text-zinc-500">Valor do Escrow</span>
+              <span className="font-mono text-sm text-brand-500 font-bold">{fmt(totalBudget)}</span>
+            </div>
+            <p className="font-mono text-[9px] text-zinc-600 mt-2">
+              Este valor fica retido na plataforma e é liberado por milestone conforme aprovação (RN05).
+            </p>
+          </div>
+
+          {error && (
+            <div className="flex items-center gap-2 text-red-400 border border-red-500/30 bg-red-500/10 px-3 py-2 mb-4 font-mono text-xs">
+              <AlertCircle className="w-4 h-4 shrink-0" /> {error}
+            </div>
+          )}
+
+          {!pixData ? (
+            <button
+              onClick={handleGeneratePix}
+              disabled={loadingPix}
+              className="w-full btn-sharp bg-brand-500 text-dark-bg font-bold font-mono text-sm px-6 py-4 hover:bg-brand-400 border border-brand-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+            >
+              {loadingPix ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> GERANDO PIX...</>
+              ) : (
+                <><QrCode className="w-4 h-4" /> GERAR_PIX({fmt(totalBudget)})</>
+              )}
+            </button>
+          ) : (
+            <div className="space-y-4">
+              {/* QR Code */}
+              {pixData.paymentMethod.qrCode && (
+                <div className="flex flex-col items-center py-4">
+                  <img
+                    src={`data:image/png;base64,${pixData.paymentMethod.qrCode}`}
+                    alt="QR Code Pix"
+                    className="w-48 h-48 border border-dark-border"
+                  />
+                  <p className="font-mono text-[9px] text-zinc-600 mt-2">Escaneie com o app do banco</p>
+                </div>
+              )}
+
+              {/* Copia e cola */}
+              {pixData.paymentMethod.qrCodeText && (
+                <div className="bg-dark-input border border-dark-border p-3">
+                  <p className="font-mono text-[9px] text-zinc-500 uppercase mb-2">Pix Copia e Cola</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      readOnly
+                      value={pixData.paymentMethod.qrCodeText}
+                      className="flex-1 bg-[#000] border border-dark-border px-3 py-2 font-mono text-[10px] text-zinc-300 truncate"
+                    />
+                    <button
+                      onClick={() => handleCopy(pixData.paymentMethod.qrCodeText!)}
+                      className="shrink-0 btn-sharp bg-dark-input border border-dark-border px-3 py-2 hover:border-brand-500 hover:text-brand-500 transition-colors"
+                    >
+                      {copied ? <Check className="w-4 h-4 text-brand-500" /> : <Copy className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Confirmar pagamento */}
+              <button
+                onClick={handleConfirmPayment}
+                disabled={confirming}
+                className="w-full btn-sharp bg-yellow-500 text-dark-bg font-bold font-mono text-sm px-6 py-4 hover:bg-yellow-400 border border-yellow-500 transition-colors disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                {confirming ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> VERIFICANDO PAGAMENTO...</>
+                ) : (
+                  <><CheckCircle2 className="w-4 h-4" /> JÁ_PAGUEI() — VERIFICAR</>
+                )}
+              </button>
+
+              <p className="font-mono text-[9px] text-zinc-600 text-center">
+                Após pagar, clique em "Já paguei" para confirmar. O sistema verificará o pagamento automaticamente.
               </p>
             </div>
           )}

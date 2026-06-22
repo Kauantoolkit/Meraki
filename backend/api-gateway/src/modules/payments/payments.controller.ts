@@ -63,6 +63,44 @@ export class PaymentsController {
   }
 }
 
+@ApiTags('Payment Hiring')
+@Controller('payments/hiring')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard, RolesGuard)
+export class PaymentHiringGatewayController {
+  constructor(private readonly paymentsService: PaymentsService) {}
+
+  private token(req: Request): string {
+    return req.headers.authorization?.split(' ')[1];
+  }
+
+  @Post()
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Criar pagamento de contratação (Pix via Mercado Pago)' })
+  create(@Body() body: Record<string, any>, @Req() req: Request) {
+    return this.paymentsService.createHiringPayment(body, this.token(req));
+  }
+
+  @Patch(':id/confirm')
+  @Roles('COMPANY')
+  @ApiOperation({ summary: 'Confirmar pagamento de contratação' })
+  confirm(@Param('id') id: string, @Req() req: Request) {
+    return this.paymentsService.confirmHiringPayment(id, this.token(req));
+  }
+}
+
+@ApiTags('Webhooks')
+@Controller('webhooks')
+export class WebhooksGatewayController {
+  constructor(private readonly paymentsService: PaymentsService) {}
+
+  @Post('mercadopago')
+  @ApiOperation({ summary: 'Webhook Mercado Pago (sem autenticação)' })
+  handleMercadoPago(@Body() body: Record<string, any>) {
+    return this.paymentsService.forwardWebhook('mercadopago', body);
+  }
+}
+
 @ApiTags('Withdrawals')
 @Controller('withdrawals')
 @ApiBearerAuth()

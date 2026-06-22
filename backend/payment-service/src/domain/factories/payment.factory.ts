@@ -20,8 +20,8 @@ export class PaymentFactory {
     payment.projectId = data.projectId;
     payment.specialistId = data.specialistId;
     payment.amount = data.amount;
-    payment.status = PaymentStatus.ESCROW_HELD;
-    payment.escrowTransactionId = `escrow-${Date.now()}`;
+    payment.status = PaymentStatus.PENDING;
+    payment.escrowTransactionId = '';
 
     return payment;
   }

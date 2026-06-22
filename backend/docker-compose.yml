@@ -147,7 +147,7 @@ services:
       DB_USER: ${DB_USER:?DB_USER não definido}
       DB_PASS: ${DB_PASS:?DB_PASS não definido}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET não definido}
-      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-15m}
+      JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN:-8h}
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       RABBITMQ_URL: amqp://${RABBITMQ_USER:?RABBITMQ_USER não definido}:${RABBITMQ_PASS:?RABBITMQ_PASS não definido}@rabbitmq:5672
       SMTP_HOST: ${SMTP_HOST:-live.smtp.mailtrap.io}
@@ -267,6 +267,8 @@ services:
       PLATFORM_FEE_RATE: ${PLATFORM_FEE_RATE:-0.10}
       PROJECT_SERVICE_URL: http://project-service:3002
       INTERNAL_API_KEY: ${INTERNAL_API_KEY:-meraki-internal-key}
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-pix}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-TEST-xxx}
     depends_on:
       payment-db:
         condition: service_healthy

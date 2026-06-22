@@ -95,7 +95,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'REGISTO',
+                        'REGISTRO',
                         style: GoogleFonts.sourceCodePro(
                           color: Colors.white,
                           fontSize: 22,
