@@ -23,7 +23,7 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
   final _minBudgetCtrl = TextEditingController();
   final _maxBudgetCtrl = TextEditingController();
   String _searchQuery = '';
-  String _skillFilter = '';
+  final List<String> _skillTags = [];
   bool _showFilters = false;
   bool _initialized = false;
 
@@ -49,9 +49,23 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
     _searchController.addListener(
       () => setState(() => _searchQuery = _searchController.text),
     );
-    _skillFilterCtrl.addListener(
-      () => setState(() => _skillFilter = _skillFilterCtrl.text),
-    );
+  }
+
+  void _addSkillTag(String raw) {
+    final tag = raw.trim();
+    if (tag.isEmpty) return;
+    if (_skillTags.any((t) => t.toLowerCase() == tag.toLowerCase())) {
+      _skillFilterCtrl.clear();
+      return;
+    }
+    setState(() {
+      _skillTags.add(tag);
+      _skillFilterCtrl.clear();
+    });
+  }
+
+  void _removeSkillTag(String tag) {
+    setState(() => _skillTags.remove(tag));
   }
 
   @override
@@ -106,9 +120,10 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                 !p.description.toLowerCase().contains(_searchQuery.toLowerCase())) {
               return false;
             }
-            if (_skillFilter.isNotEmpty &&
-                !p.requirements.any((r) =>
-                    r.toLowerCase().contains(_skillFilter.toLowerCase()))) {
+            // Filtro AND: o projeto precisa conter TODAS as skills selecionadas.
+            if (_skillTags.isNotEmpty &&
+                !_skillTags.every((tag) => p.requirements
+                    .any((r) => r.toLowerCase().contains(tag.toLowerCase())))) {
               return false;
             }
             if (minBudget != null && p.budget < minBudget) return false;
@@ -214,10 +229,16 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                             TextField(
                               controller: _skillFilterCtrl,
                               style: const TextStyle(fontSize: 13, color: Colors.black87),
+                              textInputAction: TextInputAction.done,
+                              onSubmitted: _addSkillTag,
                               decoration: InputDecoration(
-                                hintText: 'Filtrar por skill/tecnologia...',
+                                hintText: 'Filtrar por skill/tecnologia... (Enter)',
                                 hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 13),
                                 prefixIcon: const Icon(Icons.code, size: 18, color: Color(0xFF9E9E9E)),
+                                suffixIcon: IconButton(
+                                  icon: const Icon(Icons.add, size: 18, color: AppTheme.brand),
+                                  onPressed: () => _addSkillTag(_skillFilterCtrl.text),
+                                ),
                                 filled: true,
                                 fillColor: Colors.white,
                                 isDense: true,
@@ -232,6 +253,31 @@ class _ProjectsListScreenState extends ConsumerState<ProjectsListScreen> {
                                 ),
                               ),
                             ),
+                            if (_skillTags.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 6,
+                                children: _skillTags
+                                    .map((tag) => Chip(
+                                          label: Text(tag),
+                                          labelStyle: const TextStyle(
+                                            fontSize: 12,
+                                            color: AppTheme.brand,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          backgroundColor: AppTheme.brandLight,
+                                          side: const BorderSide(color: AppTheme.brand),
+                                          deleteIcon: const Icon(Icons.close,
+                                              size: 14, color: AppTheme.brand),
+                                          onDeleted: () => _removeSkillTag(tag),
+                                          materialTapTargetSize:
+                                              MaterialTapTargetSize.shrinkWrap,
+                                          visualDensity: VisualDensity.compact,
+                                        ))
+                                    .toList(),
+                              ),
+                            ],
                             const SizedBox(height: 8),
                             Row(
                               children: [
