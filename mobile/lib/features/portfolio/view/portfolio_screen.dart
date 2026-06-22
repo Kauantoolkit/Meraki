@@ -473,36 +473,160 @@ class _SpecialistProfileScreen extends StatelessWidget {
     ).whenComplete(ctrl.dispose);
   }
 
+  // Adicionar skill = escolher do catálogo e passar no quiz (>= 70%), em
+  // paridade com o React. Não permite adicionar skill por texto livre, o que
+  // furava a validação.
   void _showAddSkillDialog(BuildContext context) {
-    final ctrl = TextEditingController();
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Adicionar Habilidade'),
-        content: TextField(
-          controller: ctrl,
-          autofocus: true,
-          decoration: const InputDecoration(
-            labelText: 'Ex: Flutter, Node.js, PostgreSQL',
-            border: OutlineInputBorder(),
-          ),
+      isScrollControlled: true,
+      backgroundColor: AppTheme.slate100,
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.6,
+        maxChildSize: 0.9,
+        builder: (_, scrollController) => Consumer(
+          builder: (_, sheetRef, __) {
+            final catalogAsync = sheetRef.watch(skillsCatalogProvider);
+            final owned = (sheetRef
+                        .watch(portfolioViewModelProvider)
+                        .valueOrNull
+                        ?.skills ??
+                    [])
+                .map((s) => s.toLowerCase())
+                .toSet();
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 8, 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Validar nova habilidade',
+                          style: GoogleFonts.sourceCodePro(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: AppTheme.slate400),
+                        onPressed: () => Navigator.pop(sheetCtx),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Escolha uma skill do catálogo e passe no quiz (≥ 70%) para adicioná-la ao seu perfil.',
+                      style: GoogleFonts.sourceCodePro(
+                          color: AppTheme.slate500, fontSize: 11, height: 1.4),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: catalogAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (_, __) => Center(
+                      child: Text(
+                        'Erro ao carregar o catálogo de skills.',
+                        style: GoogleFonts.sourceCodePro(
+                            color: AppTheme.slate500, fontSize: 12),
+                      ),
+                    ),
+                    data: (catalog) {
+                      final available = catalog
+                          .where((s) =>
+                              !owned.contains(s.name.toLowerCase()) &&
+                              !owned.contains(s.displayName.toLowerCase()))
+                          .toList()
+                        ..sort((a, b) => a.displayName
+                            .toLowerCase()
+                            .compareTo(b.displayName.toLowerCase()));
+                      if (available.isEmpty) {
+                        return Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(24),
+                            child: Text(
+                              catalog.isEmpty
+                                  ? 'Nenhuma skill no catálogo ainda.'
+                                  : 'Você já validou todas as skills do catálogo.',
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.sourceCodePro(
+                                  color: AppTheme.slate500, fontSize: 12),
+                            ),
+                          ),
+                        );
+                      }
+                      return ListView.separated(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                        itemCount: available.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (_, i) {
+                          final skill = available[i];
+                          return ListTile(
+                            tileColor: AppTheme.slate50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: const BorderSide(color: AppTheme.slate200),
+                            ),
+                            title: Text(
+                              skill.displayName,
+                              style: GoogleFonts.sourceCodePro(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            trailing: const Icon(Icons.quiz_outlined,
+                                color: AppTheme.brand, size: 18),
+                            onTap: () {
+                              Navigator.pop(sheetCtx);
+                              _startSkillQuiz(
+                                  context, skill.id, skill.displayName);
+                            },
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            );
+          },
         ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancelar')),
-          FilledButton(
-            onPressed: () {
-              ref
-                  .read(portfolioViewModelProvider.notifier)
-                  .addSkill(ctrl.text);
-              Navigator.pop(context);
-            },
-            child: const Text('Adicionar'),
-          ),
-        ],
       ),
-    ).whenComplete(ctrl.dispose);
+    );
+  }
+
+  void _startSkillQuiz(BuildContext context, String skillId, String skillName) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.slate100,
+      builder: (_) => SkillQuizDialog(
+        skillId: skillId,
+        skillName: skillName,
+        mode: QuizMode.profile,
+        onCompleted: (result) async {
+          Navigator.of(context).pop();
+          // Só adiciona a skill ao perfil se passou no quiz.
+          if (result.passed) {
+            await ref
+                .read(portfolioViewModelProvider.notifier)
+                .addSkill(skillName);
+            ref.invalidate(myValidationsProvider);
+          }
+        },
+      ),
+    );
   }
 
   void _showAddCertDialog(BuildContext context) {
