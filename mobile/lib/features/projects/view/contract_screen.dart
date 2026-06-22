@@ -84,7 +84,7 @@ class _ContractScreenState extends ConsumerState<ContractScreen> {
       await api.patch('/projects/${widget.projectId}/sign-contract', data: {
         'contractHash': _generateHash(),
         'role': _isCompany ? 'COMPANY' : 'SPECIALIST',
-        'signingPartyId': _isCompany ? user?.companyId : user?.specialistId,
+        'signingPartyId': user?.id,
       });
       await _load();
     } catch (e) {
