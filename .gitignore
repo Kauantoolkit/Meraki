@@ -86,3 +86,10 @@ CLAUDE.md
 gsd.config.*
 AGENTS.md
 **/AGENTS.md
+
+# entregaveis binarios na raiz (limpeza 27/08) - ancorado em / para nao
+# afetar docs/ e prototipos versionados
+/*.docx
+/*.pdf
+/*.zip
+/*.html
